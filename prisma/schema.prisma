@@ -15,6 +15,7 @@ model User {
   institution   String?
   bio           String?
   avatarUrl     String?
+  isDemo        Boolean   @default(false)
   followers     UserFollow[] @relation("followed")
   following     UserFollow[] @relation("follower")
   postLikes     CommunityPostLike[]
@@ -189,6 +190,11 @@ model CommunityPost {
   latitude Float?
   longitude Float?
   locationVisibility ObservationLocationVisibility @default(APPROXIMATE)
+  sourceUrl String? @unique
+  sourceObserver String?
+  photoAttribution String?
+  photoLicense String?
+  isDemo Boolean @default(false)
   commentsList CommunityComment[]
   postLikes CommunityPostLike[]
   identifications CommunityIdentification[]
@@ -393,6 +399,7 @@ model CommunityComment {
   postId String
   userId String
   body String
+  isDemo Boolean @default(false)
   post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())

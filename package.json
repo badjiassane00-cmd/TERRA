@@ -11,6 +11,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "npx tsx prisma/seed.ts",
+    "prisma:seed-social": "npx tsx prisma/seed-demo-social.ts",
     "prisma:train": "npx tsx prisma/train-ai.ts",
     "prisma:studio": "prisma studio"
   },
