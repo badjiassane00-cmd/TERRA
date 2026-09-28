@@ -10,6 +10,7 @@ interface ObservationComment {
   body: string;
   createdAt: string;
   user: { id: string; name: string };
+  isDemo?: boolean;
 }
 interface ObservationIdentification {
   id: string;
@@ -28,6 +29,11 @@ export interface ObservationDetailRecord {
   description: string | null;
   observedAt: string | null;
   createdAt: string;
+  sourceUrl?: string | null;
+  sourceObserver?: string | null;
+  photoAttribution?: string | null;
+  photoLicense?: string | null;
+  isDemo?: boolean;
   latitude: number | null;
   longitude: number | null;
   locationVisibility: "PUBLIC" | "APPROXIMATE" | "PRIVATE";
@@ -35,9 +41,16 @@ export interface ObservationDetailRecord {
   comments: number;
   verified: boolean;
   verifiedBy: string | null;
-  user: { id: string; name: string; institution: string | null };
+  user: { id: string; name: string; institution: string | null; isDemo?: boolean };
   commentsList: ObservationComment[];
   identifications: ObservationIdentification[];
+}
+
+function photoLicenseUrl(code: string) {
+  const license = code.toLowerCase();
+  if (license === "cc0") return "https://creativecommons.org/publicdomain/zero/1.0/";
+  if (license === "cc-by-sa") return "https://creativecommons.org/licenses/by-sa/4.0/";
+  return "https://creativecommons.org/licenses/by/4.0/";
 }
 
 export default function ObservationDetail({ observation: initialObservation, currentUserId }: { observation: ObservationDetailRecord; currentUserId: string | null }) {
@@ -62,7 +75,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
       const response = await fetch(`/api/observations/${observation.id}/comments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body: comment }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Réponse non envoyée.");
-      setObservation((current) => ({ ...current, comments: current.comments + 1, commentsList: [...current.commentsList, { ...result.comment, createdAt: new Date(result.comment.createdAt).toISOString() }] }));
+      setObservation((current) => ({ ...current, comments: current.comments + 1, commentsList: [...current.commentsList, { ...result.comment, isDemo: false, createdAt: new Date(result.comment.createdAt).toISOString() }] }));
       setComment(""); setNotice("Votre réponse a été ajoutée.");
     } catch (submitError) { setError(submitError instanceof Error ? submitError.message : "Impossible d’ajouter la réponse."); }
     finally { setBusy(false); }
@@ -107,9 +120,10 @@ export default function ObservationDetail({ observation: initialObservation, cur
           <span className={`observation-identification-status ${observation.verified ? "confirmed" : "pending"}`}>
             {observation.verified ? <><BadgeCheck size={16} /> Identification confirmée</> : <><Sparkles size={15} /> Identification à confirmer</>}
           </span>
-          <div className="observation-author"><span className="observation-author-avatar">{observation.user.name.slice(0, 1).toLocaleUpperCase("fr")}</span><span><small>OBSERVÉ PAR</small><strong>{observation.user.name}</strong>{observation.user.institution && <small>{observation.user.institution}</small>}</span></div>
+          <div className="observation-author"><span className="observation-author-avatar">{observation.user.name.slice(0, 1).toLocaleUpperCase("fr")}</span><span><small>OBSERVÉ PAR</small><strong>{observation.user.name}</strong>{observation.user.isDemo ? <small>Compte fictif · démonstration</small> : observation.user.institution && <small>{observation.user.institution}</small>}</span></div>
           <div className="observation-taxon-stats"><span><Heart size={15} /> {observation.likes} appréciations</span><span><MessageCircle size={15} /> {observation.comments} échanges</span></div>
           {observation.verifiedBy && <small className="observation-verified-by">Vérifié par {observation.verifiedBy}</small>}
+          {observation.isDemo && <div className="observation-demo-source"><strong>Publication de démonstration</strong><span>Observation réelle par {observation.sourceObserver || "un naturaliste iNaturalist"}</span><span>Photo : {observation.photoAttribution || observation.sourceObserver}{observation.photoLicense && <> · <a href={photoLicenseUrl(observation.photoLicense)} target="_blank" rel="noreferrer">Licence {observation.photoLicense.toUpperCase()}</a></>}</span><a href={observation.sourceUrl || "https://www.inaturalist.org"} target="_blank" rel="noreferrer">Consulter la source iNaturalist ↗</a></div>}
         </aside>
       </section>
 
@@ -132,7 +146,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
         <aside className="observation-detail-sidebar">
           <section className="observation-contribute-card"><span className="observation-side-decoration">✳</span><small>LE SAVOIR EST COLLECTIF</small><h2>Vous connaissez cette espèce ?</h2><p>Partagez un nom local, une identification ou un savoir lié à cette observation.</p><a href="#discussion">Participer à l’échange <ArrowLeft className="rotate-180" size={15} /></a></section>
           <section id="discussion" className="observation-discussion-card"><div className="observation-card-title"><span className="observation-icon-tile"><MessageCircle size={17} /></span><div><small>COMMUNAUTÉ</small><h2>Discussion <span>{observation.comments}</span></h2></div></div>
-            {observation.commentsList.length === 0 ? <p className="observation-section-hint">Soyez la première personne à échanger sur cette rencontre.</p> : <div className="observation-comments-list">{observation.commentsList.map((item) => <article className="observation-comment" key={item.id}><span className="observation-comment-avatar">{item.user.name.slice(0, 1).toLocaleUpperCase("fr")}</span><div><div><strong>{item.user.name}</strong><small>{new Date(item.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</small></div><p>{item.body}</p></div></article>)}</div>}
+            {observation.commentsList.length === 0 ? <p className="observation-section-hint">Soyez la première personne à échanger sur cette rencontre.</p> : <div className="observation-comments-list">{observation.commentsList.map((item) => <article className="observation-comment" key={item.id}><span className="observation-comment-avatar">{item.user.name.slice(0, 1).toLocaleUpperCase("fr")}</span><div><div><strong>{item.user.name}</strong><small>{new Date(item.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</small></div><p>{item.body}</p>{item.isDemo && <small className="observation-demo-comment-label">Commentaire de démonstration</small>}</div></article>)}</div>}
             {currentUserId ? <form className="observation-comment-form" onSubmit={submitComment}><textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Ajouter une réponse…" maxLength={2000} required /><button disabled={busy || !comment.trim()} type="submit"><Send size={15} /> Répondre</button></form> : <p className="observation-login-prompt"><Link href="/connexion">Connectez-vous</Link> pour rejoindre la discussion.</p>}
           </section>
         </aside>

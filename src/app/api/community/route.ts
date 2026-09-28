@@ -34,7 +34,7 @@ export async function GET(request: Request) {
       orderBy: { createdAt: "desc" },
       take: limit,
       include: {
-        user: { select: { id: true, name: true, institution: true, avatarUrl: true, followers: { where: { followerId: viewerId || "__anonymous__" }, select: { id: true } } } },
+        user: { select: { id: true, name: true, institution: true, avatarUrl: true, isDemo: true, followers: { where: { followerId: viewerId || "__anonymous__" }, select: { id: true } } } },
         postLikes: { where: { userId: viewerId || "__anonymous__" }, select: { id: true } },
       },
     });

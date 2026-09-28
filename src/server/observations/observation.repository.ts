@@ -5,7 +5,7 @@ export const observationRepository = {
     return prisma.communityPost.findFirst({
       where: { id, removed: false },
       include: {
-        user: { select: { id: true, name: true, institution: true } },
+        user: { select: { id: true, name: true, institution: true, isDemo: true } },
         commentsList: {
           orderBy: { createdAt: "asc" },
           take: 100,

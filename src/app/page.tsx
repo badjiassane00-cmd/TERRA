@@ -357,10 +357,10 @@ export default function Home() {
                         <User className="w-4 h-4 text-primary" />
                       )}
                     </div>
-                    <div className="text-left">
+                    <Link href={`/profile/${user.id}`} className="text-left hover:text-primary">
                       <p className="font-medium text-foreground">{user.name}</p>
-                      <p className="text-xs text-foreground/60">{user.institution || user.email}</p>
-                    </div>
+                      <p className="text-xs text-foreground/60">Ma galerie · {user.institution || user.email}</p>
+                    </Link>
                   </div>
                   <motion.button
                     onClick={handleLogout}
@@ -417,7 +417,7 @@ export default function Home() {
                 ))}
                 {user ? (
                   <div className="space-y-2">
-                    <p className="font-medium text-foreground">{user.name}</p>
+                    <Link href={`/profile/${user.id}`} className="block font-medium text-foreground">Ma galerie · {user.name}</Link>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-2 text-foreground/70"

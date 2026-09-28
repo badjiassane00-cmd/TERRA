@@ -17,9 +17,5 @@ export default function ProfileShareButton({ displayName }: { displayName: strin
       setError("Impossible de partager le lien sur cet appareil.");
     }
   }
-  return <span className="nature-share-profile-wrap"><button className="nature-share-profile" onClick={() => void share()}><Share2 size={15} />{copied ? <><Check size={14} />Lien copié</> : navigatorShareAvailable() ? "Partager la galerie" : <><Copy size={14} />Partager la galerie</>}</button>{error && <small role="alert">{error}</small>}</span>;
-}
-
-function navigatorShareAvailable() {
-  return typeof navigator !== "undefined" && !!navigator.share;
+  return <span className="nature-share-profile-wrap"><button className="nature-share-profile" onClick={() => void share()}><Share2 size={15} />{copied ? <><Check size={14} />Lien copié</> : <><Copy size={14} />Partager la galerie</>}</button>{error && <small role="alert">{error}</small>}</span>;
 }

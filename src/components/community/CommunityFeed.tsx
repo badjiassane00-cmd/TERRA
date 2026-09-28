@@ -13,6 +13,7 @@ interface CommunityPost {
     avatar?: string;
     institution?: string;
     avatarUrl?: string | null;
+    isDemo?: boolean;
   };
   plantName: string;
   organismGroup: OrganismGroup;
@@ -30,6 +31,11 @@ interface CommunityPost {
   description?: string;
   verified?: boolean;
   verifiedBy?: string | null;
+  isDemo?: boolean;
+  sourceUrl?: string | null;
+  sourceObserver?: string | null;
+  photoAttribution?: string | null;
+  photoLicense?: string | null;
 }
 
 interface CommunityFeedProps {
@@ -42,7 +48,7 @@ interface CommunityFeedProps {
 interface ApiPost {
   id: string;
   userId: string;
-  user?: { name?: string; institution?: string; avatarUrl?: string | null };
+  user?: { name?: string; institution?: string; avatarUrl?: string | null; isDemo?: boolean };
   plantName: string;
   organismGroup?: OrganismGroup;
   scientificName: string;
@@ -58,11 +64,23 @@ interface ApiPost {
   verified?: boolean;
   verifiedBy?: string | null;
   liked?: boolean;
+  isDemo?: boolean;
+  sourceUrl?: string | null;
+  sourceObserver?: string | null;
+  photoAttribution?: string | null;
+  photoLicense?: string | null;
   following?: boolean;
 }
 
 
 interface ObservationPhotos { imageUrl: string; thumbnailUrl: string }
+
+function photoLicenseUrl(code: string) {
+  const license = code.toLowerCase();
+  if (license === "cc0") return "https://creativecommons.org/publicdomain/zero/1.0/";
+  if (license === "cc-by-sa") return "https://creativecommons.org/licenses/by-sa/4.0/";
+  return "https://creativecommons.org/licenses/by/4.0/";
+}
 
 async function canvasDataUrl(canvas: HTMLCanvasElement, quality: number): Promise<string> {
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
@@ -135,7 +153,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
           (data.data || []).map((post: ApiPost) => ({
             id: post.id,
             userId: post.userId,
-            user: { name: post.user?.name || "Membre", institution: post.user?.institution, avatarUrl: post.user?.avatarUrl },
+            user: { name: post.user?.name || "Membre", institution: post.user?.institution, avatarUrl: post.user?.avatarUrl, isDemo: post.user?.isDemo },
             plantName: post.plantName,
             organismGroup: post.organismGroup || "PLANT",
             scientificName: post.scientificName,
@@ -152,6 +170,11 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             description: post.description,
             verified: post.verified,
             verifiedBy: post.verifiedBy,
+            isDemo: post.isDemo,
+            sourceUrl: post.sourceUrl,
+            sourceObserver: post.sourceObserver,
+            photoAttribution: post.photoAttribution,
+            photoLicense: post.photoLicense,
           }))
         );
       }
@@ -371,7 +394,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             key={post.id}
             className="nature-social-post"
           >
-            <div className="nature-post-header"><Link href={`/profile/${post.userId}`} className="nature-profile-avatar">{post.user.avatarUrl ? <img src={post.user.avatarUrl} alt="" /> : post.user.name.slice(0, 1).toUpperCase()}</Link><Link href={`/profile/${post.userId}`} className="nature-post-author"><strong>{post.user.name}</strong><span>{post.user.institution || "Naturaliste"} · {formatTimeAgo(post.timestamp)}</span></Link>{currentUserId && currentUserId !== post.userId && <button className={`nature-follow-button ${post.following ? "following" : ""}`} onClick={() => void toggleFollow(post.userId)}>{post.following ? "Abonné·e" : "Suivre"}</button>}<span className="nature-post-group-label">{ORGANISM_LABELS[post.organismGroup]}</span></div>
+            <div className="nature-post-header"><Link href={`/profile/${post.userId}`} className="nature-profile-avatar">{post.user.avatarUrl ? <img src={post.user.avatarUrl} alt="" /> : post.user.name.slice(0, 1).toUpperCase()}</Link><Link href={`/profile/${post.userId}`} className="nature-post-author"><strong>{post.user.name}</strong><span>{post.user.isDemo ? "Compte fictif · démonstration" : post.user.institution || "Naturaliste"} · {formatTimeAgo(post.timestamp)}</span></Link>{currentUserId && currentUserId !== post.userId && <button className={`nature-follow-button ${post.following ? "following" : ""}`} onClick={() => void toggleFollow(post.userId)}>{post.following ? "Abonné·e" : "Suivre"}</button>}<span className="nature-post-group-label">{ORGANISM_LABELS[post.organismGroup]}</span></div>
             <div className={`${post.imageUrl ? "nature-post-photo" : "nature-post-photo empty"} bg-gradient-to-br from-primary/10 to-accent/10 relative`}>
               {post.imageUrl ? (
                 <Link href={`/observations/${post.id}`} aria-label={`Voir ${post.plantName}`}><img src={post.imageUrl} alt={post.plantName} className="w-full h-full object-cover" /></Link>
@@ -386,6 +409,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             <div className="nature-post-body">
               <div className="nature-post-actions"><button aria-label={post.liked ? "Retirer la mention j’aime" : "Aimer cette observation"} onClick={() => void toggleLike(post.id)} className={post.liked ? "liked" : ""}><Heart className={post.liked ? "fill-current" : ""} /></button><Link href={`/observations/${post.id}#discussion`} aria-label="Commenter"><MessageCircle /></Link><button aria-label="Partager cette observation" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/observations/${post.id}`)}><Send /></button><Link className="nature-save-action" href={`/observations/${post.id}`} aria-label="Ouvrir la fiche"><Bookmark /></Link></div>
               <div className="nature-like-count">{post.likes.toLocaleString("fr-FR")} J’aime</div>
+              {post.isDemo && <div className="nature-demo-source"><strong>Publication de démonstration</strong><span>Observation réelle par {post.sourceObserver || "un naturaliste iNaturalist"} · Crédit photo : {post.photoAttribution || post.sourceObserver || "iNaturalist"}{post.photoLicense && <> · <a href={photoLicenseUrl(post.photoLicense)} target="_blank" rel="noreferrer">Licence {post.photoLicense.toUpperCase()}</a></>}</span>{post.sourceUrl && <a href={post.sourceUrl} target="_blank" rel="noreferrer">Voir la source iNaturalist ↗</a>}</div>}
               {post.verified && <div className="flex items-center gap-1.5 mb-2 text-xs text-primary"><BadgeCheck className="w-3.5 h-3.5" />Identification certifiée{post.verifiedBy ? ` par ${post.verifiedBy}` : ""}</div>}
               <div className="nature-observation-caption"><Link href={`/profile/${post.userId}`}><strong>{post.user.name}</strong></Link> <Link href={`/observations/${post.id}`}><strong>{post.plantName}</strong></Link> <span className="nature-caption-group">{ORGANISM_LABELS[post.organismGroup]}</span>{post.description && <span> — {post.description}</span>}</div>
               {post.scientificName && <p className="text-sm text-foreground/60 italic mb-2">{post.scientificName}</p>}
