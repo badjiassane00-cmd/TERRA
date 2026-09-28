@@ -1,0 +1,443 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  institution   String?
+  bio           String?
+  avatarUrl     String?
+  followers     UserFollow[] @relation("followed")
+  following     UserFollow[] @relation("follower")
+  postLikes     CommunityPostLike[]
+  role          Role      @default(USER)
+  favorites     Favorite[]
+  scanHistory   ScanHistory[]
+  communityPosts CommunityPost[]
+  communityComments CommunityComment[]
+  communityIdentifications CommunityIdentification[]
+  exhibitions   Exhibition[]
+  fieldSessions FieldSession[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Plant {
+  id              String    @id @default(cuid())
+  scientificName  String    @unique
+  commonNames     String    @default("[]")
+  kingdom         String?   // règne, ex: Plantae
+  phylum          String?   // embranchement, ex: Tracheophyta
+  taxClass        String?   // classe, ex: Magnoliopsida
+  order           String?   // ordre, ex: Malvales
+  family          String?
+  genus           String?
+  species         String?
+  description     String?
+  taxonomy        String?
+  medicinal       Boolean?
+  edibleParts     String    @default("[]")
+  toxicity        String    @default("[]")
+  watering        String?
+  sunlight        String?
+  soil            String?
+  growthRate      String?
+  sowingMonths    String    @default("[]") // mois de semis/plantation, ex: ["6","7"]
+  bloomingMonths  String    @default("[]") // mois de floraison
+  harvestMonths   String    @default("[]") // mois de récolte
+  imageUrl        String?
+  gbifId          String?
+  iNaturalistId   String?
+  diseases        PlantDisease[]
+  locations       LocationPlant[]
+  localNames      LocalName[]
+  exhibitionItems ExhibitionItem[]
+  scanHistory     ScanHistory[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("plants")
+}
+
+model Disease {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  treatment   String    @default("[]")
+  confidence  Float?
+  plants      PlantDisease[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("diseases")
+}
+
+model PlantDisease {
+  id         String   @id @default(cuid())
+  plantId    String
+  diseaseId  String
+  confidence Float?
+  plant      Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  disease    Disease  @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([plantId, diseaseId])
+  @@map("plant_diseases")
+}
+
+model Location {
+  id            String        @id @default(cuid())
+  name          String
+  lat           Float
+  lng           Float
+  region        String
+  speciesCount  Int           @default(0)
+  type          LocationType
+  description   String?
+  bloomingMonths String?      @default("[]")
+  plants        LocationPlant[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("locations")
+}
+
+model LocationPlant {
+  id         String   @id @default(cuid())
+  locationId String
+  plantId    String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  plant      Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([locationId, plantId])
+  @@map("location_plants")
+}
+
+model ScanHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  plantId     String?
+  imageUrl    String?
+  result      Json?
+  lat         Float?
+  lng         Float?
+  courseName  String?  // contexte pédagogique, ex: "TP Botanique L2 - Sortie Bandia"
+  objective   String?  // objectif de l'observation dans ce contexte
+  sessionId   String?  // rattachement à une session de terrain en direct
+  session     FieldSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plant       Plant?   @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@map("scan_history")
+}
+
+// Session de terrain en direct : un vacataire/enseignant encadrant crée
+// une sortie, partage un code court, et voit les identifications des
+// étudiants arriver en temps réel plutôt que de collecter des rapports
+// après coup.
+model FieldSession {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  title        String
+  courseName   String?
+  supervisorId String
+  supervisor   User          @relation(fields: [supervisorId], references: [id], onDelete: Cascade)
+  active       Boolean       @default(true)
+  entries      ScanHistory[]
+  createdAt    DateTime      @default(now())
+
+  @@map("field_sessions")
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  plantId    String?
+  locationId String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, plantId])
+  @@unique([userId, locationId])
+  @@map("favorites")
+}
+
+model CommunityPost {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plantName     String
+  scientificName String
+  imageUrl      String
+  thumbnailUrl  String?
+  region        String
+  description   String?
+  organismGroup OrganismGroup @default(PLANT)
+  observedAt DateTime?
+  latitude Float?
+  longitude Float?
+  locationVisibility ObservationLocationVisibility @default(APPROXIMATE)
+  commentsList CommunityComment[]
+  postLikes CommunityPostLike[]
+  identifications CommunityIdentification[]
+  likes         Int       @default(0)
+  comments      Int       @default(0)
+  verified      Boolean   @default(false)
+  verifiedBy    String?
+  removed       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("community_posts")
+}
+
+model GamificationProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  points    Int      @default(0)
+  level     Int      @default(1)
+  badges    String   @default("[]")
+  streak    Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("gamification_profiles")
+}
+
+model Reminder {
+  id          String      @id @default(cuid())
+  userId      String
+  type        ReminderType
+  plantName   String
+  frequency   String
+  time        String
+  enabled     Boolean     @default(true)
+  nextReminder DateTime
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("reminders")
+}
+
+model TrainingData {
+  id            String    @id @default(cuid())
+  userId        String?
+  plantName     String
+  scientificName String
+  imageUrl      String
+  label         String
+  confidence     Float?
+  isVerified    Boolean   @default(false)
+  usedForTraining Boolean @default(false)
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("training_data")
+}
+
+model ModelVersion {
+  id            String    @id @default(cuid())
+  version       String    @unique
+  name          String
+  description   String?
+  accuracy       Float?
+  loss           Float?
+  trainingDataCount Int
+  status        ModelStatus @default(DRAFT)
+  modelUrl      String?
+  deployed       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("model_versions")
+}
+
+model LocalName {
+  id          String   @id @default(cuid())
+  plantId     String
+  plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  language    String   // code libre : "wo" (wolof), "bm" (bambara), "ff" (peul)...
+  languageName String  // libellé lisible : "Wolof", "Bambara"...
+  name        String
+  contributedBy String?
+  votes       Int      @default(0)
+  verified    Boolean  @default(false)
+  verifiedBy  String?
+  createdAt   DateTime @default(now())
+
+  @@unique([plantId, language, name])
+  @@map("local_names")
+}
+
+model UserContribution {
+  id            String    @id @default(cuid())
+  userId        String
+  type          ContributionType
+  targetId      String
+  points        Int       @default(0)
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+
+  @@map("user_contributions")
+}
+
+enum ModelStatus {
+  DRAFT
+  TRAINING
+  READY
+  DEPLOYED
+  ARCHIVED
+}
+
+enum ContributionType {
+  TRAINING_IMAGE
+  LABEL_CORRECTION
+  PLANT_SIGHTING
+  DISEASE_REPORT
+}
+
+enum ReminderType {
+  WATERING
+  SUNLIGHT
+  FERTILIZING
+  PRUNING
+}
+
+enum Role {
+  USER
+  INSTITUTION
+  ADMIN
+}
+
+enum LocationType {
+  JARDIN_BOTANIQUE
+  PARC_NATIONAL
+  RESERVE
+  JARDIN_UNIVERSITAIRE
+  COMMERCE
+}
+
+// Exposition personnelle : un utilisateur compose sa propre collection
+// de plantes (parmi celles qu'il a identifiées ou toute espèce connue
+// de la base), avec un titre, une description, et peut la rendre
+// publique pour la partager (utile pour un enseignant, un pépiniériste
+// qui veut composer une vitrine, ou un passionné).
+model Exhibition {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  coverImage  String?
+  theme       String?           // ex: "médicinale", "jardin de ville", "espèces menacées"
+  isPublic    Boolean           @default(false)
+  items       ExhibitionItem[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("exhibitions")
+}
+
+model ExhibitionItem {
+  id           String     @id @default(cuid())
+  exhibitionId String
+  exhibition   Exhibition @relation(fields: [exhibitionId], references: [id], onDelete: Cascade)
+  plantId      String
+  plant        Plant      @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  note         String?
+  imageUrl     String?
+  position     Int        @default(0)
+  addedAt      DateTime   @default(now())
+
+  @@unique([exhibitionId, plantId])
+  @@map("exhibition_items")
+}
+
+
+enum OrganismGroup {
+  PLANT
+  INSECT
+  BIRD
+  MAMMAL
+  REPTILE
+  AMPHIBIAN
+  FUNGUS
+  AQUATIC
+  OTHER
+}
+
+
+enum ObservationLocationVisibility {
+  PUBLIC
+  APPROXIMATE
+  PRIVATE
+}
+
+model CommunityComment {
+  id String @id @default(cuid())
+  postId String
+  userId String
+  body String
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
+  @@map("community_comments")
+}
+
+model CommunityIdentification {
+  id String @id @default(cuid())
+  postId String
+  userId String
+  taxonName String
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId, createdAt])
+  @@map("community_identifications")
+}
+
+
+model CommunityPostLike {
+  id String @id @default(cuid())
+  postId String
+  userId String
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+  @@map("community_post_likes")
+}
+
+model UserFollow {
+  id String @id @default(cuid())
+  followerId String
+  followedId String
+  follower User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followed User @relation("followed", fields: [followedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([followerId, followedId])
+  @@index([followedId, createdAt])
+  @@map("user_follows")
+}

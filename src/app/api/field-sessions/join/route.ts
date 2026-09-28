@@ -1,0 +1,32 @@
+import { NextResponse } from "next/server";
+import { prisma } from "../../../../lib/prisma";
+
+// Un étudiant rejoint une session via le code communiqué à l'oral sur
+// le terrain par l'encadrant.
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const code = (body.code || "").toString().trim().toUpperCase();
+
+    if (!code) {
+      return NextResponse.json({ error: "Code requis" }, { status: 400 });
+    }
+
+    const session = await prisma.fieldSession.findUnique({
+      where: { code },
+      include: { supervisor: { select: { name: true } } },
+    });
+
+    if (!session || !session.active) {
+      return NextResponse.json(
+        { error: "Code invalide ou session terminée" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ session });
+  } catch (error) {
+    console.error("Erreur POST /api/field-sessions/join:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
