@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Leaf, LockKeyhole, Mail, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Leaf, LockKeyhole, Mail, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import BackLink from "@/components/navigation/BackLink";
 
 type AuthMode = "login" | "signup";
 
@@ -56,7 +57,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
       </div>
 
       <section className="auth-form-panel">
-        <Link href="/" className="auth-back"><ArrowLeft size={16} /> Retour à l’exploration</Link>
+        <BackLink href="/" className="auth-back" label="Retour à l’accueil" />
         <div className="auth-form-card">
           <div className="auth-mobile-mark"><span className="auth-brand-mark"><Leaf size={18} /></span><span>SunuNature</span></div>
           <span className="auth-form-kicker">{isSignup ? "VOTRE CARNET COMMENCE ICI" : "HEUREUX DE VOUS RETROUVER"}</span>

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Leaf, Lock, Loader2, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Leaf, Lock, Loader2 } from "lucide-react";
+import BackLink from "@/components/navigation/BackLink";
 
 interface ExhibitionItem {
   id: string;
@@ -61,10 +61,7 @@ export default function PublicExhibitionPage() {
     <div className="min-h-screen bg-background">
       <nav className="border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-4">
-          <Link href="/" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-primary">
-            <ArrowLeft className="w-4 h-4" />
-            Retour à SunuNature
-          </Link>
+          <BackLink href="/" label="Retour à l’accueil" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-primary" />
         </div>
       </nav>
 
