@@ -111,12 +111,12 @@ export default function BotanicalBackground() {
         <fog attach="fog" args={["#0a1a0f", 5, 20]} />
 
         <ambientLight intensity={0.3} />
-        <directionalLight position={[5, 5, 5]} intensity={0.8} color="#2d6a4f" />
+        <directionalLight position={[5, 5, 5]} intensity={0.8} color="#78b57c" />
         <pointLight position={[-5, -5, -5]} intensity={0.5} color="#40916c" />
 
         <ParticleField />
 
-        <FloatingLeaf position={[-3, 2, -2]} color="#2d6a4f" speed={0.8} />
+        <FloatingLeaf position={[-3, 2, -2]} color="#78b57c" speed={0.8} />
         <FloatingLeaf position={[3, -1, -3]} color="#40916c" speed={1.2} />
         <FloatingLeaf position={[2, 3, -1]} color="#52b788" speed={0.6} />
         <FloatingLeaf position={[-2, -2, -2]} color="#74c69d" speed={1.0} />

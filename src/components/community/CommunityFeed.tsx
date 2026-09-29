@@ -187,7 +187,11 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void loadPosts(); }, 0);
-    const openComposer = () => setShowForm(true);
+    const openComposer = (event: Event) => {
+      setShowForm(true);
+      const group = (event as CustomEvent<{ organismGroup?: OrganismGroup }>).detail?.organismGroup;
+      if (group && ORGANISM_GROUPS.includes(group)) setNewOrganismGroup(group);
+    };
     window.addEventListener("sununature:compose", openComposer);
     return () => { window.clearTimeout(timer); window.removeEventListener("sununature:compose", openComposer); };
   }, [loadPosts]);
@@ -252,6 +256,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       setNewOrganismGroup("PLANT");
       setNewRegion("Sénégal");
       setShowForm(false);
+      window.dispatchEvent(new CustomEvent("sununature:observation-published", { detail: { organismGroup: newOrganismGroup } }));
       await loadPosts();
     } catch (error) {
       setPostError(error instanceof Error ? error.message : "Publication impossible pour le moment.");

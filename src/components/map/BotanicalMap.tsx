@@ -35,7 +35,7 @@ interface BotanicalMapProps {
 }
 
 const regionColors: Record<string, string> = {
-  "Afrique de l'Ouest": "#2d6a4f",
+  "Afrique de l'Ouest": "#78b57c",
   "Afrique Centrale": "#40916c",
   "Afrique de l'Est": "#52b788",
   "Afrique du Nord": "#74c69d",
@@ -123,7 +123,7 @@ export default function BotanicalMap({ region, type, userLocation }: BotanicalMa
   };
 
   const getMarkerIcon = (loc: Location) => {
-    const color = regionColors[loc.region] || "#2d6a4f";
+    const color = regionColors[loc.region] || "#78b57c";
     return L.divIcon({
       className: "custom-marker",
       html: `
@@ -302,7 +302,7 @@ export default function BotanicalMap({ region, type, userLocation }: BotanicalMa
               <div className="flex items-start gap-3">
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border border-border bg-paper"
-                  style={{ color: regionColors[loc.region] || "#2d6a4f" }}
+                  style={{ color: regionColors[loc.region] || "#78b57c" }}
                 >
                   <Leaf className="w-5 h-5" />
                 </div>

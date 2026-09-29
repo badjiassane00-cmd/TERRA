@@ -93,7 +93,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
 function RegionCard({ region, index, onClick }: { region: Region; index: number; onClick: () => void }) {
   const colors: Record<string, string> = {
     "west-africa": "#4a9e6b",
-    "central-africa": "#2d6a4f",
+    "central-africa": "#78b57c",
     "east-africa": "#52b788",
     "north-africa": "#74c69d",
   };

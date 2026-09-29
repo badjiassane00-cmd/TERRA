@@ -4,23 +4,18 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import PhotoUpload from "@/components/PhotoUpload";
-import PlantResult from "@/components/PlantResult";
 import RegionalExhibition from "@/components/RegionalExhibition";
 import BotanicalBackground from "@/components/three/BotanicalBackground";
-import VoiceAssistant from "@/components/voice/VoiceAssistant";
-import ARView from "@/components/ar/ARView";
 import GamificationPanel from "@/components/gamification/GamificationPanel";
 import CommunityFeed from "@/components/community/CommunityFeed";
+import NotificationBell from "@/components/notifications/NotificationBell";
+import DailyNatureQuest from "@/components/community/DailyNatureQuest";
+import BiodiversityPulse from "@/components/community/BiodiversityPulse";
 import SmartReminders from "@/components/notifications/SmartReminders";
 import MyExhibitions from "@/components/exhibitions/MyExhibitions";
 import ResearchExport from "@/components/exhibitions/ResearchExport";
 import AcademicJournal from "@/components/academic/AcademicJournal";
 import PlantQuiz from "@/components/academic/PlantQuiz";
-import FieldSession from "@/components/academic/FieldSession";
-import AIPlantRecognition from "@/components/ai/AIPlantRecognition";
-import NearbySightings from "@/components/NearbySightings";
-import { recognizeLifeLocally } from "@/lib/local-life-recognition";
 import { type OrganismFilter } from "@/types/nature";
 import {
   Leaf,
@@ -33,19 +28,14 @@ import {
   LogIn,
   LogOut,
   ShieldCheck,
-  FlaskConical,
   Sparkles,
-  ChevronDown,
-  Zap,
   Crosshair,
-  Brain,
   Globe,
   MapPin,
   Bug,
   Bird,
   PawPrint,
   TreePine,
-  Compass,
   ArrowRight,
 } from "lucide-react";
 
@@ -76,38 +66,6 @@ const TrackingJournal = dynamic(() => import("@/components/journal/TrackingJourn
   ssr: false,
 });
 
-interface PlantIdentificationResult {
-  id: string;
-  scientific_name: string;
-  common_names: string[];
-  probability: number;
-  description?: string;
-  taxonomy?: {
-    family?: string;
-    genus?: string;
-    species?: string;
-  };
-  medicinal?: boolean;
-  edible_parts?: string[];
-  toxicity?: string[];
-  watering?: string;
-  sunlight?: string;
-  soil?: string;
-  growth_rate?: string;
-  disease_detection?: Array<{
-    disease: string;
-    confidence: number;
-    description: string;
-    treatment: string[];
-  }>;
-  similar_images?: Array<{
-    url: string;
-    similarity: number;
-  }>;
-  sources?: { provider: string; gbif?: string };
-  alternatives?: Array<{ scientific_name: string; common_names: string[]; probability: number }>;
-}
-
 interface User {
   id: string;
   email: string;
@@ -118,45 +76,15 @@ interface User {
 
 type AuthMode = "login" | "signup" | null;
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
-    },
-  },
-};
-
 export default function Home() {
-  const [isLoading, setIsLoading] = useState(false);
   const [organismFilter, setOrganismFilter] = useState<OrganismFilter>("ALL");
-  const [result, setResult] = useState<PlantIdentificationResult | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scanMode, setScanMode] = useState<"identify" | "disease" | "life">("identify");
-  const [treatmentMode, setTreatmentMode] = useState<"before" | "after">("before");
-  const [history, setHistory] = useState<Array<{ date: string; result: PlantIdentificationResult; imageUrl?: string }>>([]);
   const [user, setUser] = useState<User | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>(null);
   const [authForm, setAuthForm] = useState({ email: "", password: "", name: "", institution: "" });
   const [authError, setAuthError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [activeFieldSessionId, setActiveFieldSessionId] = useState<string | null>(null);
-  const [scrollY, setScrollY] = useState(0);
+  const [locationNotice, setLocationNotice] = useState("");
   const userLoaded = useRef(false);
 
   const loadInitialData = useCallback(() => {
@@ -187,27 +115,22 @@ export default function Home() {
       })
       .catch(() => {});
 
-    const savedHistory = localStorage.getItem("botanique_history");
-    if (savedHistory) {
-      try {
-        setHistory(JSON.parse(savedHistory));
-      } catch {}
-    }
   }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadInitialData();
 
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
   }, [loadInitialData]);
 
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV === "development") {
+      navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => void registration.unregister())).catch(() => {});
+      if ("caches" in window) caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith("sununature-" )).map((key) => caches.delete(key)))).catch(() => {});
+      return;
     }
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
   }, []);
 
   const handleAuth = async (action: "login" | "signup") => {
@@ -236,81 +159,13 @@ export default function Home() {
   };
 
   const enableLocation = () => {
-    if (!navigator.geolocation) {
-      setError("La géolocalisation n’est pas prise en charge par ce navigateur.");
-      return;
-    }
+    if (!navigator.geolocation) { setLocationNotice("La géolocalisation n’est pas disponible."); return; }
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => setUserLocation({ lat: coords.latitude, lng: coords.longitude }),
-      () => setError("Position non disponible. Vous pouvez continuer sans la partager."),
+      ({ coords }) => { setUserLocation({ lat: coords.latitude, lng: coords.longitude }); setLocationNotice("Position ajoutée à votre carte."); },
+      () => setLocationNotice("Position non disponible. Vous pouvez explorer sans la partager."),
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 },
     );
   };
-
-  const handleImageUpload = useCallback(async (file: File) => {
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      let data: { result?: PlantIdentificationResult; candidates?: Array<{ scientific_name: string; common_names: string[]; probability: number }>; error?: string };
-      if (scanMode === "life") {
-        const predictions = await recognizeLifeLocally(file);
-        const response = await fetch("/api/identify-life", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ predictions }),
-        });
-        data = await response.json();
-        if (!response.ok) throw new Error(data.error || "L’identification du vivant a échoué.");
-      } else {
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("mode", scanMode);
-      if (treatmentMode === "after") {
-        formData.append("treatmentStage", "after");
-      }
-      if (userLocation) {
-        formData.append("lat", String(userLocation.lat));
-        formData.append("lng", String(userLocation.lng));
-      }
-      if (activeFieldSessionId) {
-        formData.append("sessionId", activeFieldSessionId);
-      }
-
-      const response = await fetch("/api/identify", {
-        method: "POST",
-        body: formData,
-      });
-
-      data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de l'analyse");
-      }
-      }
-
-      if (data.result?.scientific_name) {
-        const plantResult: PlantIdentificationResult = { ...data.result, alternatives: scanMode === "life" ? data.candidates : undefined };
-
-        setResult(plantResult);
-
-        const newEntry = {
-          date: new Date().toISOString(),
-          result: plantResult,
-          imageUrl: preview || undefined,
-        };
-        const updatedHistory = [newEntry, ...history].slice(0, 20);
-        setHistory(updatedHistory);
-        localStorage.setItem("botanique_history", JSON.stringify(updatedHistory));
-      } else {
-        throw new Error("Aucun résultat. Essayez avec une image plus claire et bien cadrée.");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [scanMode, treatmentMode, userLocation, activeFieldSessionId, preview, history]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -333,14 +188,14 @@ export default function Home() {
               {["fil", "identification", "carte"].map((section, index) => (
                 <motion.a
                   key={section}
-                  href={`#${section}`}
+                  href={section === "identification" ? "/identifier" : `#${section}`}
                   className="text-foreground/70 hover:text-primary transition-colors"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -2 }}
                 >
-                  {section === "fil" ? "Découvrir" : section === "identification" ? "Observer" : "Carte"}
+                  {section === "fil" ? "Découvrir" : section === "identification" ? "Identifier" : "Carte"}
                 </motion.a>
               ))}
               {user ? (
@@ -349,6 +204,7 @@ export default function Home() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
+                  <NotificationBell />
                   <div className="flex items-center gap-2 text-sm">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       {user.role === "institution" ? (
@@ -408,16 +264,17 @@ export default function Home() {
                 {["fil", "identification", "carte"].map((section) => (
                   <a
                     key={section}
-                    href={`#${section}`}
+                    href={section === "identification" ? "/identifier" : `#${section}`}
                     className="block text-foreground/70 hover:text-primary"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {section === "fil" ? "Découvrir" : section === "identification" ? "Observer" : "Carte"}
+                    {section === "fil" ? "Découvrir" : section === "identification" ? "Identifier" : "Carte"}
                   </a>
                 ))}
                 {user ? (
                   <div className="space-y-2">
                     <Link href={`/profile/${user.id}`} className="block font-medium text-foreground">Ma galerie · {user.name}</Link>
+                    <Link href="/notifications" className="block font-medium text-foreground">Notifications et alertes</Link>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-2 text-foreground/70"
@@ -579,7 +436,7 @@ export default function Home() {
                 <button type="button" onClick={() => { window.dispatchEvent(new Event("sununature:compose")); document.getElementById("fil")?.scrollIntoView({ behavior: "smooth" }); }} className="wild-button-primary"><Camera size={18} /> Partager une observation</button>
                 <a href="#fil" className="wild-button-quiet">Explorer les découvertes <ArrowRight size={16} /></a>
               </div>
-              <div className="wild-community-proof"><div className="wild-avatar-stack"><span>🌿</span><span>🦋</span><span>🐦</span><span>🌍</span></div><span>La nature n’a pas de frontières.<br /><strong>Votre regard enrichit la science.</strong></span></div>
+              <div className="wild-community-proof"><div className="wild-avatar-stack"><span>🌿</span><span>🦋</span><span>🐦</span></div><span>La nature n’a pas de frontières.<br /><strong>Votre regard enrichit la science.</strong></span></div>
             </div>
             <div className="wild-hero-art" aria-label="La biodiversité africaine en trois dimensions">
               <div className="wild-art-label"><span className="wild-live-dot" /> CARNET DE TERRAIN · SÉNÉGAL</div>
@@ -590,6 +447,10 @@ export default function Home() {
           </div>
           <div className="wild-stats-strip"><span><strong>Plantes</strong> médecine, forêt, savane</span><i /><span><strong>Insectes</strong> pollinisateurs & alliés</span><i /><span><strong>Oiseaux, mammifères</strong> et tout le vivant</span><i /><span className="wild-location"><MapPin size={15} /> De Dakar à Nairobi</span></div>
         </div>
+      </section>
+
+      <section className="wild-pulse-wrap px-4" aria-label="État de la biodiversité observée">
+        <div className="mx-auto max-w-7xl"><BiodiversityPulse onSelectGroup={(group) => { setOrganismFilter(group); document.getElementById("fil")?.scrollIntoView({ behavior: "smooth" }); }} /></div>
       </section>
 
       <section id="fil" className="wild-discover px-4 py-10 md:py-14">
@@ -605,219 +466,16 @@ export default function Home() {
              ].map(({ name, detail, icon: Icon, tone, group }) => <a href="#fil" onClick={() => setOrganismFilter(group)} key={name} className={`wild-category ${tone}`}><span className="wild-category-icon"><Icon size={21} /></span><span><strong>{name}</strong><small>{detail}</small></span><ArrowRight size={15} className="wild-category-arrow" /></a>)}
           </div>
           <div className="wild-feed-layout">
-            <div className="wild-feed-main"><div className="wild-feed-tabs"><span className="active">Pour vous</span><a href="#carte">À proximité</a><a href="#identification">À identifier</a><button onClick={() => { window.dispatchEvent(new Event("sununature:compose")); document.getElementById("fil")?.scrollIntoView({ behavior: "smooth" }); }}><Camera size={16} /> Publier</button></div><CommunityFeed currentUserId={user?.id} currentUserRole={user?.role} groupFilter={organismFilter} onGroupFilterChange={setOrganismFilter} /></div>
+            <div className="wild-feed-main"><div className="wild-feed-tabs"><span className="active">Pour vous</span><a href="#carte">À proximité</a><Link href="/identifier">À identifier</Link><button onClick={() => { window.dispatchEvent(new Event("sununature:compose")); document.getElementById("fil")?.scrollIntoView({ behavior: "smooth" }); }}><Camera size={16} /> Publier</button></div><CommunityFeed currentUserId={user?.id} currentUserRole={user?.role} groupFilter={organismFilter} onGroupFilterChange={setOrganismFilter} /></div>
             <aside className="wild-side-column">
-              <div className="wild-side-card wild-mission"><span className="wild-side-icon"><Compass size={20} /></span><span className="wild-eyebrow dark">MISSION DU JOUR</span><h3>Regardez de plus près.</h3><p>Un arbre en fleur, un papillon de passage ou un chant d’oiseau : votre observation peut aider la recherche.</p><a href="#identification">Commencer une observation <ArrowRight size={15} /></a></div>
+              <DailyNatureQuest userId={user?.id} />
               <div className="wild-side-card wild-field-note"><span className="wild-eyebrow dark">LE CARNET AFRICAIN</span><div className="wild-note-art"><span>🌱</span><span>🦋</span><span>🐝</span></div><h3>Le vivant, dans toutes ses langues.</h3><p>Partagez les noms locaux et les savoirs transmis dans votre communauté.</p><button onClick={() => user ? (window.dispatchEvent(new Event("sununature:compose")), document.getElementById("fil")?.scrollIntoView({ behavior: "smooth" })) : setAuthMode("login")}><UserPlus size={15} /> {user ? "Partager une observation" : "Rejoindre la communauté"}</button></div>
             </aside>
           </div>
         </div>
       </section>
 
-      <section id="identification" className="py-20 px-4 bg-gradient-to-b from-background to-white">
-        <motion.div
-          className="max-w-7xl mx-auto"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <motion.div className="text-center mb-12" variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm mb-4 border border-primary/10">
-              <Zap className="w-4 h-4" />
-              IA Puissante
-            </div>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-              {scanMode === "life" ? "Reconnaissez le vivant" : scanMode === "disease" ? "Examinez vos plantes" : "Identifiez les plantes"}
-            </h2>
-            <p className="text-base text-foreground/70 max-w-2xl mx-auto">
-              {scanMode === "life" ? "Photographiez un insecte, un animal, un champignon ou une plante. L’analyse visuelle s’effectue directement sur votre appareil." : scanMode === "disease" ? "Photographiez une plante pour analyser ses symptômes." : "Photographiez une plante, une fleur ou un arbre pour obtenir une proposition d’identification botanique."}
-            </p>
-          </motion.div>
 
-          <motion.div className="flex flex-wrap justify-center gap-4 mb-8" variants={itemVariants}>
-            {[
-              { mode: "identify" as const, label: "Plantes", icon: Leaf, color: "primary" },
-              { mode: "life" as const, label: "Insectes & animaux", icon: Sparkles, color: "primary" },
-              { mode: "disease" as const, label: "Maladies des plantes", icon: FlaskConical, color: "terracotta" },
-            ].map((option) => (
-              <motion.button
-                key={option.mode}
-                onClick={() => setScanMode(option.mode)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-colors border ${
-                  scanMode === option.mode
-                    ? option.color === "primary"
-                      ? "bg-primary text-white border-primary"
-                      : "bg-terracotta text-white border-terracotta"
-                    : option.color === "primary"
-                      ? "bg-primary/10 text-primary border-border hover:bg-primary/20"
-                      : "bg-terracotta/10 text-terracotta border-border hover:bg-terracotta/20"
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <option.icon className="w-5 h-5" />
-                {option.label}
-              </motion.button>
-            ))}
-            <button
-              type="button"
-              onClick={enableLocation}
-              className={`flex items-center gap-2 px-4 py-3 rounded-full text-sm border transition-colors ${userLocation ? "bg-primary/10 text-primary border-primary/30" : "bg-white text-foreground/70 border-border hover:border-primary"}`}
-            >
-              <Crosshair className="w-4 h-4" />
-              {userLocation ? "Position activée" : "Affiner avec ma position"}
-            </button>
-            {scanMode === "life" && <p className="mb-4 text-center text-xs text-foreground/60">MobileNet classe les catégories ImageNet les plus proches · la photo reste sur cet appareil · espèces africaines rares parfois non reconnues</p>}
-            {scanMode === "disease" && (
-              <motion.div
-                className="flex items-center gap-2"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                <span className="text-sm font-medium text-foreground/70">État:</span>
-                {[
-                  { value: "before" as const, label: "Avant traitement" },
-                  { value: "after" as const, label: "Après traitement" },
-                ].map((t) => (
-                  <button
-                    key={t.value}
-                    onClick={() => setTreatmentMode(t.value)}
-                    className={`herbarium-label cursor-pointer ${
-                      treatmentMode === t.value ? "bg-primary text-white border-primary" : ""
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            <motion.div variants={itemVariants}>
-              <PhotoUpload onImageUpload={handleImageUpload} isLoading={isLoading} onPreviewChange={setPreview} />
-              {scanMode === "disease" && (
-                <motion.div
-                  className="mt-4 p-4 border border-terracotta/30 bg-terracotta/5 rounded-xl"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                >
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-terracotta mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-terracotta">Mode diagnostic</p>
-                      <p className="text-sm text-terracotta/80 mt-1">
-                        L&apos;IA analysera les signes de maladie sur votre plante et proposera des traitements.
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-              {error && (
-                <motion.div
-                  className="mt-4 p-4 border border-terracotta/30 bg-terracotta/5 rounded-xl"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  <p className="text-terracotta text-sm">{error}</p>
-                </motion.div>
-              )}
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <PlantResult result={result} isLoading={isLoading} previewUrl={preview} userId={user?.id} userRole={user?.role} mode={scanMode} />
-              <NearbySightings scientificName={result?.scientific_name} location={userLocation} />
-            </motion.div>
-          </div>
-        </motion.div>
-      </section>
-
-      {history.length > 0 && (
-        <section className="py-16 px-4 bg-paper">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="font-serif text-2xl md:text-3xl font-bold text-foreground mb-2">
-                  Historique & comparaison
-                </h2>
-                <p className="text-sm text-foreground/60">
-                  Suivez l&apos;évolution de vos plantes dans le temps.
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setHistory([]);
-                  localStorage.removeItem("botanique_history");
-                }}
-                className="herbarium-button text-xs"
-              >
-                Réinitialiser
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {history.slice(0, 8).map((entry, index) => (
-                <div
-                  key={index}
-                  className="herbarium-card rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => setResult(entry.result)}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full border border-border bg-paper flex items-center justify-center">
-                      <Leaf className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {entry.result.scientific_name}
-                      </p>
-                      <p className="text-xs text-foreground/50">
-                        {new Date(entry.date).toLocaleDateString("fr-FR")}
-                      </p>
-                    </div>
-                  </div>
-                  {entry.imageUrl && (
-                    <img
-                      src={entry.imageUrl}
-                      alt=""
-                      className="w-full h-24 object-cover rounded-lg border border-border mb-2"
-                    />
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="herbarium-label text-xs">
-                      {Math.round(entry.result.probability * 100)}%
-                    </span>
-                    {entry.result.disease_detection && entry.result.disease_detection.length > 0 && (
-                      <span className="text-xs text-terracotta font-medium">
-                        {entry.result.disease_detection.length} maladie(s)
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="py-16 px-4 bg-gradient-to-b from-background to-paper">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm mb-4 border border-primary/10">
-              <Brain className="w-4 h-4" />
-              Intelligence Artificielle
-            </div>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Reconnaissance Botanique par IA
-            </h2>
-            <p className="text-base text-foreground/70 max-w-2xl mx-auto">
-              Modèle entraînable qui s&apos;améliore avec vos contributions.
-              Chaque identification enrichit la base de données collective.
-            </p>
-          </div>
-
-          <AIPlantRecognition />
-        </div>
-      </section>
 
       <section className="py-16 px-4 bg-paper">
         <div className="max-w-7xl mx-auto">
@@ -835,16 +493,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <VoiceAssistant
-              onResult={(text) => console.log("Voice result:", text)}
-              onPlantIdentified={(plantName) => console.log("Identified:", plantName)}
-            />
-            <ARView
-              onCapture={(file) => {
-                handleImageUpload(file);
-              }}
-            />
+          <div className="nature-modern-shortcuts">
+            <Link href="/identifier" className="nature-modern-shortcut nature-modern-shortcut-scan"><span>✳ STUDIO IA</span><strong>Identifier une rencontre</strong><small>Plantes · Insectes · Faune · Diagnostic</small><ArrowRight size={18} /></Link>
+            <Link href="/observations" className="nature-modern-shortcut nature-modern-shortcut-community"><span>✦ COMMUNAUTÉ</span><strong>Explorer les galeries</strong><small>Des observations partagées depuis l’Afrique</small><ArrowRight size={18} /></Link>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -864,11 +515,6 @@ export default function Home() {
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
               <AcademicJournal userId={user.id} />
               <ResearchExport userId={user.id} userRole={user.role} />
-            </div>
-          )}
-          {user && (
-            <div className="mt-8">
-              <FieldSession userId={user.id} onSessionChange={setActiveFieldSessionId} />
             </div>
           )}
           <div className="mt-8">
@@ -905,6 +551,8 @@ export default function Home() {
             <p className="text-base text-foreground/70 max-w-2xl mx-auto">
               Explorez les espaces naturels et les lieux de découverte en Afrique de l’Ouest.
             </p>
+            <button className="nature-map-location-button" onClick={enableLocation}><Crosshair size={15} /> {userLocation ? "Position activée" : "Me situer sur la carte"}</button>
+            {locationNotice && <p className="nature-location-notice" role="status">{locationNotice}</p>}
           </div>
 
           <BotanicalMap
