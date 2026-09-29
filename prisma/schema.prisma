@@ -15,6 +15,12 @@ model User {
   institution   String?
   bio           String?
   avatarUrl     String?
+  phoneNumber   String?
+  notifyEmail   Boolean   @default(false)
+  notifySms     Boolean   @default(false)
+  notifyWhatsApp Boolean  @default(false)
+  smsConsentAt  DateTime?
+  whatsAppConsentAt DateTime?
   isDemo        Boolean   @default(false)
   followers     UserFollow[] @relation("followed")
   following     UserFollow[] @relation("follower")
@@ -25,6 +31,7 @@ model User {
   communityPosts CommunityPost[]
   communityComments CommunityComment[]
   communityIdentifications CommunityIdentification[]
+  notifications Notification[]
   exhibitions   Exhibition[]
   fieldSessions FieldSession[]
   createdAt     DateTime  @default(now())
@@ -447,4 +454,19 @@ model UserFollow {
   @@unique([followerId, followedId])
   @@index([followedId, createdAt])
   @@map("user_follows")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  href      String
+  kind      String   @default("community")
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
 }

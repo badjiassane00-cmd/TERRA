@@ -8,8 +8,8 @@
 // est du JS valide, et n'essaie plus de mettre en cache des noms de
 // fichiers Next.js (hashés à chaque build, donc jamais stables).
 
-const SHELL_CACHE = "sununature-shell-v3";
-const API_CACHE = "sununature-api-v3";
+const SHELL_CACHE = "sununature-shell-v4";
+const API_CACHE = "sununature-api-v4";
 
 const SHELL_URLS = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 

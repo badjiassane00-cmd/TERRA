@@ -31,7 +31,9 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Connexion impossible pour le moment.");
-      router.replace("/");
+      const requestedPath = new URLSearchParams(window.location.search).get("next");
+      const destination = requestedPath?.startsWith("/") && !requestedPath.startsWith("//") ? requestedPath : "/";
+      router.replace(destination);
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");

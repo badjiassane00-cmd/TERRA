@@ -116,22 +116,6 @@ export default function SmartReminders({ userId }: SmartRemindersProps) {
     }
   };
 
-  const requestNotificationPermission = async () => {
-    if ("Notification" in window) {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        new Notification("SunuNature", {
-          body: "Les notifications sont activées pour vos rappels botaniques.",
-          icon: "/favicon.ico",
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    requestNotificationPermission();
-  }, []);
-
   if (authRequired) {
     return (
       <div className="herbarium-card rounded-xl p-6 text-center">
