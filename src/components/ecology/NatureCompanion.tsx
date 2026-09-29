@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import SeasonalCalendar from "@/components/ecology/SeasonalCalendar";
 import PollinatorNetwork from "@/components/ecology/PollinatorNetwork";
+import LocalBiodiversityAlerts from "@/components/ecology/LocalBiodiversityAlerts";
 
 type EcologyData = {
   calendar: Array<{ month: number; count: number; speciesCount: number }>;
