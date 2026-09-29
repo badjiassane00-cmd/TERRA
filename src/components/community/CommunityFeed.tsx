@@ -52,6 +52,12 @@ const FIELD_GUIDANCE: Record<OrganismGroup, { title: string; text: string }> = {
   OTHER: { title: "Ajoutez une échelle et l’habitat", text: "Un repère de taille et une vue du milieu rendent votre observation plus utile aux naturalistes." },
 };
 
+interface PendingObservation {
+  id: string;
+  queuedAt: string;
+  body: Record<string, unknown>;
+}
+
 interface CommunityFeedProps {
   currentUserId?: string;
   currentUserRole?: "user" | "admin" | "institution";
@@ -157,6 +163,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
+  const [pendingObservations, setPendingObservations] = useState<PendingObservation[]>([]);
   const [now] = useState(() => Date.now());
 
   const loadPosts = useCallback(async () => {
@@ -201,7 +208,13 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { void loadPosts(); }, 0);
+    const timer = window.setTimeout(() => {
+      try {
+        const saved = localStorage.getItem("sununature:pending-observations");
+        if (saved) setPendingObservations(JSON.parse(saved) as PendingObservation[]);
+      } catch { localStorage.removeItem("sununature:pending-observations"); }
+      void loadPosts();
+    }, 0);
     const openComposer = (event: Event) => {
       setShowForm(true);
       const group = (event as CustomEvent<{ organismGroup?: OrganismGroup }>).detail?.organismGroup;
@@ -210,6 +223,29 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     window.addEventListener("sununature:compose", openComposer);
     return () => { window.clearTimeout(timer); window.removeEventListener("sununature:compose", openComposer); };
   }, [loadPosts]);
+
+  useEffect(() => {
+    const synchronize = async () => {
+      if (!navigator.onLine) return;
+      const saved = localStorage.getItem("sununature:pending-observations");
+      if (!saved) return;
+      let queue: PendingObservation[];
+      try { queue = JSON.parse(saved) as PendingObservation[]; } catch { localStorage.removeItem("sununature:pending-observations"); return; }
+      const remaining: PendingObservation[] = [];
+      for (const item of queue) {
+        try {
+          const response = await fetch("/api/community", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(item.body) });
+          if (!response.ok) remaining.push(item);
+        } catch { remaining.push(item); }
+      }
+      localStorage.setItem("sununature:pending-observations", JSON.stringify(remaining));
+      setPendingObservations(remaining);
+      if (remaining.length < queue.length) { window.dispatchEvent(new Event("sununature:observation-published")); await loadPosts(); }
+    };
+    window.addEventListener("online", synchronize);
+    const timer = window.setTimeout(synchronize, 0);
+    return () => { window.removeEventListener("online", synchronize); window.clearTimeout(timer); };
+  }, [loadPosts, currentUserId]);
 
   const toggleLike = async (postId: string) => {
     if (!currentUserId) { router.push("/connexion"); return; }
@@ -241,43 +277,43 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     if (!newSpeciesName.trim() || !newPost.trim() || !newPhoto) return;
     setPosting(true);
     setPostError(null);
+    const clientSubmissionId = crypto.randomUUID();
+    const body = {
+      plantName: newSpeciesName.trim(), organismGroup: newOrganismGroup,
+      scientificName: newScientificName.trim(), imageUrl: newPhoto.imageUrl,
+      thumbnailUrl: newPhoto.thumbnailUrl, region: newRegion, description: newPost,
+      observedAt: newObservedAt, latitude: newLocation?.latitude ?? null,
+      longitude: newLocation?.longitude ?? null, locationVisibility, clientSubmissionId,
+    };
+    const queueOffline = (): boolean => {
+      if (pendingObservations.length >= 2) return false;
+      const queue = [...pendingObservations, { id: clientSubmissionId, queuedAt: new Date().toISOString(), body }];
+      try { localStorage.setItem("sununature:pending-observations", JSON.stringify(queue)); }
+      catch { return false; }
+      setPendingObservations(queue);
+      setNewPost(""); setNewSpeciesName(""); setNewScientificName(""); setNewPhoto(null); setNewLocation(null);
+      setNewObservedAt(new Date().toISOString().slice(0, 10)); setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("Sénégal");
+      setShowForm(false);
+      return true;
+    };
     try {
       const res = await fetch("/api/community", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plantName: newSpeciesName.trim(),
-          organismGroup: newOrganismGroup,
-          scientificName: newScientificName.trim(),
-          imageUrl: newPhoto.imageUrl,
-          thumbnailUrl: newPhoto.thumbnailUrl,
-          region: newRegion,
-          description: newPost,
-          observedAt: newObservedAt,
-          latitude: newLocation?.latitude ?? null,
-          longitude: newLocation?.longitude ?? null,
-          locationVisibility,
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Publication impossible pour le moment.");
-      setNewPost("");
-      setNewSpeciesName("");
-      setNewScientificName("");
-      setNewObservedAt(new Date().toISOString().slice(0, 10));
-      setNewPhoto(null);
-      setNewLocation(null);
-      setLocationVisibility("APPROXIMATE");
-      setNewOrganismGroup("PLANT");
-      setNewRegion("Sénégal");
+      setNewPost(""); setNewSpeciesName(""); setNewScientificName("");
+      setNewObservedAt(new Date().toISOString().slice(0, 10)); setNewPhoto(null); setNewLocation(null);
+      setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("Sénégal");
       setShowForm(false);
       window.dispatchEvent(new CustomEvent("sununature:observation-published", { detail: { organismGroup: newOrganismGroup } }));
       await loadPosts();
     } catch (error) {
-      setPostError(error instanceof Error ? error.message : "Publication impossible pour le moment.");
-    } finally {
-      setPosting(false);
-    }
+      if (!navigator.onLine || error instanceof TypeError) {
+        const saved = queueOffline();
+        setPostError(saved ? "Observation enregistrée sur cet appareil. Elle sera publiée au retour de la connexion." : "La file hors ligne est pleine ou le stockage est saturé. Rétablissez la connexion avant de réessayer.");
+      } else setPostError(error instanceof Error ? error.message : "Publication impossible pour le moment.");
+    } finally { setPosting(false); }
   };
 
   const moderate = async (postId: string, action: "verify" | "remove") => {
@@ -395,6 +431,8 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
           </div>
         </div>
       )}
+
+      {pendingObservations.length > 0 && <aside className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4" aria-live="polite"><strong className="text-sm">{pendingObservations.length} observation(s) en attente de connexion</strong><p className="mt-1 text-xs text-foreground/60">Elles seront envoyées automatiquement quand le réseau reviendra.</p><ul className="mt-2 space-y-1">{pendingObservations.map((item) => <li key={item.id} className="flex items-center justify-between gap-3 text-xs"><span className="truncate">{String(item.body.plantName)} · enregistrée le {new Date(item.queuedAt).toLocaleString("fr-FR")}</span><button type="button" className="text-terracotta underline" onClick={() => { const next = pendingObservations.filter((pending) => pending.id !== item.id); setPendingObservations(next); localStorage.setItem("sununature:pending-observations", JSON.stringify(next)); }}>Supprimer</button></li>)}</ul></aside>}
 
       <div className="nature-filter-row">
         <button type="button" onClick={() => onGroupFilterChange?.("ALL")} className={`nature-filter-chip ${groupFilter === "ALL" ? "active" : ""}`}>Tout</button>

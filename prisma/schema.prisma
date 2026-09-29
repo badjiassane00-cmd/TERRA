@@ -198,6 +198,7 @@ model CommunityPost {
   longitude Float?
   locationVisibility ObservationLocationVisibility @default(APPROXIMATE)
   sourceUrl String? @unique
+  clientSubmissionId String? @unique
   sourceObserver String?
   photoAttribution String?
   photoLicense String?

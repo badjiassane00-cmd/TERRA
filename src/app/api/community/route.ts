@@ -95,9 +95,16 @@ export async function POST(request: Request) {
     const locationVisibility = typeof requestedVisibility === "string" && LOCATION_VISIBILITIES.includes(requestedVisibility as (typeof LOCATION_VISIBILITIES)[number])
       ? (requestedVisibility as (typeof LOCATION_VISIBILITIES)[number])
       : "APPROXIMATE";
+    const requestedSubmissionId = typeof body.clientSubmissionId === "string" ? body.clientSubmissionId : null;
+    const clientSubmissionId = requestedSubmissionId && /^[a-zA-Z0-9_-]{8,80}$/.test(requestedSubmissionId) ? requestedSubmissionId : null;
+    if (clientSubmissionId) {
+      const existing = await prisma.communityPost.findUnique({ where: { clientSubmissionId } });
+      if (existing?.userId === authorId) return NextResponse.json({ observation: { ...existing, ...publicCoordinates(existing, authorId) }, duplicate: true });
+      if (existing) return NextResponse.json({ error: "Identifiant de publication déjà utilisé." }, { status: 409 });
+    }
 
     const post = await prisma.communityPost.create({
-      data: { userId: authorId, plantName, scientificName, imageUrl, thumbnailUrl, region, description, organismGroup, observedAt, latitude, longitude, locationVisibility },
+      data: { userId: authorId, plantName, scientificName, imageUrl, thumbnailUrl, region, description, organismGroup, observedAt, latitude, longitude, locationVisibility, clientSubmissionId },
     });
     return NextResponse.json({ observation: { ...post, ...publicCoordinates(post, authorId) } }, { status: 201 });
   } catch (error) {
