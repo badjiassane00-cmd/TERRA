@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, CalendarDays, ExternalLink, LayoutGrid, List, LoaderCircle, MapPin, MapPinned, Search, SlidersHorizontal } from "lucide-react";
+import BackLink from "@/components/navigation/BackLink";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismGroup } from "@/types/nature";
 import type { ObservationPin } from "./ObservationMap";
 
@@ -84,7 +86,7 @@ export default function ObservationExplorer() {
     <main className="observations-explorer">
       <header className="observations-explorer-heading">
         <div>
-          <Link href="/" className="observations-back-link">← SunuNature</Link>
+          <BackLink href="/" label="Retour à l’accueil" className="observations-back-link" />
           <span className="observation-overline"><span /> LE CARNET DU VIVANT</span>
           <h1>Observations de la nature</h1>
           <p>Explorez les découvertes naturalistes en Afrique et les histoires de terrain partagées par la communauté.</p>
@@ -114,7 +116,7 @@ export default function ObservationExplorer() {
       {!loading && !error && visible.length === 0 && <div className="observation-empty"><span>🌱</span><h2>Le carnet attend votre regard.</h2><p>Aucune observation ne correspond encore à ces filtres.</p><Link href="/connexion">Partager la première <ArrowRight size={16} /></Link></div>}
       {!loading && visible.length > 0 && view !== "map" && <div className={`observation-card-grid ${view === "list" ? "list-view" : ""}`}>
         {visible.map((observation) => <Link className="explorer-observation-card" href={`/observations/${observation.id}`} key={observation.id}>
-          <div className="explorer-observation-photo"><img src={observation.imageUrl} alt={observation.plantName} /><span>{ORGANISM_LABELS[observation.organismGroup]}</span></div>
+          <div className="explorer-observation-photo"><Image fill sizes="(max-width: 650px) 100vw, 33vw" unoptimized src={observation.imageUrl} alt={observation.plantName} /><span>{ORGANISM_LABELS[observation.organismGroup]}</span></div>
           <div className="explorer-observation-copy"><div className="explorer-observation-meta"><span><MapPin size={13} />{observation.region}</span><span><CalendarDays size={13} />{observation.observedAt ? new Date(observation.observedAt).toLocaleDateString("fr-FR") : "Récemment"}</span></div><h2>{observation.plantName}</h2>{observation.scientificName && <p className="explorer-scientific-name">{observation.scientificName}</p>}<p className="explorer-observation-description">{observation.description}</p><span className="explorer-observer">Observé par <strong>{observation.user.name}</strong></span>{observation.source === "iNaturalist" && <small className="observation-photo-credit">iNaturalist · {observation.photoAttribution}{observation.photoLicense ? ` · ${observation.photoLicense}` : ""}</small>}</div>
         </Link>)}
       </div>}

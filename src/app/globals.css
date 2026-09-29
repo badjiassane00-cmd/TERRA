@@ -530,3 +530,27 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .nature-field-insight>a{display:inline-flex;align-items:center;gap:5px;justify-self:start;margin-top:3px;color:#347448;font-size:9px;font-weight:800;text-decoration:none}
 @media(max-width:900px){.nature-social-post{grid-template-columns:minmax(0,1fr) minmax(220px,.95fr)}.nature-post-body{padding:14px}}
 @media(max-width:680px){.nature-social-post{grid-template-columns:minmax(0,1fr)}.nature-post-header{grid-column:1;grid-row:1}.nature-post-photo{grid-column:1;grid-row:2;min-height:0;aspect-ratio:1/1}.nature-post-body{grid-column:1;grid-row:3;padding:8px 14px 16px}}
+
+
+/* Actions sociales naturalistes et fiche photo sans zone laissée vide. */
+.nature-post-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:4px 0 10px}
+.nature-post-actions .nature-action-like,.nature-post-actions .nature-action-comment,.nature-post-actions .nature-action-share{display:inline-flex;width:auto;height:36px;align-items:center;justify-content:center;gap:7px;border:1px solid #e5ecdf;border-radius:999px;background:#f8faf6;padding:0 11px;color:#46634c;font-size:9px;font-weight:750;text-decoration:none;white-space:nowrap;transition:background .18s,border-color .18s,transform .18s}
+.nature-post-actions .nature-action-like:hover,.nature-post-actions .nature-action-comment:hover,.nature-post-actions .nature-action-share:hover{transform:translateY(-1px);border-color:#bfd6b9;background:#eff6eb}
+.nature-post-actions .nature-action-like.liked{border-color:#e9c9bf;background:#fff3ed;color:#a54f40}
+.nature-post-actions .nature-action-like svg,.nature-post-actions .nature-action-comment svg,.nature-post-actions .nature-action-share svg{width:16px;height:16px}
+.nature-share-notice{margin:0 0 8px;color:#38754c;font-size:9px;font-weight:700}
+.nature-observation-record{display:grid;gap:11px;margin-top:13px;border:1px solid #e5ecdf;border-radius:12px;background:linear-gradient(145deg,#f8faf5,#f0f6ec);padding:13px}
+.nature-observation-record-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nature-observation-record-heading>span:first-child{display:inline-flex;align-items:center;gap:6px;color:#577b59;font-size:8px;font-weight:850;letter-spacing:.12em}
+.nature-observation-record-heading>span:last-child{border-radius:999px;padding:5px 8px;font-size:8px;font-weight:750}
+.nature-observation-record-heading .confirmed{background:#e4f1e4;color:#33764b}.nature-observation-record-heading .pending{background:#f8f0df;color:#987138}
+.nature-observation-record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.nature-observation-record-grid>div{display:grid;gap:4px;min-width:0;border-radius:8px;background:#ffffffb8;padding:8px}
+.nature-observation-record-grid small{color:#879388;font-size:7px;font-weight:800;letter-spacing:.08em}
+.nature-observation-record-grid strong{overflow-wrap:anywhere;color:#3d5742;font-size:9px;font-weight:700;line-height:1.4}
+.nature-observation-record>a{display:inline-flex;align-items:center;gap:5px;justify-self:start;color:#34744b;font-size:9px;font-weight:800;text-decoration:none}
+.observation-author-avatar{overflow:hidden;text-decoration:none}.observation-author-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.observation-taxon-stats .observation-appreciate-button,.observation-taxon-stats>a{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:0;color:#58745d;font:inherit;font-size:9px;text-decoration:none;cursor:pointer}
+.observation-taxon-stats .observation-appreciate-button strong{border-radius:999px;background:#eef4e9;padding:4px 7px;color:#3a6f48;font-size:8px}
+.observation-taxon-stats .observation-appreciate-button.liked{color:#a54f40}.observation-taxon-stats .observation-appreciate-button:disabled{opacity:.6;cursor:wait}
+@media(max-width:680px){.nature-post-actions{gap:6px}.nature-post-actions .nature-action-like,.nature-post-actions .nature-action-comment,.nature-post-actions .nature-action-share{height:33px;gap:5px;padding:0 9px;font-size:8px}.nature-observation-record{padding:10px}.nature-observation-record-grid{gap:6px}.observation-share-button{font-size:8px;padding:8px 9px}}

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, CalendarDays, LockKeyhole, Bookmark, Send, Sparkles, ArrowRight } from "lucide-react";
+import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, Sparkles, ArrowRight } from "lucide-react";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismFilter, type OrganismGroup } from "@/types/nature";
 
 interface CommunityPost {
@@ -164,6 +164,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [pendingObservations, setPendingObservations] = useState<PendingObservation[]>([]);
+  const [shareNotice, setShareNotice] = useState<{ postId: string; message: string } | null>(null);
   const [now] = useState(() => Date.now());
 
   const loadPosts = useCallback(async () => {
@@ -260,6 +261,25 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       setPosts((prev) => prev.map((post) => post.id === postId ? { ...post, liked: result.liked, likes: result.likes } : post));
     } catch {
       setPosts((prev) => prev.map((post) => post.id === postId ? before : post));
+    }
+  };
+
+  const shareObservation = async (post: CommunityPost) => {
+    const url = `${window.location.origin}/observations/${post.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${post.plantName} · SunuNature`, text: `Une rencontre avec ${post.plantName} observée au ${post.region}.`, url });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        throw new Error("Le partage n’est pas disponible sur cet appareil.");
+      }
+      setShareNotice({ postId: post.id, message: "Fiche naturaliste partagée" });
+      window.setTimeout(() => setShareNotice((current) => current?.postId === post.id ? null : current), 2400);
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      setShareNotice({ postId: post.id, message: error instanceof Error ? error.message : "Partage impossible." });
+      window.setTimeout(() => setShareNotice((current) => current?.postId === post.id ? null : current), 3000);
     }
   };
 
@@ -465,15 +485,28 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
               <div className="nature-photo-place"><MapPin size={13} />{post.region}</div>
             </div>
             <div className="nature-post-body">
-              <div className="nature-post-actions"><button aria-label={post.liked ? "Retirer la mention j’aime" : "Aimer cette observation"} onClick={() => void toggleLike(post.id)} className={post.liked ? "liked" : ""}><Heart className={post.liked ? "fill-current" : ""} /></button><Link href={`/observations/${post.id}#discussion`} aria-label="Commenter"><MessageCircle /></Link><button aria-label="Partager cette observation" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/observations/${post.id}`)}><Send /></button><Link className="nature-save-action" href={`/observations/${post.id}`} aria-label="Ouvrir la fiche"><Bookmark /></Link></div>
-              <div className="nature-like-count">{post.likes.toLocaleString("fr-FR")} J’aime</div>
+              <div className="nature-post-actions">
+                <button aria-label={post.liked ? "Retirer belle rencontre" : "Belle rencontre"} aria-pressed={post.liked} onClick={() => void toggleLike(post.id)} className={`nature-action-like ${post.liked ? "liked" : ""}`}><Heart className={post.liked ? "fill-current" : ""}/><span>{post.liked ? "Rencontre aimée" : "Belle rencontre"}</span></button>
+                <Link href={`/observations/${post.id}#discussion`} className="nature-action-comment" aria-label={`Échanger sur ${post.plantName}`}><MessageCircle/><span>Échanger{post.comments ? ` · ${post.comments}` : ""}</span></Link>
+                <button type="button" className="nature-action-share" aria-label={`Partager la fiche de ${post.plantName}`} onClick={() => void shareObservation(post)}><Share2/><span>Partager la fiche</span></button>
+              </div>
+              {shareNotice?.postId === post.id && <p className="nature-share-notice" role="status">{shareNotice.message}</p>}
+              <div className="nature-like-count">{post.likes.toLocaleString("fr-FR")} appréciation{post.likes === 1 ? "" : "s"} de naturalistes</div>
               {post.isDemo && <div className="nature-demo-source"><strong>Publication de démonstration</strong><span>Observation réelle par {post.sourceObserver || "un naturaliste iNaturalist"} · Crédit photo : {post.photoAttribution || post.sourceObserver || "iNaturalist"}{post.photoLicense && <> · <a href={photoLicenseUrl(post.photoLicense)} target="_blank" rel="noreferrer">Licence {post.photoLicense.toUpperCase()}</a></>}</span>{post.sourceUrl && <a href={post.sourceUrl} target="_blank" rel="noreferrer">Voir la source iNaturalist ↗</a>}</div>}
               {post.verified && <div className="flex items-center gap-1.5 mb-2 text-xs text-primary"><BadgeCheck className="w-3.5 h-3.5" />Identification certifiée{post.verifiedBy ? ` par ${post.verifiedBy}` : ""}</div>}
               <div className="nature-observation-caption"><Link href={`/profile/${post.userId}`}><strong>{post.user.name}</strong></Link> <Link href={`/observations/${post.id}`}><strong>{post.plantName}</strong></Link> <span className="nature-caption-group">{ORGANISM_LABELS[post.organismGroup]}</span>{post.description && <span> — {post.description}</span>}</div>
               {post.scientificName && <p className="text-sm text-foreground/60 italic mb-2">{post.scientificName}</p>}
-              <div className="observation-card-meta"><span><CalendarDays size={14} />{post.observedAt ? new Date(post.observedAt).toLocaleDateString("fr-FR") : formatTimeAgo(post.timestamp)}</span><span><MapPin size={14} />{post.region}</span>{post.latitude != null && post.longitude != null && <span><LockKeyhole size={13} />Position masquée</span>}</div>
+              <aside className="nature-observation-record">
+                <div className="nature-observation-record-heading"><span><Leaf size={14}/> CARNET DE TERRAIN</span><span className={post.verified ? "confirmed" : "pending"}>{post.verified ? "Identifiée" : "À confirmer"}</span></div>
+                <div className="nature-observation-record-grid">
+                  <div><small>GROUPE DU VIVANT</small><strong>{ORGANISM_LABELS[post.organismGroup]}</strong></div>
+                  <div><small>TERRITOIRE</small><strong>{post.region}</strong></div>
+                  <div><small>RENCONTRE OBSERVÉE</small><strong>{post.observedAt ? new Date(post.observedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : formatTimeAgo(post.timestamp)}</strong></div>
+                  <div><small>IDENTIFICATION</small><strong>{post.verified ? "Confirmée par la communauté" : "Proposez un nom local ou scientifique"}</strong></div>
+                </div>
+                <Link href={`/observations/${post.id}#identification`}>Compléter cette fiche naturaliste <ArrowRight size={13}/></Link>
+              </aside>
               <aside className="nature-field-insight"><span><Sparkles size={13} /> CONSEIL DE TERRAIN · {ORGANISM_LABELS[post.organismGroup].toLocaleUpperCase("fr")}</span><strong>{FIELD_GUIDANCE[post.organismGroup].title}</strong><p>{FIELD_GUIDANCE[post.organismGroup].text}</p><Link href={`/observations/${post.id}`} aria-label={`En savoir plus sur ${post.plantName}`}>Ouvrir la fiche terrain <ArrowRight size={13} /></Link></aside>
-              <Link href={`/observations/${post.id}#discussion`} className="nature-comments-link">{post.comments ? `Voir les ${post.comments} commentaires` : "Ajouter un commentaire"}</Link>
               <Link href={`/observations/${post.id}`} className="nature-detail-link">Explorer la fiche naturaliste <Share2 size={13} /></Link>
 
               {(isModerator || currentUserId === post.userId) && (
