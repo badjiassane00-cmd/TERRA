@@ -72,6 +72,10 @@ Le calendrier vivant est calculé par pays à partir des observations publiques 
 
 `PLANTNET_API_KEY` est la seule clé indispensable à l’identification botanique spécialisée. Elle est utilisée uniquement par la route serveur `/api/identify` et n'est jamais envoyée au navigateur. Les résultats sont enrichis automatiquement par le référentiel taxonomique ouvert [GBIF](https://www.gbif.org/) (aucune clé nécessaire). Le diagnostic est une aide au triage : confirmez tout traitement, surtout sur une plante alimentaire, auprès d'un professionnel.
 
+### Sons de la nature
+
+L’interface permet d’enregistrer ou d’importer un court audio. Pour obtenir les propositions d’espèces, configurez un service d’analyse auto-hébergé compatible avec `POST multipart/form-data` contenant `audio` (et éventuellement `latitude`/`longitude`). La réponse JSON doit contenir `species` ou `results`, un tableau avec des champs comme `name`, `scientificName`, `commonName` et `confidence`. Configurez `SOUND_IDENTIFICATION_API_URL` et, si nécessaire, `SOUND_IDENTIFICATION_API_KEY`. SunuNature relaie l’audio aux utilisateurs connectés et ne l’enregistre pas dans sa base; vérifiez les règles de conservation du fournisseur du modèle.
+
 ## Base de données
 
 ```bash
