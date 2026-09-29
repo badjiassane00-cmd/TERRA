@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Filter, Leaf, Flower2, TreePine, Calendar, Search, Grid, List, Sparkles, TrendingUp, Globe, ChevronRight, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { MapPin, Leaf, Flower2, TreePine, Calendar, Search, Grid, List, Sparkles, TrendingUp, Globe, ChevronRight, Loader2 } from "lucide-react";
 import { useRef } from "react";
 
 interface Plant {
@@ -570,7 +571,7 @@ export default function RegionalExhibition() {
                   className="herbarium-card rounded-xl p-5 flex gap-5 items-center cursor-pointer hover:shadow-md transition-shadow"
                 >
                   <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border border-border">
-                    <img src={plant.imageUrl || "https://images.unsplash.com/photo-1599592574727-290c38af6f8f"} alt={plant.name} className="w-full h-full object-cover" />
+                    <Image src={plant.imageUrl || "https://images.unsplash.com/photo-1599592574727-290c38af6f8f"} alt={plant.name} width={96} height={96} unoptimized className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
                     <h4 className="font-serif font-semibold text-foreground mb-1">{plant.name}</h4>

@@ -508,3 +508,25 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .nature-profile-avatar-message{max-width:190px;min-height:20px;margin:0;color:#849087;text-align:center;font-size:8px;line-height:1.4}
 .nature-spin{animation:nature-spin .9s linear infinite}@keyframes nature-spin{to{transform:rotate(360deg)}}
 @media(max-width:650px){.nature-profile-avatar-editor{gap:7px}.nature-profile-avatar-editor .nature-profile-large-avatar{width:76px;height:76px;font-size:28px}.nature-profile-avatar-edit{padding:7px 9px;font-size:8px}.nature-profile-avatar-message{max-width:150px;font-size:7px}}
+
+
+/* Navigation claire et lisible sur la page d’accueil. */
+.glass-effect{background:rgba(198,228,190,.97);border-bottom:1px solid #a9cda2;box-shadow:0 5px 18px #23492b12;backdrop-filter:blur(16px)}
+.glass-effect,.glass-effect a{color:#31563a}
+.glass-effect a:hover{color:#1f703b}
+.glass-effect .text-primary{color:#317c43}
+
+/* La fiche de terrain utilise la colonne à droite de chaque photo. */
+.nature-social-feed{max-width:none}
+.nature-social-post{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(280px,.94fr);align-items:stretch}
+.nature-post-header{grid-column:1/-1;min-width:0}
+.nature-post-photo{grid-column:1;grid-row:2;min-width:0;min-height:320px;aspect-ratio:1/1}
+.nature-post-body{grid-column:2;grid-row:2;min-width:0;align-self:stretch;padding:16px 19px 20px}
+.nature-observation-caption{overflow-wrap:anywhere}
+.nature-field-insight{display:grid;gap:6px;margin-top:16px;border:1px solid #e2ebdc;border-radius:12px;background:linear-gradient(135deg,#f1f7eb,#fafbf7);padding:13px}
+.nature-field-insight>span{display:inline-flex;align-items:center;gap:6px;color:#658365;font-size:8px;font-weight:850;letter-spacing:.12em}
+.nature-field-insight>strong{color:#34563b;font:600 15px/1.2 var(--font-fraunces),Georgia,serif}
+.nature-field-insight>p{margin:0;color:#718074;font-size:9px;line-height:1.65}
+.nature-field-insight>a{display:inline-flex;align-items:center;gap:5px;justify-self:start;margin-top:3px;color:#347448;font-size:9px;font-weight:800;text-decoration:none}
+@media(max-width:900px){.nature-social-post{grid-template-columns:minmax(0,1fr) minmax(220px,.95fr)}.nature-post-body{padding:14px}}
+@media(max-width:680px){.nature-social-post{grid-template-columns:minmax(0,1fr)}.nature-post-header{grid-column:1;grid-row:1}.nature-post-photo{grid-column:1;grid-row:2;min-height:0;aspect-ratio:1/1}.nature-post-body{grid-column:1;grid-row:3;padding:8px 14px 16px}}

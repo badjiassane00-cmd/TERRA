@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, CalendarDays, LockKeyhole, Bookmark, Send } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, CalendarDays, LockKeyhole, Bookmark, Send, Sparkles, ArrowRight } from "lucide-react";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismFilter, type OrganismGroup } from "@/types/nature";
 
 interface CommunityPost {
@@ -37,6 +39,18 @@ interface CommunityPost {
   photoAttribution?: string | null;
   photoLicense?: string | null;
 }
+
+const FIELD_GUIDANCE: Record<OrganismGroup, { title: string; text: string }> = {
+  PLANT: { title: "Montrez la plante dans son milieu", text: "Une photo des feuilles, des fleurs et de l’habitat aide à distinguer les espèces proches. Ne prélevez rien." },
+  INSECT: { title: "Observez sans capturer", text: "Le comportement et la plante visitée sont de précieux indices. Gardez l’insecte libre et évitez de le manipuler." },
+  BIRD: { title: "Écoutez avant de vous approcher", text: "Le chant, l’heure et l’habitat complètent la photo. Restez à distance des nids." },
+  MAMMAL: { title: "Les traces racontent aussi", text: "Empreintes, poils et passages peuvent documenter une présence sans déranger l’animal. Ne le nourrissez pas." },
+  REPTILE: { title: "Laissez-lui une voie de fuite", text: "Photographiez à distance sans toucher l’animal ni déplacer pierres, bois ou abris." },
+  AMPHIBIAN: { title: "Documentez le point d’eau", text: "La mare, l’humidité et le moment de la journée donnent du contexte. Évitez de déplacer les animaux." },
+  FUNGUS: { title: "Photographiez aussi le support", text: "Le bois, le sol ou la litière aident à documenter la rencontre. Ne consommez jamais une espèce non identifiée." },
+  AQUATIC: { title: "Montrez l’état du milieu", text: "Clarté de l’eau, végétation et berge donnent des indices. Observez sans capturer ni piétiner les zones fragiles." },
+  OTHER: { title: "Ajoutez une échelle et l’habitat", text: "Un repère de taille et une vue du milieu rendent votre observation plus utile aux naturalistes." },
+};
 
 interface CommunityFeedProps {
   currentUserId?: string;
@@ -125,6 +139,7 @@ async function compressObservationPhoto(file: File): Promise<ObservationPhotos> 
 }
 
 export default function CommunityFeed({ currentUserId, currentUserRole, groupFilter = "ALL", onGroupFilterChange }: CommunityFeedProps) {
+  const router = useRouter();
   const isModerator = currentUserRole === "institution" || currentUserRole === "admin";
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [newPost, setNewPost] = useState("");
@@ -197,7 +212,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   }, [loadPosts]);
 
   const toggleLike = async (postId: string) => {
-    if (!currentUserId) { window.location.assign("/connexion"); return; }
+    if (!currentUserId) { router.push("/connexion"); return; }
     const before = posts.find((post) => post.id === postId);
     if (!before) return;
     const willLike = !before.liked;
@@ -213,7 +228,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   };
 
   const toggleFollow = async (authorId: string) => {
-    if (!currentUserId) { window.location.assign("/connexion"); return; }
+    if (!currentUserId) { router.push("/connexion"); return; }
     try {
       const response = await fetch(`/api/users/${authorId}/follow`, { method: "POST" });
       if (!response.ok) throw new Error();
@@ -342,7 +357,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
               finally { setPhotoProcessing(false); }
             }} />
           </label>
-          {newPhoto && <div className="observation-photo-preview"><img src={newPhoto.thumbnailUrl} alt="Aperçu de l’observation" /><button type="button" aria-label="Retirer la photo" onClick={() => setNewPhoto(null)}><X size={16} /></button></div>}
+          {newPhoto && <div className="observation-photo-preview"><Image src={newPhoto.thumbnailUrl} alt="Aperçu de l’observation" width={480} height={320} unoptimized /><button type="button" aria-label="Retirer la photo" onClick={() => setNewPhoto(null)}><X size={16} /></button></div>}
           <label className="observation-field-label">Date de l’observation
             <input type="date" value={newObservedAt} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setNewObservedAt(event.target.value)} className="herbarium-input mb-3" />
           </label>
@@ -399,10 +414,10 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             key={post.id}
             className="nature-social-post"
           >
-            <div className="nature-post-header"><Link href={`/profile/${post.userId}`} className="nature-profile-avatar">{post.user.avatarUrl ? <img src={post.user.avatarUrl} alt="" /> : post.user.name.slice(0, 1).toUpperCase()}</Link><Link href={`/profile/${post.userId}`} className="nature-post-author"><strong>{post.user.name}</strong><span>{post.user.isDemo ? "Compte fictif · démonstration" : post.user.institution || "Naturaliste"} · {formatTimeAgo(post.timestamp)}</span></Link>{currentUserId && currentUserId !== post.userId && <button className={`nature-follow-button ${post.following ? "following" : ""}`} onClick={() => void toggleFollow(post.userId)}>{post.following ? "Abonné·e" : "Suivre"}</button>}<span className="nature-post-group-label">{ORGANISM_LABELS[post.organismGroup]}</span></div>
+            <div className="nature-post-header"><Link href={`/profile/${post.userId}`} className="nature-profile-avatar">{post.user.avatarUrl ? <Image src={post.user.avatarUrl} alt={`Photo de ${post.user.name}`} width={39} height={39} unoptimized /> : post.user.name.slice(0, 1).toUpperCase()}</Link><Link href={`/profile/${post.userId}`} className="nature-post-author"><strong>{post.user.name}</strong><span>{post.user.isDemo ? "Compte fictif · démonstration" : post.user.institution || "Naturaliste"} · {formatTimeAgo(post.timestamp)}</span></Link>{currentUserId && currentUserId !== post.userId && <button className={`nature-follow-button ${post.following ? "following" : ""}`} onClick={() => void toggleFollow(post.userId)}>{post.following ? "Abonné·e" : "Suivre"}</button>}<span className="nature-post-group-label">{ORGANISM_LABELS[post.organismGroup]}</span></div>
             <div className={`${post.imageUrl ? "nature-post-photo" : "nature-post-photo empty"} bg-gradient-to-br from-primary/10 to-accent/10 relative`}>
               {post.imageUrl ? (
-                <Link href={`/observations/${post.id}`} aria-label={`Voir ${post.plantName}`}><img src={post.imageUrl} alt={post.plantName} className="w-full h-full object-cover" /></Link>
+                <Link href={`/observations/${post.id}`} aria-label={`Voir ${post.plantName}`}><Image src={post.imageUrl} alt={post.plantName} width={960} height={960} unoptimized className="w-full h-full object-cover" /></Link>
               ) : (
                 <div className="flex min-h-28 items-center justify-center gap-3 px-5 text-primary/70">
                   <Leaf className="h-7 w-7" />
@@ -419,6 +434,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
               <div className="nature-observation-caption"><Link href={`/profile/${post.userId}`}><strong>{post.user.name}</strong></Link> <Link href={`/observations/${post.id}`}><strong>{post.plantName}</strong></Link> <span className="nature-caption-group">{ORGANISM_LABELS[post.organismGroup]}</span>{post.description && <span> — {post.description}</span>}</div>
               {post.scientificName && <p className="text-sm text-foreground/60 italic mb-2">{post.scientificName}</p>}
               <div className="observation-card-meta"><span><CalendarDays size={14} />{post.observedAt ? new Date(post.observedAt).toLocaleDateString("fr-FR") : formatTimeAgo(post.timestamp)}</span><span><MapPin size={14} />{post.region}</span>{post.latitude != null && post.longitude != null && <span><LockKeyhole size={13} />Position masquée</span>}</div>
+              <aside className="nature-field-insight"><span><Sparkles size={13} /> CONSEIL DE TERRAIN · {ORGANISM_LABELS[post.organismGroup].toLocaleUpperCase("fr")}</span><strong>{FIELD_GUIDANCE[post.organismGroup].title}</strong><p>{FIELD_GUIDANCE[post.organismGroup].text}</p><Link href={`/observations/${post.id}`} aria-label={`En savoir plus sur ${post.plantName}`}>Ouvrir la fiche terrain <ArrowRight size={13} /></Link></aside>
               <Link href={`/observations/${post.id}#discussion`} className="nature-comments-link">{post.comments ? `Voir les ${post.comments} commentaires` : "Ajouter un commentaire"}</Link>
               <Link href={`/observations/${post.id}`} className="nature-detail-link">Explorer la fiche naturaliste <Share2 size={13} /></Link>
 
