@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import RegionalExhibition from "@/components/RegionalExhibition";
 import BotanicalBackground from "@/components/three/BotanicalBackground";
@@ -71,6 +72,7 @@ interface User {
 type AuthMode = "login" | "signup" | null;
 
 export default function Home() {
+  const router = useRouter();
   const [organismFilter, setOrganismFilter] = useState<OrganismFilter>("ALL");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -224,7 +226,7 @@ export default function Home() {
                 </motion.div>
               ) : (
                 <motion.button
-                  onClick={() => window.location.assign("/connexion")}
+                  onClick={() => router.push("/connexion")}
                   className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full hover:bg-primary-dark transition-colors"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -279,7 +281,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <button
-                    onClick={() => window.location.assign("/connexion")}
+                    onClick={() => router.push("/connexion")}
                     className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full w-full justify-center"
                   >
                     <LogIn className="w-4 h-4" />

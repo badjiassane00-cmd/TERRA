@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import NextImage from "next/image";
 import { Camera, Check, LoaderCircle, X } from "lucide-react";
 
 type Props = { initialAvatarUrl: string | null; displayName: string };
@@ -87,7 +88,7 @@ export default function ProfileAvatarEditor({ initialAvatarUrl, displayName }: P
   }
 
   return <div className="nature-profile-avatar-editor">
-    <div className="nature-profile-large-avatar">{avatarUrl ? <img src={avatarUrl} alt={`Photo de profil de ${displayName}`} /> : <span aria-label={`Initiale de ${displayName}`}>{displayName.slice(0, 1).toLocaleUpperCase("fr")}</span>}</div>
+    <div className="nature-profile-large-avatar">{avatarUrl ? <NextImage src={avatarUrl} alt={`Photo de profil de ${displayName}`} width={320} height={320} unoptimized /> : <span aria-label={`Initiale de ${displayName}`}>{displayName.slice(0, 1).toLocaleUpperCase("fr")}</span>}</div>
     <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void saveFile(event.currentTarget.files?.[0])} hidden />
     <button className="nature-profile-avatar-edit" type="button" onClick={() => input.current?.click()} disabled={busy} aria-label="Choisir une photo de profil">{busy ? <LoaderCircle size={15} className="nature-spin" /> : saved ? <Check size={15} /> : <Camera size={15} />}<span>{busy ? "Enregistrement…" : saved ? "Enregistré" : "Modifier la photo"}</span></button>
     {avatarUrl && <button className="nature-profile-avatar-remove" type="button" onClick={() => void removeAvatar()} disabled={busy} aria-label="Retirer la photo de profil"><X size={13} /></button>}
