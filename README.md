@@ -68,6 +68,8 @@ cp .env.example .env.local
 
 Les plantes sont identifiées par Pl@ntNet avec `PLANTNET_API_KEY`. Le mode « Insectes & animaux » classe l’image sur l’appareil avec MobileNet puis rapproche les étiquettes de GBIF via `/api/identify-life`; la photo ne quitte pas le navigateur. MobileNet reconnaît des catégories ImageNet et peut manquer des espèces africaines rares ou proches.
 
+Le calendrier vivant est calculé par pays à partir des observations publiques de la communauté sur 24 mois. Il mesure l’activité de partage et ne constitue pas une prévision de présence des espèces.
+
 `PLANTNET_API_KEY` est la seule clé indispensable à l’identification botanique spécialisée. Elle est utilisée uniquement par la route serveur `/api/identify` et n'est jamais envoyée au navigateur. Les résultats sont enrichis automatiquement par le référentiel taxonomique ouvert [GBIF](https://www.gbif.org/) (aucune clé nécessaire). Le diagnostic est une aide au triage : confirmez tout traitement, surtout sur une plante alimentaire, auprès d'un professionnel.
 
 ## Base de données

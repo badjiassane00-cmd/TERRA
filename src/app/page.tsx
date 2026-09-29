@@ -12,6 +12,7 @@ import CommunityFeed from "@/components/community/CommunityFeed";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import DailyNatureQuest from "@/components/community/DailyNatureQuest";
 import SmartReminders from "@/components/notifications/SmartReminders";
+import NatureCompanion from "@/components/ecology/NatureCompanion";
 import MyExhibitions from "@/components/exhibitions/MyExhibitions";
 import ResearchExport from "@/components/exhibitions/ResearchExport";
 import AcademicJournal from "@/components/academic/AcademicJournal";
@@ -485,6 +486,8 @@ export default function Home() {
             <Link href="/identifier" className="nature-modern-shortcut nature-modern-shortcut-scan"><span>✳ STUDIO IA</span><strong>Identifier une rencontre</strong><small>Plantes · Insectes · Faune · Diagnostic</small><ArrowRight size={18} /></Link>
             <Link href="/observations" className="nature-modern-shortcut nature-modern-shortcut-community"><span>✦ COMMUNAUTÉ</span><strong>Explorer les galeries</strong><small>Des observations partagées depuis l’Afrique</small><ArrowRight size={18} /></Link>
           </div>
+
+          <NatureCompanion />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="space-y-8">
