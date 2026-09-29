@@ -10,7 +10,6 @@ import GamificationPanel from "@/components/gamification/GamificationPanel";
 import CommunityFeed from "@/components/community/CommunityFeed";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import DailyNatureQuest from "@/components/community/DailyNatureQuest";
-import BiodiversityPulse from "@/components/community/BiodiversityPulse";
 import SmartReminders from "@/components/notifications/SmartReminders";
 import MyExhibitions from "@/components/exhibitions/MyExhibitions";
 import ResearchExport from "@/components/exhibitions/ResearchExport";
@@ -38,11 +37,6 @@ import {
   TreePine,
   ArrowRight,
 } from "lucide-react";
-
-const Plant3DShowcase = dynamic(() => import("@/components/three/Plant3DShowcase"), {
-  ssr: false,
-  loading: () => <div className="w-full h-full min-h-[260px]" />,
-});
 
 const BotanicalMap = dynamic(() => import("@/components/map/BotanicalMap"), {
   ssr: false,
@@ -438,20 +432,12 @@ export default function Home() {
               </div>
               <div className="wild-community-proof"><div className="wild-avatar-stack"><span>🌿</span><span>🦋</span><span>🐦</span></div><span>La nature n’a pas de frontières.<br /><strong>Votre regard enrichit la science.</strong></span></div>
             </div>
-            <div className="wild-hero-art" aria-label="La biodiversité africaine en trois dimensions">
-              <div className="wild-art-label"><span className="wild-live-dot" /> CARNET DE TERRAIN · SÉNÉGAL</div>
-              <div className="wild-art-tree"><Plant3DShowcase /></div>
-              <div className="wild-art-caption"><span>01 / BIODIVERSITÉ</span><strong>Le vivant est<br />tout autour de nous.</strong></div>
-              <div className="wild-art-stamp">VIVANT<br />AFRICAIN</div>
-            </div>
+            <div className="wild-hero-art" role="img" aria-label="Photo d’une forêt tropicale" />
           </div>
           <div className="wild-stats-strip"><span><strong>Plantes</strong> médecine, forêt, savane</span><i /><span><strong>Insectes</strong> pollinisateurs & alliés</span><i /><span><strong>Oiseaux, mammifères</strong> et tout le vivant</span><i /><span className="wild-location"><MapPin size={15} /> De Dakar à Nairobi</span></div>
         </div>
       </section>
 
-      <section className="wild-pulse-wrap px-4" aria-label="État de la biodiversité observée">
-        <div className="mx-auto max-w-7xl"><BiodiversityPulse onSelectGroup={(group) => { setOrganismFilter(group); document.getElementById("fil")?.scrollIntoView({ behavior: "smooth" }); }} /></div>
-      </section>
 
       <section id="fil" className="wild-discover px-4 py-10 md:py-14">
         <div className="mx-auto max-w-7xl">
