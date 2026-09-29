@@ -11,10 +11,8 @@ export const metadata: Metadata = { title: "Fiche d’observation — SunuNature
 
 export default async function ObservationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [observation, viewerId] = await Promise.all([
-    observationRepository.findById(id),
-    getSessionUserId(),
-  ]);
+  const viewerId = await getSessionUserId();
+  const observation = await observationRepository.findById(id, viewerId);
   let externalObservation = null;
   if (!observation && /^\d+$/.test(id)) {
     try {
@@ -28,6 +26,7 @@ export default async function ObservationPage({ params }: { params: Promise<{ id
   const location = publicCoordinates(observation, viewerId);
   const detail: ObservationDetailRecord = {
     ...observation,
+    liked: observation.postLikes.length > 0,
     ...location,
     createdAt: observation.createdAt.toISOString(),
     sourceUrl: observation.sourceUrl,

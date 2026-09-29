@@ -63,6 +63,7 @@ export default function ProfileAvatarEditor({ initialAvatarUrl, displayName }: P
       const result = await response.json() as { avatarUrl?: string; error?: string };
       if (!response.ok || !result.avatarUrl) throw new Error(result.error || "Impossible d’enregistrer cette photo.");
       setAvatarUrl(result.avatarUrl);
+      window.dispatchEvent(new CustomEvent("sununature:avatar-updated", { detail: { avatarUrl: result.avatarUrl } }));
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2600);
     } catch (cause) {

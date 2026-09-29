@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import RegionalExhibition from "@/components/RegionalExhibition";
@@ -64,8 +65,8 @@ const TrackingJournal = dynamic(() => import("@/components/journal/TrackingJourn
 
 interface User {
   id: string;
-  email: string;
   name: string;
+  avatarUrl?: string | null;
   institution?: string;
   role: "user" | "admin" | "institution";
 }
@@ -92,7 +93,16 @@ export default function Home() {
     const savedUser = localStorage.getItem("botanique_user");
     if (savedUser && !userLoaded.current) {
       try {
-        setUser(JSON.parse(savedUser));
+        const cachedUser = JSON.parse(savedUser) as User & { email?: string };
+        const privateSafeUser: User = {
+          id: cachedUser.id,
+          name: cachedUser.name,
+          avatarUrl: cachedUser.avatarUrl,
+          institution: cachedUser.institution,
+          role: cachedUser.role,
+        };
+        setUser(privateSafeUser);
+        localStorage.setItem("botanique_user", JSON.stringify(privateSafeUser));
         userLoaded.current = true;
       } catch {}
     }
@@ -119,6 +129,15 @@ export default function Home() {
     loadInitialData();
 
   }, [loadInitialData]);
+
+  useEffect(() => {
+    const updateAvatar = (event: Event) => {
+      const avatarUrl = (event as CustomEvent<{ avatarUrl: string | null }>).detail?.avatarUrl;
+      setUser((current) => current ? { ...current, avatarUrl } : current);
+    };
+    window.addEventListener("sununature:avatar-updated", updateAvatar);
+    return () => window.removeEventListener("sununature:avatar-updated", updateAvatar);
+  }, []);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
@@ -203,16 +222,12 @@ export default function Home() {
                 >
                   <NotificationBell />
                   <div className="flex items-center gap-2 text-sm">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      {user.role === "institution" ? (
-                        <ShieldCheck className="w-4 h-4 text-primary" />
-                      ) : (
-                        <User className="w-4 h-4 text-primary" />
-                      )}
+                    <div className="h-9 w-9 overflow-hidden rounded-full border border-white/80 bg-primary/10 flex items-center justify-center shadow-sm">
+                      {user.avatarUrl ? <Image src={user.avatarUrl} alt={`Photo de ${user.name}`} width={36} height={36} unoptimized className="h-full w-full object-cover" /> : user.role === "institution" ? <ShieldCheck className="w-4 h-4 text-primary" /> : <User className="w-4 h-4 text-primary" />}
                     </div>
                     <Link href={`/profile/${user.id}`} className="text-left hover:text-primary">
                       <p className="font-medium text-foreground">{user.name}</p>
-                      <p className="text-xs text-foreground/60">Ma galerie · {user.institution || user.email}</p>
+                      <p className="text-xs text-foreground/60">Ma galerie · {user.institution || "Naturaliste"}</p>
                     </Link>
                   </div>
                   <motion.button
@@ -270,7 +285,7 @@ export default function Home() {
                 ))}
                 {user ? (
                   <div className="space-y-2">
-                    <Link href={`/profile/${user.id}`} className="block font-medium text-foreground">Ma galerie · {user.name}</Link>
+                    <Link href={`/profile/${user.id}`} className="flex items-center gap-2 font-medium text-foreground"><span className="h-8 w-8 overflow-hidden rounded-full bg-primary/10">{user.avatarUrl ? <Image src={user.avatarUrl} alt={`Photo de ${user.name}`} width={32} height={32} unoptimized className="h-full w-full object-cover" /> : <span className="grid h-full w-full place-items-center text-primary">{user.name.slice(0, 1).toUpperCase()}</span>}</span>Ma galerie · {user.name}</Link>
                     <Link href="/notifications" className="block font-medium text-foreground">Notifications et alertes</Link>
                     <button
                       onClick={handleLogout}

@@ -3,7 +3,14 @@ import { signSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "
 import { AuthError, authService } from "@/server/auth/auth.service";
 
 function authenticatedResponse(user: Awaited<ReturnType<typeof authService.authenticate>>, remember = true) {
-  const { password: _password, ...safeUser } = user;
+  const safeUser = {
+    id: user.id,
+    name: user.name,
+    institution: user.institution,
+    bio: user.bio,
+    avatarUrl: user.avatarUrl,
+    role: user.role,
+  };
   const response = NextResponse.json({
     user: { ...safeUser, role: safeUser.role.toLowerCase() },
   });

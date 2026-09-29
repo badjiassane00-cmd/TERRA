@@ -2,7 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BadgeCheck, CalendarDays, Check, Clipboard, Eye, Heart, LockKeyhole, MapPin, MessageCircle, Send, Sparkles } from "lucide-react";
+import Image from "next/image";
+import BackLink from "@/components/navigation/BackLink";
+import { ArrowLeft, BadgeCheck, CalendarDays, Check, Share2, Eye, Heart, LockKeyhole, MapPin, MessageCircle, Send, Sparkles } from "lucide-react";
 import { ORGANISM_LABELS, type OrganismGroup } from "@/types/nature";
 
 interface ObservationComment {
@@ -38,10 +40,11 @@ export interface ObservationDetailRecord {
   longitude: number | null;
   locationVisibility: "PUBLIC" | "APPROXIMATE" | "PRIVATE";
   likes: number;
+  liked: boolean;
   comments: number;
   verified: boolean;
   verifiedBy: string | null;
-  user: { id: string; name: string; institution: string | null; isDemo?: boolean };
+  user: { id: string; name: string; institution: string | null; avatarUrl: string | null; isDemo?: boolean };
   commentsList: ObservationComment[];
   identifications: ObservationIdentification[];
 }
@@ -61,6 +64,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [liking, setLiking] = useState(false);
   const date = observation.observedAt ? new Date(observation.observedAt) : new Date(observation.createdAt);
   const dateLabel = date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   const coordinates = observation.latitude !== null && observation.longitude !== null
@@ -97,21 +101,37 @@ export default function ObservationDetail({ observation: initialObservation, cur
 
   async function shareObservation() {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      if (navigator.share) await navigator.share({ title: `${observation.plantName} · SunuNature`, text: `Une rencontre avec ${observation.plantName} au ${observation.region}.`, url: window.location.href });
+      else await navigator.clipboard.writeText(window.location.href);
       setCopied(true); window.setTimeout(() => setCopied(false), 1800);
-    } catch { setError("Copie du lien impossible sur cet appareil."); }
+    } catch (shareError) {
+      if (shareError instanceof Error && shareError.name === "AbortError") return;
+      setError("Partage indisponible sur cet appareil.");
+    }
+  }
+
+  async function appreciateObservation() {
+    if (!currentUserId) { setError("Connectez-vous pour saluer cette rencontre."); return; }
+    setLiking(true); setError("");
+    try {
+      const response = await fetch(`/api/community/${observation.id}/like`, { method: "POST" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Appréciation non enregistrée.");
+      setObservation((current) => ({ ...current, liked: result.liked, likes: result.likes }));
+    } catch (likeError) { setError(likeError instanceof Error ? likeError.message : "Appréciation non enregistrée."); }
+    finally { setLiking(false); }
   }
 
   return (
     <main className="observation-detail-page">
-      <nav className="observation-detail-topbar"><Link href="/observations"><ArrowLeft size={16} /> Toutes les observations</Link><Link href="/" className="observation-detail-brand"><span>✳</span> SunuNature</Link></nav>
+      <nav className="observation-detail-topbar"><BackLink href="/observations" label="Retour aux observations" /><Link href="/" className="observation-detail-brand"><span>✳</span> SunuNature</Link></nav>
       <div className="observation-detail-breadcrumb"><Link href="/">Accueil</Link><span>/</span><Link href="/observations">Observations</Link><span>/</span><span>{observation.plantName}</span></div>
 
       <section className="observation-detail-hero">
         <div className="observation-detail-image-wrap">
-          {observation.imageUrl ? <img className="observation-detail-image" src={observation.imageUrl} alt={observation.plantName} /> : <div className="observation-image-placeholder">Une rencontre avec le vivant</div>}
+          {observation.imageUrl ? <Image fill sizes="(max-width: 800px) 100vw, 65vw" unoptimized className="observation-detail-image" src={observation.imageUrl} alt={observation.plantName} /> : <div className="observation-image-placeholder">Une rencontre avec le vivant</div>}
           <span className="observation-detail-image-tag"><Eye size={14} /> OBSERVATION DE TERRAIN</span>
-          <button className="observation-share-button" onClick={shareObservation}>{copied ? <Check size={16} /> : <Clipboard size={16} />}{copied ? "Lien copié" : "Partager"}</button>
+          <button className="observation-share-button" onClick={shareObservation}>{copied ? <Check size={16} /> : <Share2 size={16} />}{copied ? "Fiche partagée" : "Partager cette rencontre"}</button>
         </div>
         <aside className="observation-taxon-card">
           <span className="observation-overline"><span /> {ORGANISM_LABELS[observation.organismGroup].toLocaleUpperCase("fr")}</span>
@@ -120,8 +140,8 @@ export default function ObservationDetail({ observation: initialObservation, cur
           <span className={`observation-identification-status ${observation.verified ? "confirmed" : "pending"}`}>
             {observation.verified ? <><BadgeCheck size={16} /> Identification confirmée</> : <><Sparkles size={15} /> Identification à confirmer</>}
           </span>
-          <div className="observation-author"><span className="observation-author-avatar">{observation.user.name.slice(0, 1).toLocaleUpperCase("fr")}</span><span><small>OBSERVÉ PAR</small><strong>{observation.user.name}</strong>{observation.user.isDemo ? <small>Compte fictif · démonstration</small> : observation.user.institution && <small>{observation.user.institution}</small>}</span></div>
-          <div className="observation-taxon-stats"><span><Heart size={15} /> {observation.likes} appréciations</span><span><MessageCircle size={15} /> {observation.comments} échanges</span></div>
+          <div className="observation-author"><Link className="observation-author-avatar" href={`/profile/${observation.user.id}`}>{observation.user.avatarUrl ? <Image src={observation.user.avatarUrl} alt={`Photo de ${observation.user.name}`} width={39} height={39} unoptimized /> : observation.user.name.slice(0, 1).toLocaleUpperCase("fr")}</Link><span><small>OBSERVÉ PAR</small><strong>{observation.user.name}</strong>{observation.user.isDemo ? <small>Compte fictif · démonstration</small> : observation.user.institution && <small>{observation.user.institution}</small>}</span></div>
+          <div className="observation-taxon-stats"><button className={`observation-appreciate-button ${observation.liked ? "liked" : ""}`} type="button" aria-pressed={observation.liked} disabled={liking} onClick={() => void appreciateObservation()}><Heart size={16} className={observation.liked ? "fill-current" : ""}/>{observation.liked ? "Belle rencontre saluée" : "Saluer cette rencontre"}<strong>{observation.likes}</strong></button><a href="#discussion"><MessageCircle size={15} /> {observation.comments} échanges</a></div>
           {observation.verifiedBy && <small className="observation-verified-by">Vérifié par {observation.verifiedBy}</small>}
           {observation.isDemo && <div className="observation-demo-source"><strong>Publication de démonstration</strong><span>Observation réelle par {observation.sourceObserver || "un naturaliste iNaturalist"}</span><span>Photo : {observation.photoAttribution || observation.sourceObserver}{observation.photoLicense && <> · <a href={photoLicenseUrl(observation.photoLicense)} target="_blank" rel="noreferrer">Licence {observation.photoLicense.toUpperCase()}</a></>}</span><a href={observation.sourceUrl || "https://www.inaturalist.org"} target="_blank" rel="noreferrer">Consulter la source iNaturalist ↗</a></div>}
         </aside>
@@ -136,7 +156,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
             <p className="observation-location-privacy"><LockKeyhole size={14} /> Pour protéger les espèces sensibles, les coordonnées approximatives sont arrondies. La position privée n’est visible que par l’observateur.</p>
           </section>
 
-          <section className="observation-info-card observation-identification-card">
+          <section id="identification" className="observation-info-card observation-identification-card">
             <div className="observation-card-title"><span className="observation-icon-tile"><Sparkles size={17} /></span><div><small>IDENTIFICATION COLLABORATIVE</small><h2>Qu’avez-vous reconnu ?</h2></div></div>
             {observation.identifications.length === 0 ? <p className="observation-section-hint">Aucune proposition pour le moment. Aidez la communauté à identifier cette espèce.</p> : <div className="observation-identification-list">{observation.identifications.map((item) => <div className="observation-identification-item" key={item.id}><span className="observation-id-check"><Check size={15} /></span><span><strong>{item.taxonName}</strong><small>Proposé par {item.user.name} · {new Date(item.createdAt).toLocaleDateString("fr-FR")}</small></span></div>)}</div>}
             {currentUserId ? <form className="observation-inline-form" onSubmit={submitIdentification}><input value={identification} onChange={(event) => setIdentification(event.target.value)} placeholder="Proposer un nom d’espèce…" maxLength={180} required /><button type="submit" disabled={busy}><Send size={15} /> Proposer</button></form> : <p className="observation-login-prompt"><Link href="/connexion">Connectez-vous</Link> pour proposer une identification.</p>}
