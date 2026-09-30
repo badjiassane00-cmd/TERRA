@@ -554,3 +554,22 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .observation-taxon-stats .observation-appreciate-button strong{border-radius:999px;background:#eef4e9;padding:4px 7px;color:#3a6f48;font-size:8px}
 .observation-taxon-stats .observation-appreciate-button.liked{color:#a54f40}.observation-taxon-stats .observation-appreciate-button:disabled{opacity:.6;cursor:wait}
 @media(max-width:680px){.nature-post-actions{gap:6px}.nature-post-actions .nature-action-like,.nature-post-actions .nature-action-comment,.nature-post-actions .nature-action-share{height:33px;gap:5px;padding:0 9px;font-size:8px}.nature-observation-record{padding:10px}.nature-observation-record-grid{gap:6px}.observation-share-button{font-size:8px;padding:8px 9px}}
+
+
+/* Navigation d’entrée et espace Explorer. */
+.nature-app-header{max-width:1240px;border-bottom:1px solid #e7ede2}
+.nature-app-header nav{display:flex;align-items:center;gap:clamp(10px,2vw,23px)}
+.nature-app-header nav>a{display:inline-flex;align-items:center;gap:7px;color:#55745a;font-size:10px;font-weight:750;text-decoration:none;white-space:nowrap}
+.nature-app-header nav>a:hover{color:#286d48}
+.nature-app-header .nature-notification-bell{position:relative;color:#55745a}
+.nature-app-header-profile .nature-app-header-avatar{display:grid;width:31px;height:31px;place-items:center;overflow:hidden;border:1px solid #dce8d7;border-radius:50%;background:#edf5e9;color:#4d8256;font-weight:800}
+.nature-app-header-avatar img{width:100%;height:100%;object-fit:cover}
+.nature-explorer-page{min-height:100vh;background:radial-gradient(ellipse at 15% 0%,#edf7e8 0,transparent 33%),#f8faf6;color:#24392a}
+.nature-explorer-intro{max-width:1180px;margin:35px auto 24px;padding:0 24px}
+.nature-explorer-intro>span{display:inline-flex;align-items:center;gap:7px;color:#77a576;font-size:9px;font-weight:850;letter-spacing:.14em}
+.nature-explorer-intro h1{margin:12px 0;color:#304c36;font:500 clamp(34px,5vw,55px)/.99 var(--font-fraunces),Georgia,serif;letter-spacing:-.035em}
+.nature-explorer-intro>p{max-width:620px;margin:12px 0;color:#748275;font-size:12px;line-height:1.7}
+.nature-explorer-identify-link{display:inline-flex;align-items:center;gap:8px;margin-top:7px;border-radius:999px;background:#83c987;padding:11px 15px;color:#1e452c;font-size:10px;font-weight:800;text-decoration:none}
+.nature-explorer-feed-wrap{max-width:1240px;margin:0 auto;padding:0 24px 55px}
+.nature-explorer-feed-wrap .nature-social-feed{padding-top:0}
+@media(max-width:680px){.nature-app-header{align-items:flex-start;padding:14px}.nature-app-header nav{justify-content:flex-end;flex-wrap:wrap;gap:10px}.nature-app-header nav>a{font-size:0}.nature-app-header nav>a svg{width:19px;height:19px}.nature-app-header nav .nature-app-header-profile{font-size:0}.nature-app-header-profile .nature-app-header-avatar{width:30px;height:30px}.nature-explorer-intro{margin:24px auto 18px;padding:0 16px}.nature-explorer-feed-wrap{padding:0 14px 40px}}

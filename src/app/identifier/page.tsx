@@ -1,12 +1,3 @@
-import Link from "next/link";
-import { Bell, Camera, Leaf } from "lucide-react";
-import BackLink from "@/components/navigation/BackLink";
-import { getSessionUser } from "@/lib/session";
-import IdentificationWorkspace from "@/components/identification/IdentificationWorkspace";
-import NotificationBell from "@/components/notifications/NotificationBell";
+import IdentificationPage from "@/components/identification/IdentificationPage";
 
-export default async function IdentifierPage() {
-  const user = await getSessionUser();
-  const role = user?.role.toLowerCase() as "user" | "admin" | "institution" | undefined;
-  return <main className="nature-identifier-page"><header className="nature-identifier-header"><Link href="/" className="nature-identifier-brand"><Leaf size={21} /> SunuNature</Link><nav><Link href="/observations"><Camera size={16} /> Fil des observations</Link>{user && <NotificationBell />}<Link href={user ? "/notifications" : "/connexion"} className="nature-identifier-alert-link"><Bell size={16} /> Alertes</Link></nav></header><IdentificationWorkspace userId={user?.id || null} userRole={role || null} /><footer className="nature-identifier-footer"><BackLink href="/" label="Retour à l’accueil" /><span>SunuNature · Observer · Comprendre · Protéger</span></footer></main>;
-}
+export default IdentificationPage;
