@@ -80,13 +80,15 @@ Les brouillons de publication photo hors connexion sont conservés sur l’appar
 
 ## Base MySQL et médias MinIO
 
-Le dépôt utilise maintenant MySQL 8.4 et un stockage S3 compatible pour les images. Lancer MySQL localement :
+Le dépôt utilise MySQL 8.4 et MinIO AIStor pour les images. Pour démarrer les services locaux, placez votre licence AIStor dans `minio.license` à la racine du dépôt (ce fichier est ignoré par Git), configurez les secrets dans `.env`, puis lancez :
 
 ```bash
-docker compose up -d mysql
+docker compose up -d mysql minio
 ```
 
-Configurer `.env.local` avec l’URL MySQL `mysql://terra:terra-local-password@127.0.0.1:3309/terra` et les variables `MEDIA_S3_*` de votre serveur MinIO. TERRA utilise un bucket privé et sert les images publiques par ses propres routes, tandis que les images personnelles exigent la session de leur propriétaire. Aucun serveur MinIO local n’est inclus : l’image officielle n’est actuellement pas récupérable depuis les registres testés et le dépôt amont est archivé; raccordez un serveur MinIO que vous gérez ou choisissez un autre stockage S3 compatible avant l’usage des photos.
+MinIO expose l’API S3 sur `http://127.0.0.1:9000` et la console sur `http://127.0.0.1:9001`. Les ports sont liés à l’interface locale seulement. Le volume Docker `terra_minio_data` conserve les objets après le redémarrage du conteneur. TERRA utilise le bucket privé `terra-media` avec un compte applicatif limité à la lecture et l’écriture des objets du bucket. Les images personnelles restent protégées par la session de leur propriétaire.
+
+Pour créer une licence gratuite AIStor Free, suivez la [documentation MinIO sur les licences](https://docs.min.io/aistor/operations/licenses/). Configurez `MINIO_ROOT_USER` et `MINIO_ROOT_PASSWORD` pour l’administration, puis `MEDIA_S3_ENDPOINT`, `MEDIA_S3_BUCKET`, `MEDIA_S3_ACCESS_KEY` et `MEDIA_S3_SECRET_KEY` pour l’application. Le compte média doit disposer des droits `GetBucketLocation`, `ListBucket`, `GetObject` et `PutObject` sur `terra-media`. Ne mettez jamais la licence ou les secrets dans Git.
 
 Les migrations PostgreSQL historiques sont conservées dans `prisma/migrations-postgresql`. La nouvelle migration MySQL est indépendante. Avant de remplacer `DATABASE_URL`, gardez sa valeur PostgreSQL dans `LEGACY_POSTGRES_URL`, puis configurez la cible MySQL dans `DATABASE_URL` et lancez les commandes dans cet ordre :
 
@@ -94,11 +96,10 @@ Les migrations PostgreSQL historiques sont conservées dans `prisma/migrations-p
 npm run prisma:generate
 npm run db:deploy
 CONFIRM_POSTGRES_TO_MYSQL=yes npm run db:transfer:mysql
-# Après avoir configuré et démarré MinIO
 npm run media:externalize
 ```
 
-Le transfert ne modifie pas PostgreSQL et s’arrête si la cible MySQL contient déjà des lignes. Les photos déjà intégrées restent visibles dans MySQL tant que MinIO n’est pas configuré. `npm run media:externalize` les envoie ensuite vers le bucket privé, puis TERRA les sert via ses routes publiques ou par la session de leur propriétaire.
+Le transfert ne modifie pas PostgreSQL et s’arrête si la cible MySQL contient déjà des lignes. `npm run media:externalize` envoie les images intégrées restantes vers le bucket privé, puis TERRA les sert via ses routes publiques ou par la session de leur propriétaire.
 
 ### Prisma
 
