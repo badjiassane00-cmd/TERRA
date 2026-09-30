@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 import { requireModerator } from "../../../../lib/moderation";
@@ -8,7 +9,7 @@ import { getSessionUserId } from "../../../../lib/session";
 // la retirer (contenu inapproprié / erroné). L'auteur peut aussi
 // supprimer sa propre publication. L'identité vient toujours du cookie
 // de session, jamais d'un champ envoyé par le client.
-export async function PATCH(
+async function PATCHImpl(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -38,7 +39,11 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
+
+
+export const PATCH = withApiErrors(PATCHImpl);
+
+async function DELETEImpl(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -69,3 +74,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const DELETE = withApiErrors(DELETEImpl);

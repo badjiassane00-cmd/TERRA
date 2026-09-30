@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/lib/api-client";
 /* eslint-disable @next/next/no-img-element -- observation photos use API-provided hosts */
 
 import { useEffect, useState, useCallback } from "react";
@@ -18,7 +19,7 @@ export default function NearbySightings({ scientificName, location }: { scientif
     setState("loading");
     try {
       const params = new URLSearchParams({ scientificName, lat: String(latitude), lng: String(longitude) });
-      const response = await fetch(`/api/observations?${params}`, { signal });
+      const response = await apiFetch(`/api/observations?${params}`, { signal });
       if (!response.ok) throw new Error();
       const data = await response.json();
       if (signal.aborted) return;

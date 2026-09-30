@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { GraduationCap, Leaf, Loader2, Pencil, Check, X } from "lucide-react";
 
@@ -34,7 +35,7 @@ export default function AcademicJournal({ userId }: AcademicJournalProps) {
 
   const load = () => {
     setIsLoading(true);
-    fetch(`/api/scan-history?userId=${userId}&limit=100`)
+    apiFetch(`/api/scan-history?userId=${userId}&limit=100`)
       .then((res) => res.json())
       .then((data) => setScans(data.data || []))
       .catch(() => setScans([]))
@@ -81,7 +82,7 @@ export default function AcademicJournal({ userId }: AcademicJournalProps) {
   const saveEdit = async (scanId: string) => {
     setIsSaving(true);
     try {
-      await fetch(`/api/scan-history/${scanId}`, {
+      await apiFetch(`/api/scan-history/${scanId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, courseName: courseInput.trim(), objective: objectiveInput.trim() }),

@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 
 // Dictionnaire de secours utilisé uniquement si aucune clé IA n'est
@@ -105,8 +106,7 @@ async function askClaude(query: string, apiKey: string) {
   const { response, plantName } = extractPlantLine(rawText);
   return { response, plantName, speak: response.length < 400, source: "claude" as const };
 }
-
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   try {
     const body = await request.json();
     const { query } = body;
@@ -143,3 +143,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

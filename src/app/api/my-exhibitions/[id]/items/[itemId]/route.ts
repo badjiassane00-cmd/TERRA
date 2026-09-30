@@ -1,8 +1,8 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../../../lib/prisma";
 import { getSessionUserId } from "../../../../../../lib/session";
-
-export async function DELETE(
+async function DELETEImpl(
   request: Request,
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
@@ -29,3 +29,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const DELETE = withApiErrors(DELETEImpl);

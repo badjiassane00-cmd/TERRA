@@ -1,15 +1,9 @@
+import { distanceKm } from "@/lib/geo";
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number) {
-  const radians = (value: number) => (value * Math.PI) / 180;
-  const dLat = radians(bLat - aLat);
-  const dLng = radians(bLng - aLng);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(radians(aLat)) * Math.cos(radians(bLat)) * Math.sin(dLng / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   const { searchParams } = new URL(request.url);
   const lat = Number(searchParams.get("lat"));
   const lng = Number(searchParams.get("lng"));
@@ -36,3 +30,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Les alertes locales sont indisponibles." }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

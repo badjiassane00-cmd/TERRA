@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { apiFetch } from "@/lib/api-client";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
@@ -46,7 +47,7 @@ export default function ObservationExplorer() {
       const query = new URLSearchParams({ limit: "48" });
       if (group !== "ALL") query.set("group", group);
       if (search.trim()) query.set("q", search.trim());
-      const response = await fetch(source === "iNaturalist" ? `/api/naturalist/observations?${query}` : `/api/community?${query}`);
+      const response = await apiFetch(source === "iNaturalist" ? `/api/naturalist/observations?${query}` : `/api/community?${query}`);
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Les observations ne sont pas disponibles.");
       setObservations(source === "iNaturalist"

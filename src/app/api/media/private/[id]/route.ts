@@ -1,9 +1,9 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
 import { readStoredImage } from "@/server/media/object-storage";
-
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function GETImpl(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connexion requise." }, { status: 401 });
   const { id } = await params;
@@ -18,3 +18,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Média indisponible." }, { status: 503 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

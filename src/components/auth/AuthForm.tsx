@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,7 +25,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
     setPending(true);
 
     try {
-      const response = await fetch("/api/auth", {
+      const response = await apiFetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: mode, name, email, password, remember }),

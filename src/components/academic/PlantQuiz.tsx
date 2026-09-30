@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useState } from "react";
 import { BrainCircuit, Loader2, RotateCcw, CheckCircle2, XCircle } from "lucide-react";
 
@@ -27,7 +28,7 @@ export default function PlantQuiz() {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch("/api/quiz?count=8");
+      const res = await apiFetch("/api/quiz?count=8");
       const data = await res.json();
       if (data.error || !data.questions?.length) {
         setErrorMsg(data.error || "Impossible de générer un quiz pour le moment.");

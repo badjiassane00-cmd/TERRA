@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Flame, Star, Target, Award, Zap } from "lucide-react";
@@ -48,7 +49,7 @@ export default function GamificationPanel({ userId }: GamificationProps) {
   const [showBadges, setShowBadges] = useState(false);
   const fetchStats = useCallback(async () => {
     try {
-      const res = await fetch("/api/gamification");
+      const res = await apiFetch("/api/gamification");
       if (res.ok) {
         const data = await res.json();
         setStats((prev) => ({

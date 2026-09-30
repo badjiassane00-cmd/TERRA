@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -20,7 +21,7 @@ export default function NotificationBell() {
       const requestController = new AbortController();
       activeRequest = requestController;
       try {
-        const response = await fetch("/api/account/notifications", {
+        const response = await apiFetch("/api/account/notifications", {
           cache: "no-store",
           signal: requestController.signal,
         });

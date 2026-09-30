@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 
@@ -26,8 +27,7 @@ function shuffle<T>(arr: T[]): T[] {
   }
   return a;
 }
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const count = Math.min(parseInt(searchParams.get("count") || "5"), 15);
@@ -78,3 +78,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

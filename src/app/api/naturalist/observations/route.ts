@@ -1,8 +1,8 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { ORGANISM_GROUPS, type OrganismGroup } from "@/types/nature";
 import { inaturalistService } from "@/server/inaturalist/inaturalist.service";
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   const params = new URL(request.url).searchParams;
   const requestedGroup = params.get("group");
   const group = requestedGroup && ORGANISM_GROUPS.includes(requestedGroup as OrganismGroup)
@@ -20,3 +20,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Les observations iNaturalist sont temporairement indisponibles." }, { status: 502 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

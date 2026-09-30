@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 
@@ -22,8 +23,7 @@ interface PlantWithSpecialty {
   }>;
   computedSpecialty: string;
 }
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const region = searchParams.get("region");
@@ -184,6 +184,10 @@ export async function GET(request: Request) {
     );
   }
 }
+
+
+
+export const GET = withApiErrors(GETImpl);
 
 function extractRegionFromDescription(description?: string): string {
   if (!description) return "Autre";

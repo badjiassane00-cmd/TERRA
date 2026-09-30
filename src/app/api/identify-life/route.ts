@@ -1,11 +1,11 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
 type LocalPrediction = { className: string; probability: number };
-
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   try {
     const body = await request.json();
     const predictions = Array.isArray(body.predictions) ? body.predictions.slice(0, 5) as LocalPrediction[] : [];
@@ -47,3 +47,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Impossible d’enrichir ces suggestions taxonomiques." }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

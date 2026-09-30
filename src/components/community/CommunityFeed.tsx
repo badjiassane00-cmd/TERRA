@@ -1,11 +1,13 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, Sparkles, ArrowRight } from "lucide-react";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismFilter, type OrganismGroup } from "@/types/nature";
+import { compressObservationPhoto, photoLicenseUrl, type ObservationPhotos } from "@/lib/observation-media";
 
 interface CommunityPost {
   id: string;
@@ -93,57 +95,6 @@ interface ApiPost {
 }
 
 
-interface ObservationPhotos { imageUrl: string; thumbnailUrl: string }
-
-function photoLicenseUrl(code: string) {
-  const license = code.toLowerCase();
-  if (license === "cc0") return "https://creativecommons.org/publicdomain/zero/1.0/";
-  if (license === "cc-by-sa") return "https://creativecommons.org/licenses/by-sa/4.0/";
-  return "https://creativecommons.org/licenses/by/4.0/";
-}
-
-async function canvasDataUrl(canvas: HTMLCanvasElement, quality: number): Promise<string> {
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-  if (!blob) throw new Error("Impossible de préparer la photo.");
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Lecture de photo impossible."));
-    reader.onerror = () => reject(new Error("Lecture de photo impossible."));
-    reader.readAsDataURL(blob);
-  });
-}
-
-async function compressObservationPhoto(file: File): Promise<ObservationPhotos> {
-  if (!file.type.startsWith("image/")) throw new Error("Choisissez une photo au format JPEG, PNG ou WebP.");
-  if (file.size > 15 * 1024 * 1024) throw new Error("La photo originale ne doit pas dépasser 15 Mo.");
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Impossible de préparer la photo.");
-  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  let fullCanvas = canvas;
-  let fullPhoto = await canvasDataUrl(fullCanvas, 0.72);
-  if (fullPhoto.length > 1_200_000) {
-    const smaller = document.createElement("canvas");
-    smaller.width = Math.round(canvas.width * 0.72);
-    smaller.height = Math.round(canvas.height * 0.72);
-    smaller.getContext("2d")?.drawImage(canvas, 0, 0, smaller.width, smaller.height);
-    fullCanvas = smaller;
-    fullPhoto = await canvasDataUrl(fullCanvas, 0.61);
-  }
-  if (fullPhoto.length > 1_200_000) throw new Error("La photo reste trop lourde après compression. Choisissez une autre image.");
-  const thumbnail = document.createElement("canvas");
-  const thumbnailScale = Math.min(1, 480 / Math.max(fullCanvas.width, fullCanvas.height));
-  thumbnail.width = Math.max(1, Math.round(fullCanvas.width * thumbnailScale));
-  thumbnail.height = Math.max(1, Math.round(fullCanvas.height * thumbnailScale));
-  thumbnail.getContext("2d")?.drawImage(fullCanvas, 0, 0, thumbnail.width, thumbnail.height);
-  return { imageUrl: fullPhoto, thumbnailUrl: await canvasDataUrl(thumbnail, 0.58) };
-}
-
 export default function CommunityFeed({ currentUserId, currentUserRole, groupFilter = "ALL", onGroupFilterChange }: CommunityFeedProps) {
   const router = useRouter();
   const isModerator = currentUserRole === "institution" || currentUserRole === "admin";
@@ -169,7 +120,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
 
   const loadPosts = useCallback(async () => {
     try {
-      const res = await fetch("/api/community?limit=20");
+      const res = await apiFetch("/api/community?limit=20");
       if (res.ok) {
         const data = await res.json();
         setPosts(
@@ -235,7 +186,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       const remaining: PendingObservation[] = [];
       for (const item of queue) {
         try {
-          const response = await fetch("/api/community", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(item.body) });
+          const response = await apiFetch("/api/community", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(item.body) });
           if (!response.ok) remaining.push(item);
         } catch { remaining.push(item); }
       }
@@ -255,7 +206,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     const willLike = !before.liked;
     setPosts((prev) => prev.map((post) => post.id === postId ? { ...post, liked: willLike, likes: Math.max(0, post.likes + (willLike ? 1 : -1)) } : post));
     try {
-      const response = await fetch(`/api/community/${postId}/like`, { method: "POST" });
+      const response = await apiFetch(`/api/community/${postId}/like`, { method: "POST" });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       setPosts((prev) => prev.map((post) => post.id === postId ? { ...post, liked: result.liked, likes: result.likes } : post));
@@ -286,7 +237,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const toggleFollow = async (authorId: string) => {
     if (!currentUserId) { router.push("/connexion"); return; }
     try {
-      const response = await fetch(`/api/users/${authorId}/follow`, { method: "POST" });
+      const response = await apiFetch(`/api/users/${authorId}/follow`, { method: "POST" });
       if (!response.ok) throw new Error();
       const result = await response.json();
       setPosts((prev) => prev.map((post) => post.userId === authorId ? { ...post, following: result.following } : post));
@@ -317,7 +268,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       return true;
     };
     try {
-      const res = await fetch("/api/community", {
+      const res = await apiFetch("/api/community", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
       const result = await res.json();
@@ -339,7 +290,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const moderate = async (postId: string, action: "verify" | "remove") => {
     if (!currentUserId) return;
     try {
-      const res = await fetch(`/api/community/${postId}`, {
+      const res = await apiFetch(`/api/community/${postId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: currentUserId, action }),
@@ -358,7 +309,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const deletePost = async (postId: string) => {
     if (!currentUserId) return;
     try {
-      await fetch(`/api/community/${postId}?userId=${currentUserId}`, { method: "DELETE" });
+      await apiFetch(`/api/community/${postId}?userId=${currentUserId}`, { method: "DELETE" });
       setPosts((prev) => prev.filter((p) => p.id !== postId));
     } catch {
       // suppression échouée : le post reste affiché

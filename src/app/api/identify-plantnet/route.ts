@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 
@@ -13,8 +14,7 @@ interface PlantNetResult {
 
 const PLANTNET_API_KEY = process.env.PLANTNET_API_KEY || "";
 const PLANTNET_API_URL = "https://my-api.plantnet.org/v2/identify/all";
-
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   try {
     const formData = await request.formData();
     const image = formData.get("image") as File;
@@ -100,3 +100,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

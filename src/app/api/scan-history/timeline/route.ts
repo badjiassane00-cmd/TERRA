@@ -1,5 +1,6 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { scanHistoryRepository } from "@/server/scan-history/scan-history.repository";
 import { getSessionUserId } from "../../../../lib/session";
 
 interface DiseaseEntry {
@@ -16,7 +17,7 @@ interface ScanResult {
 // Regroupe les scans d'un même utilisateur par plante pour construire
 // un carnet de suivi : évolution de la confiance d'identification et
 // des maladies détectées dans le temps pour une même espèce.
-export async function GET() {
+async function GETImpl() {
   try {
     const userId = await getSessionUserId();
 
@@ -24,11 +25,7 @@ export async function GET() {
       return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
     }
 
-    const scans = await prisma.scanHistory.findMany({
-      where: { userId, plantId: { not: null } },
-      orderBy: { createdAt: "asc" },
-      include: { plant: { select: { scientificName: true, commonNames: true } } },
-    });
+    const scans = await scanHistoryRepository.timelineForUser(userId);
 
     const groups = new Map<
       string,
@@ -78,3 +75,6 @@ export async function GET() {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

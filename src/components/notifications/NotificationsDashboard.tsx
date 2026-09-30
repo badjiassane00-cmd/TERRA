@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { announceNotificationsUpdated } from "@/lib/notification-events";
@@ -32,7 +33,7 @@ export default function NotificationsDashboard() {
 
   const load = useCallback(async () => {
     try {
-      const response = await fetch("/api/account/notifications", { cache: "no-store" });
+      const response = await apiFetch("/api/account/notifications", { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Impossible de charger vos alertes.");
       setPreferences(data.preferences);
@@ -52,7 +53,7 @@ export default function NotificationsDashboard() {
     if (!preferences) return;
     setSaving(true); setError(""); setNotice("");
     try {
-      const response = await fetch("/api/account/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phoneNumber, notifyEmail: preferences.notifyEmail, notifySms: preferences.notifySms, notifyWhatsApp: preferences.notifyWhatsApp }) });
+      const response = await apiFetch("/api/account/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phoneNumber, notifyEmail: preferences.notifyEmail, notifySms: preferences.notifySms, notifyWhatsApp: preferences.notifyWhatsApp }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Enregistrement impossible.");
       setPreferences(data.preferences); setPhoneNumber(data.preferences.phoneNumber || ""); setDirty(false); setNotice("Vos préférences sont enregistrées.");
@@ -63,7 +64,7 @@ export default function NotificationsDashboard() {
   async function sendTest(channel: Channel) {
     setTesting(channel); setError(""); setNotice("");
     try {
-      const response = await fetch("/api/account/notifications/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ channel }) });
+      const response = await apiFetch("/api/account/notifications/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ channel }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Le message de test n’a pas pu être envoyé.");
       setNotice(data.message);
@@ -74,7 +75,7 @@ export default function NotificationsDashboard() {
   async function markAllRead() {
     setError("");
     try {
-      const response = await fetch("/api/account/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ markAllRead: true }) });
+      const response = await apiFetch("/api/account/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ markAllRead: true }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Impossible de marquer les notifications comme lues.");
       setNotifications((items) => items.map((item) => ({ ...item, readAt: item.readAt || new Date().toISOString() })));
@@ -88,7 +89,7 @@ export default function NotificationsDashboard() {
   async function openNotification(item: NotificationItem) {
     if (item.readAt) return;
     try {
-      const response = await fetch(`/api/notifications/${item.id}`, { method: "PATCH" });
+      const response = await apiFetch(`/api/notifications/${item.id}`, { method: "PATCH" });
       if (!response.ok) return;
       setNotifications((items) => items.map((candidate) => candidate.id === item.id ? { ...candidate, readAt: new Date().toISOString() } : candidate));
       setUnreadCount((count) => Math.max(0, count - 1));

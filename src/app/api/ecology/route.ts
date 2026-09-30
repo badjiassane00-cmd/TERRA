@@ -1,8 +1,9 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /** Phenology and co-presence signals derived only from public community observations. */
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   const region = new URL(request.url).searchParams.get("region")?.trim();
   try {
     const since = new Date();
@@ -75,3 +76,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Les observations écologiques sont indisponibles." }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

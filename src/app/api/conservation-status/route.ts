@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 
 // Statut de conservation IUCN Red List. Nécessite un token gratuit :
@@ -22,8 +23,7 @@ const CATEGORY_LABELS: Record<string, { label: string; severity: number }> = {
   DD: { label: "Données insuffisantes", severity: -1 },
   NE: { label: "Non évaluée", severity: -1 },
 };
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   const { searchParams } = new URL(request.url);
   const scientificName = searchParams.get("scientificName");
 
@@ -76,3 +76,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ available: false, reason: "error" });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

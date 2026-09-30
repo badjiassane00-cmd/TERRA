@@ -1,9 +1,10 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 
 // Compatible with a self-hosted acoustic classifier. Keep the provider URL and
 // credentials server-side; no audio is saved by TERRA.
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   if (!await getSessionUserId()) return NextResponse.json({ error: "Connectez-vous pour analyser un enregistrement." }, { status: 401 });
   const endpoint = process.env.SOUND_IDENTIFICATION_API_URL;
   if (!endpoint) {
@@ -34,3 +35,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Le service d’identification sonore est injoignable." }, { status: 502 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

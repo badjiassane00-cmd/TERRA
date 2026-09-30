@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 import { requireModerator } from "../../../lib/moderation";
@@ -6,7 +7,7 @@ import { getSessionUserId } from "../../../lib/session";
 // Noms vernaculaires en langues locales (wolof, bambara, peul...),
 // contribués par la communauté. Un même nom scientifique peut avoir
 // plusieurs noms par langue ; les plus votés remontent en premier.
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const scientificName = searchParams.get("scientificName");
@@ -31,7 +32,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function POSTImpl(request: Request) {
   try {
     const body = await request.json();
     const { scientificName, language, languageName, name, contributedBy } = body;
@@ -77,9 +82,11 @@ export async function POST(request: Request) {
   }
 }
 
-// Un compte Institution/Admin certifie qu'un nom local est correct
+
+
+export const POST = withApiErrors(POSTImpl);// Un compte Institution/Admin certifie qu'un nom local est correct
 // (utile car ces noms sont contribués librement par la communauté).
-export async function PATCH(request: Request) {
+async function PATCHImpl(request: Request) {
   try {
     const body = await request.json();
     const { id } = body;
@@ -105,3 +112,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const PATCH = withApiErrors(PATCHImpl);

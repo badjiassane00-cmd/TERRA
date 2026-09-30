@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { getSessionUser } from "../../../../lib/session";
 
@@ -5,7 +6,7 @@ import { getSessionUser } from "../../../../lib/session";
 // la page, à partir du cookie httpOnly plutôt que de faire confiance
 // aveuglément à ce qui est stocké dans localStorage (qui ne prouve
 // rien : n'importe qui peut y écrire depuis la console du navigateur).
-export async function GET() {
+async function GETImpl() {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ user: null }, { status: 200 });
@@ -17,3 +18,6 @@ export async function GET() {
     },
   });
 }
+
+
+export const GET = withApiErrors(GETImpl);

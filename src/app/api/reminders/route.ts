@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 import { ReminderType } from "@prisma/client";
@@ -30,8 +31,7 @@ const INTERVALS: Record<string, number> = {
 function weatherCacheKey(lat: number, lng: number) {
   return `${lat.toFixed(2)},${lng.toFixed(2)}`;
 }
-
-export async function GET() {
+async function GETImpl() {
   try {
     const userId = await getSessionUserId();
 
@@ -86,7 +86,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function POSTImpl(request: Request) {
   try {
     const userId = await getSessionUserId();
     if (!userId) {
@@ -129,7 +133,11 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PATCH(request: Request) {
+
+
+export const POST = withApiErrors(POSTImpl);
+
+async function PATCHImpl(request: Request) {
   try {
     const userId = await getSessionUserId();
     if (!userId) {
@@ -160,7 +168,11 @@ export async function PATCH(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+
+
+export const PATCH = withApiErrors(PATCHImpl);
+
+async function DELETEImpl(request: Request) {
   try {
     const userId = await getSessionUserId();
     if (!userId) {
@@ -187,3 +199,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const DELETE = withApiErrors(DELETEImpl);

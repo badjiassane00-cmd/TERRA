@@ -1,34 +1,14 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { exhibitionService } from "@/server/exhibitions/exhibition.service";
 import { getSessionUserId } from "../../../../lib/session";
-
-export async function GET(
+async function GETImpl(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const exhibition = await prisma.exhibition.findUnique({
-      where: { id },
-      include: {
-        user: { select: { name: true } },
-        items: {
-          orderBy: { position: "asc" },
-          include: {
-            plant: {
-              select: {
-                id: true,
-                scientificName: true,
-                commonNames: true,
-                family: true,
-                imageUrl: true,
-                medicinal: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const exhibition = await exhibitionService.findById(id);;
 
     if (!exhibition) {
       return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
@@ -41,7 +21,11 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function PATCHImpl(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -55,56 +39,42 @@ export async function PATCH(
     const body = await request.json();
     const { title, description, theme, isPublic, coverImage } = body;
 
-    const existing = await prisma.exhibition.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
-    }
-    if (existing.userId !== sessionUserId) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
-    }
-
-    const exhibition = await prisma.exhibition.update({
-      where: { id },
-      data: {
-        ...(title !== undefined ? { title: title.trim() } : {}),
-        ...(description !== undefined ? { description } : {}),
-        ...(theme !== undefined ? { theme } : {}),
-        ...(isPublic !== undefined ? { isPublic: Boolean(isPublic) } : {}),
-        ...(coverImage !== undefined ? { coverImage } : {}),
-      },
+    const result = await exhibitionService.updateOwned(id, sessionUserId, {
+      ...(title !== undefined ? { title } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(theme !== undefined ? { theme } : {}),
+      ...(isPublic !== undefined ? { isPublic: Boolean(isPublic) } : {}),
+      ...(coverImage !== undefined ? { coverImage } : {}),
     });
-
-    return NextResponse.json({ exhibition });
+    if (result.kind === "missing") return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
+    if (result.kind === "forbidden") return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    return NextResponse.json({ exhibition: result.exhibition });
   } catch (error) {
     console.error("Erreur PATCH /api/my-exhibitions/[id]:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
-export async function DELETE(
+
+export const PATCH = withApiErrors(PATCHImpl);
+
+async function DELETEImpl(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const sessionUserId = await getSessionUserId();
-    if (!sessionUserId) {
-      return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
-    }
-
+    if (!sessionUserId) return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
     const { id } = await params;
-
-    const existing = await prisma.exhibition.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
-    }
-    if (existing.userId !== sessionUserId) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
-    }
-
-    await prisma.exhibition.delete({ where: { id } });
+    const result = await exhibitionService.deleteOwned(id, sessionUserId);
+    if (result === "missing") return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
+    if (result === "forbidden") return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erreur DELETE /api/my-exhibitions/[id]:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const DELETE = withApiErrors(DELETEImpl);

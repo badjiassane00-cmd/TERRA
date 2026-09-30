@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { signSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "@/lib/session";
 import { AuthError, authService } from "@/server/auth/auth.service";
@@ -23,8 +24,7 @@ function authenticatedResponse(user: Awaited<ReturnType<typeof authService.authe
   });
   return response;
 }
-
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   try {
     const body = await request.json();
     const email = typeof body.email === "string" ? body.email.trim() : "";
@@ -49,8 +49,15 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE() {
+
+
+export const POST = withApiErrors(POSTImpl);
+
+async function DELETEImpl() {
   const response = NextResponse.json({ success: true });
   response.cookies.set(SESSION_COOKIE_NAME, "", { maxAge: 0, path: "/" });
   return response;
 }
+
+
+export const DELETE = withApiErrors(DELETEImpl);

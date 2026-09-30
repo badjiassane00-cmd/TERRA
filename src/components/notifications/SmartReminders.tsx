@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useState, useEffect, useCallback } from "react";
 import { Bell, Droplets, Sun, Wind, Calendar, Plus, X, Check } from "lucide-react";
 
@@ -32,7 +33,7 @@ export default function SmartReminders({ userId }: SmartRemindersProps) {
   });
   const loadReminders = useCallback(async () => {
     try {
-      const res = await fetch("/api/reminders");
+      const res = await apiFetch("/api/reminders");
       if (res.status === 401) {
         setAuthRequired(true);
         return;
@@ -65,7 +66,7 @@ export default function SmartReminders({ userId }: SmartRemindersProps) {
       prev.map((r) => (r.id === id ? { ...r, enabled: newEnabled } : r))
     );
     try {
-      await fetch("/api/reminders", {
+      await apiFetch("/api/reminders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, enabled: newEnabled }),
@@ -78,7 +79,7 @@ export default function SmartReminders({ userId }: SmartRemindersProps) {
   const addReminder = async () => {
     if (!newReminder.plantName.trim()) return;
     try {
-      const res = await fetch("/api/reminders", {
+      const res = await apiFetch("/api/reminders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newReminder),

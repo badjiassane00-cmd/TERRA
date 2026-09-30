@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,7 +27,7 @@ export default function PersonalCatalogs() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/catalogues", { cache: "no-store" });
+      const response = await apiFetch("/api/catalogues", { cache: "no-store" });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Impossible de charger les catalogues.");
       setCatalogs(payload.catalogs || []);
@@ -45,7 +46,7 @@ export default function PersonalCatalogs() {
     if (!title.trim()) return;
     setBusy(true); setError("");
     try {
-      const response = await fetch("/api/catalogues", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, description }) });
+      const response = await apiFetch("/api/catalogues", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, description }) });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Création impossible.");
       setTitle(""); setDescription(""); setActiveCatalog(payload.catalog.id); await refresh();
@@ -58,7 +59,7 @@ export default function PersonalCatalogs() {
     if (!activeCatalog || !entryName.trim()) return;
     setBusy(true); setError("");
     try {
-      const response = await fetch(`/api/catalogues/${activeCatalog}/entries`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: entryName, scientificName, group, imageUrl, note }) });
+      const response = await apiFetch(`/api/catalogues/${activeCatalog}/entries`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: entryName, scientificName, group, imageUrl, note }) });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Ajout impossible.");
       setEntryName(""); setScientificName(""); setImageUrl(""); setNote(""); await refresh();

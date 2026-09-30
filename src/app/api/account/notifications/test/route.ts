@@ -1,10 +1,11 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { sendTestNotification, type NotificationChannel } from "@/server/notifications/notification.service";
 
 const channels = new Set<NotificationChannel>(["email", "sms", "whatsapp"]);
 
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour tester vos notifications." }, { status: 401 });
   try {
@@ -16,3 +17,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Échec de l’envoi." }, { status: 503 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

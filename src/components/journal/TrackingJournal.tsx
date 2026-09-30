@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronDown, Leaf, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
@@ -53,7 +54,7 @@ export default function TrackingJournal({ userId }: TrackingJournalProps) {
     const controller = new AbortController();
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/scan-history/timeline?userId=${userId}`, { signal: controller.signal });
+      const res = await apiFetch(`/api/scan-history/timeline?userId=${userId}`, { signal: controller.signal });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setTimelines(data.data || []);

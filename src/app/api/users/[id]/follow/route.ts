@@ -1,9 +1,9 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../../lib/prisma";
 import { getSessionUserId } from "../../../../../lib/session";
 import { createCommunityNotification } from "@/server/notifications/notification.service";
-
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function POSTImpl(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const followerId = await getSessionUserId();
   if (!followerId) return NextResponse.json({ error: "Connectez-vous pour suivre ce naturaliste." }, { status: 401 });
   const { id: followedId } = await params;
@@ -26,3 +26,6 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Impossible de suivre ce naturaliste." }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

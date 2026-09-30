@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -76,7 +77,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
     if (!comment.trim()) return;
     setBusy(true); setError(""); setNotice("");
     try {
-      const response = await fetch(`/api/observations/${observation.id}/comments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body: comment }) });
+      const response = await apiFetch(`/api/observations/${observation.id}/comments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body: comment }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Réponse non envoyée.");
       setObservation((current) => ({ ...current, comments: current.comments + 1, commentsList: [...current.commentsList, { ...result.comment, isDemo: false, createdAt: new Date(result.comment.createdAt).toISOString() }] }));
@@ -90,7 +91,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
     if (!identification.trim()) return;
     setBusy(true); setError(""); setNotice("");
     try {
-      const response = await fetch(`/api/observations/${observation.id}/identifications`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taxonName: identification }) });
+      const response = await apiFetch(`/api/observations/${observation.id}/identifications`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taxonName: identification }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Identification non enregistrée.");
       setObservation((current) => ({ ...current, identifications: [result.identification, ...current.identifications.filter((item) => item.user.id !== result.identification.user.id)] }));
@@ -114,7 +115,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
     if (!currentUserId) { setError("Connectez-vous pour saluer cette rencontre."); return; }
     setLiking(true); setError("");
     try {
-      const response = await fetch(`/api/community/${observation.id}/like`, { method: "POST" });
+      const response = await apiFetch(`/api/community/${observation.id}/like`, { method: "POST" });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Appréciation non enregistrée.");
       setObservation((current) => ({ ...current, liked: result.liked, likes: result.likes }));

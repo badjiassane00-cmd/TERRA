@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 import { getSessionUserId } from "../../../../lib/session";
@@ -5,7 +6,7 @@ import { getSessionUserId } from "../../../../lib/session";
 // Détail d'une session avec la liste des relevés déjà soumis — appelée
 // en polling côté superviseur pour un effet "temps réel" simple, sans
 // dépendance websocket.
-export async function GET(
+async function GETImpl(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -32,7 +33,11 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function PATCHImpl(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -65,3 +70,6 @@ export async function PATCH(
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const PATCH = withApiErrors(PATCHImpl);

@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 import { requireModerator } from "../../../../lib/moderation";
@@ -35,8 +36,7 @@ function csvEscape(value: unknown): string {
   }
   return str;
 }
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const scope = searchParams.get("scope") === "all" ? "all" : "mine";
@@ -119,3 +119,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

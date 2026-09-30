@@ -1,9 +1,9 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
 import { notificationProviders } from "@/server/notifications/notification.service";
-
-export async function GET() {
+async function GETImpl() {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour gérer vos notifications." }, { status: 401, headers: { "Cache-Control": "private, no-store" } });
   const [user, notifications, unreadCount] = await Promise.all([
@@ -15,7 +15,11 @@ export async function GET() {
   return NextResponse.json({ preferences: user, notifications, unreadCount, providers: notificationProviders() }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
-export async function PATCH(request: Request) {
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function PATCHImpl(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour gérer vos notifications." }, { status: 401, headers: { "Cache-Control": "private, no-store" } });
   let payload: unknown;
@@ -57,3 +61,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Impossible d’enregistrer ces préférences." }, { status: 500, headers: { "Cache-Control": "private, no-store" } });
   }
 }
+
+
+export const PATCH = withApiErrors(PATCHImpl);

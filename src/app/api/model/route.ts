@@ -1,8 +1,7 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
-
-
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   try {
     const body = await request.json();
     const { version, name, description, accuracy, loss, trainingDataCount, status } = body;
@@ -29,7 +28,11 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+
+
+export const POST = withApiErrors(POSTImpl);
+
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "10");
@@ -48,3 +51,6 @@ export async function GET(request: Request) {
     );
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

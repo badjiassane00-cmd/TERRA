@@ -1,26 +1,15 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { plantRepository } from "@/server/plants/plant.repository";
 
 // Liste légère des plantes pour le matching local côté client
 // (utilisé par AIPlantRecognition). Auparavant cette requête tournait
 // directement dans le navigateur via un import dynamique de
 // @prisma/client — ce qui est invalide (Prisma ne s'exécute pas côté
 // client) et exposait potentiellement la logique d'accès aux données.
-export async function GET() {
+async function GETImpl() {
   try {
-    const allPlants = await prisma.plant.findMany({
-      select: {
-        id: true,
-        scientificName: true,
-        commonNames: true,
-        family: true,
-        description: true,
-        medicinal: true,
-        watering: true,
-        sunlight: true,
-        soil: true,
-      },
-    });
+    const allPlants = await plantRepository.listForRecognition();
 
     const plants = allPlants.map((plant) => ({
       ...plant,
@@ -39,3 +28,6 @@ export async function GET() {
     );
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

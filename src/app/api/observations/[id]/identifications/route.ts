@@ -1,8 +1,8 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
-
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function POSTImpl(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour proposer une identification." }, { status: 401 });
   try {
@@ -24,3 +24,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Impossible d’enregistrer cette identification." }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

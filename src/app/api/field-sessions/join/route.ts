@@ -1,9 +1,10 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 
 // Un étudiant rejoint une session via le code communiqué à l'oral sur
 // le terrain par l'encadrant.
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   try {
     const body = await request.json();
     const code = (body.code || "").toString().trim().toUpperCase();
@@ -30,3 +31,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

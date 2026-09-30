@@ -1,7 +1,7 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { getWeatherSnapshot } from "../../../lib/weather";
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   const { searchParams } = new URL(request.url);
   const lat = Number(searchParams.get("lat"));
   const lng = Number(searchParams.get("lng"));
@@ -24,3 +24,6 @@ export async function GET(request: Request) {
 
   return NextResponse.json(snapshot);
 }
+
+
+export const GET = withApiErrors(GETImpl);

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useState } from "react";
 import { ShieldAlert } from "lucide-react";
 
@@ -30,7 +31,7 @@ export default function ConservationBadge({ scientificName }: ConservationBadgeP
   useEffect(() => {
     if (!scientificName) return;
     const controller = new AbortController();
-    fetch(`/api/conservation-status?scientificName=${encodeURIComponent(scientificName)}`, {
+    apiFetch(`/api/conservation-status?scientificName=${encodeURIComponent(scientificName)}`, {
       signal: controller.signal,
     })
       .then((res) => res.json())

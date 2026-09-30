@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useState, useRef } from "react";
 import { CalendarDays, Droplets, Sun, Loader2 } from "lucide-react";
 
@@ -43,7 +44,7 @@ export default function SahelCalendar({ scientificName, watering }: SahelCalenda
     if (!scientificName) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
-    fetch(`/api/plants/calendar?scientificName=${encodeURIComponent(scientificName)}`)
+    apiFetch(`/api/plants/calendar?scientificName=${encodeURIComponent(scientificName)}`)
       .then((res) => res.json())
       .then(setData)
       .catch(() => setData(null))

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { ShieldCheck, Check, X, Loader2, Languages, Image as ImageIcon } from "lucide-react";
 
@@ -34,7 +35,7 @@ export default function InstitutionPanel({ userId }: InstitutionPanelProps) {
 
   const load = useCallback(() => {
     setIsLoading(true);
-    fetch(`/api/institution/pending?userId=${userId}`)
+    apiFetch(`/api/institution/pending?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => {
         setNames(data.pendingNames || []);
@@ -58,7 +59,7 @@ export default function InstitutionPanel({ userId }: InstitutionPanelProps) {
 
   const verifyName = async (id: string) => {
     setBusyId(id);
-    await fetch(`/api/local-names/${id}`, {
+    await apiFetch(`/api/local-names/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId }),
@@ -69,14 +70,14 @@ export default function InstitutionPanel({ userId }: InstitutionPanelProps) {
 
   const rejectName = async (id: string) => {
     setBusyId(id);
-    await fetch(`/api/local-names/${id}?userId=${userId}`, { method: "DELETE" });
+    await apiFetch(`/api/local-names/${id}?userId=${userId}`, { method: "DELETE" });
     setNames((prev) => prev.filter((n) => n.id !== id));
     setBusyId(null);
   };
 
   const moderatePost = async (id: string, action: "verify" | "remove") => {
     setBusyId(id);
-    await fetch(`/api/community/${id}`, {
+    await apiFetch(`/api/community/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action }),

@@ -1,5 +1,6 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { exhibitionService } from "@/server/exhibitions/exhibition.service";
 import { getSessionUserId } from "../../../lib/session";
 
 // Liste des expositions personnelles. Pour ses propres expositions
@@ -8,18 +9,13 @@ import { getSessionUserId } from "../../../lib/session";
 // lire les expositions privées d'un autre utilisateur en changeant
 // juste l'URL. ?publicOnly=true reste accessible sans session (vitrine
 // publique, ne nécessite pas de compte).
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const publicOnly = searchParams.get("publicOnly") === "true";
 
     if (publicOnly) {
-      const exhibitions = await prisma.exhibition.findMany({
-        where: { isPublic: true },
-        include: { _count: { select: { items: true } }, user: { select: { name: true } } },
-        orderBy: { updatedAt: "desc" },
-        take: 30,
-      });
+      const exhibitions = await exhibitionService.listPublic();;
       return NextResponse.json({ exhibitions });
     }
 
@@ -28,11 +24,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
     }
 
-    const exhibitions = await prisma.exhibition.findMany({
-      where: { userId: sessionUserId },
-      include: { _count: { select: { items: true } }, user: { select: { name: true } } },
-      orderBy: { updatedAt: "desc" },
-    });
+    const exhibitions = await exhibitionService.listForUser(sessionUserId);;
 
     return NextResponse.json({ exhibitions });
   } catch (error) {
@@ -41,7 +33,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function POSTImpl(request: Request) {
   try {
     const sessionUserId = await getSessionUserId();
     if (!sessionUserId) {
@@ -55,15 +51,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "title est requis" }, { status: 400 });
     }
 
-    const exhibition = await prisma.exhibition.create({
-      data: {
+    const exhibition = await exhibitionService.create({
         userId: sessionUserId,
-        title: title.trim(),
+        title,
         description: description || null,
         theme: theme || null,
         isPublic: Boolean(isPublic),
-      },
-    });
+      });;
 
     return NextResponse.json({ exhibition });
   } catch (error) {
@@ -71,3 +65,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

@@ -1,8 +1,8 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../../lib/prisma";
 import { getSessionUserId } from "../../../../../lib/session";
-
-export async function POST(
+async function POSTImpl(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -65,3 +65,6 @@ export async function POST(
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

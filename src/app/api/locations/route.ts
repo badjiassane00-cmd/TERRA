@@ -1,8 +1,9 @@
+import { distanceKm } from "@/lib/geo";
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 import { LocationType, Prisma } from "@prisma/client";
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const region = searchParams.get("region");
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
       const radiusKm = parseFloat(radius);
 
       locations = locations.filter((loc) => {
-        const distance = getDistanceFromLatLonInKm(
+        const distance = distanceKm(
           centerLat,
           centerLng,
           loc.lat,
@@ -67,7 +68,7 @@ export async function GET(request: Request) {
     const enriched = locations.map((loc) => ({
       ...loc,
       bloomingMonths: typeof loc.bloomingMonths === "string" ? JSON.parse(loc.bloomingMonths) : loc.bloomingMonths,
-      distance: lat && lng ? getDistanceFromLatLonInKm(parseFloat(lat), parseFloat(lng), loc.lat, loc.lng) : null,
+      distance: lat && lng ? distanceKm(parseFloat(lat), parseFloat(lng), loc.lat, loc.lng) : null,
     }));
 
     return NextResponse.json({
@@ -83,25 +84,6 @@ export async function GET(request: Request) {
   }
 }
 
-function getDistanceFromLatLonInKm(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
-  const R = 6371;
-  const dLat = deg2rad(lat2 - lat1);
-  const dLng = deg2rad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) *
-      Math.cos(deg2rad(lat2)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
-function deg2rad(deg: number): number {
-  return deg * (Math.PI / 180);
-}
+
+export const GET = withApiErrors(GETImpl);

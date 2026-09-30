@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Mic, MicOff, Volume2, Loader2 } from "lucide-react";
 
@@ -99,7 +100,7 @@ export default function VoiceAssistant({ onResult, onPlantIdentified }: VoiceAss
         setError(null);
 
         try {
-          const res = await fetch("/api/voice-assistant", {
+          const res = await apiFetch("/api/voice-assistant", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ query: text }),
@@ -264,7 +265,7 @@ export default function VoiceAssistant({ onResult, onPlantIdentified }: VoiceAss
               onClick={() => {
                 setTranscript(q);
                 setIsProcessing(true);
-                fetch("/api/voice-assistant", {
+                apiFetch("/api/voice-assistant", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ query: q }),

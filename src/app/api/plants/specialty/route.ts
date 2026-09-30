@@ -1,21 +1,13 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
-
-
-export async function GET(request: Request) {
+import { plantRepository } from "@/server/plants/plant.repository";
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const specialty = searchParams.get("specialty");
 
     // Les plantes à spécialité ont "specialty" dans leur JSON taxonomy
-    const plants = await prisma.plant.findMany({
-      where: {
-        taxonomy: { contains: '"specialty"' },
-        ...(specialty ? { taxonomy: { contains: `"specialty":"${specialty}"` } } : {}),
-      },
-      include: { locations: { include: { location: true } } },
-      take: 100,
-    });
+    const plants = await plantRepository.listSpecialty(specialty || undefined);
 
     const data = plants.map((plant) => {
       let characteristics: Record<string, unknown> = {};
@@ -55,3 +47,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useState } from "react";
 import { BellRing, MapPin } from "lucide-react";
 
@@ -15,7 +16,7 @@ export default function LocalBiodiversityAlerts() {
     setMessage("Recherche des observations publiques proches…");
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       try {
-        const response = await fetch(`/api/ecology/alerts?lat=${coords.latitude}&lng=${coords.longitude}`);
+        const response = await apiFetch(`/api/ecology/alerts?lat=${coords.latitude}&lng=${coords.longitude}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         setAlerts(data.alerts || []);

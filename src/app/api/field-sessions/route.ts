@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 import { getSessionUserId } from "../../../lib/session";
@@ -12,8 +13,7 @@ function generateCode(): string {
   }
   return code;
 }
-
-export async function GET() {
+async function GETImpl() {
   try {
     const sessionUserId = await getSessionUserId();
     if (!sessionUserId) {
@@ -34,7 +34,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function POSTImpl(request: Request) {
   try {
     const sessionUserId = await getSessionUserId();
     if (!sessionUserId) {
@@ -66,3 +70,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

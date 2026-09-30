@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
 import { requireModerator } from "../../../../lib/moderation";
@@ -5,7 +6,7 @@ import { getSessionUserId } from "../../../../lib/session";
 
 // Tout ce qui attend une validation institutionnelle : noms locaux
 // non vérifiés et publications communautaires non certifiées.
-export async function GET() {
+async function GETImpl() {
   try {
     const moderator = await requireModerator(await getSessionUserId());
     if (!moderator) {
@@ -32,3 +33,6 @@ export async function GET() {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

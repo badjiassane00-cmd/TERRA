@@ -1,8 +1,7 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
-
-
-export async function GET() {
+async function GETImpl() {
   try {
     const count = await prisma.trainingData.count();
     const speciesCount = await prisma.trainingData.findMany({
@@ -28,7 +27,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function POSTImpl(request: Request) {
   try {
     const formData = await request.formData();
     const image = formData.get("image") as File;
@@ -67,3 +70,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

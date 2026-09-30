@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 
@@ -21,8 +22,7 @@ interface ScanResult {
   scientific_name?: string;
   disease_detection?: DiseaseEntry[];
 }
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const days = Number(searchParams.get("days") || "180");
@@ -95,3 +95,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

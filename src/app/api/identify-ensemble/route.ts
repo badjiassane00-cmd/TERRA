@@ -1,9 +1,9 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { identificationService } from "@/server/identification/identification.service";
-
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   try {
     const formData = await request.formData();
     const image = formData.get("image");
@@ -22,3 +22,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Erreur serveur lors de l'identification" }, { status: 502 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

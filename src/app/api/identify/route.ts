@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 import { enrichWithGbif, normalizeDiseases, normalizePlantNet, type Identification } from "@/lib/botany";
@@ -7,8 +8,7 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png"]);
 
 export const runtime = "nodejs";
-
-export async function POST(request: Request) {
+async function POSTImpl(request: Request) {
   try {
     const formData = await request.formData();
     const image = formData.get("image");
@@ -58,7 +58,9 @@ export async function POST(request: Request) {
   }
 }
 
-async function saveScan(userId: string, result: Identification, lat: number | null, lng: number | null, sessionId: string | null) {
+
+
+export const POST = withApiErrors(POSTImpl);async function saveScan(userId: string, result: Identification, lat: number | null, lng: number | null, sessionId: string | null) {
   const plant = await prisma.plant.upsert({
     where: { scientificName: result.scientific_name },
     update: {

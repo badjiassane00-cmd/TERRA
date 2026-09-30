@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useRef, useState } from "react";
 import NextImage from "next/image";
 import { Camera, Check, LoaderCircle, X } from "lucide-react";
@@ -59,7 +60,7 @@ export default function ProfileAvatarEditor({ initialAvatarUrl, displayName }: P
       if (blob.size > 320_000) blob = await toJpeg(image, 256, 0.68);
       if (blob.size > 320_000) throw new Error("Cette photo est trop lourde. Choisissez-en une autre.");
       const dataUrl = await readDataUrl(blob);
-      const response = await fetch("/api/account/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ avatarUrl: dataUrl }) });
+      const response = await apiFetch("/api/account/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ avatarUrl: dataUrl }) });
       const result = await response.json() as { avatarUrl?: string; error?: string };
       if (!response.ok || !result.avatarUrl) throw new Error(result.error || "Impossible d’enregistrer cette photo.");
       setAvatarUrl(result.avatarUrl);
@@ -77,7 +78,7 @@ export default function ProfileAvatarEditor({ initialAvatarUrl, displayName }: P
   async function removeAvatar() {
     setBusy(true); setError(""); setSaved(false);
     try {
-      const response = await fetch("/api/account/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ avatarUrl: null }) });
+      const response = await apiFetch("/api/account/profile/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ avatarUrl: null }) });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Impossible de retirer cette photo.");
       setAvatarUrl(null);

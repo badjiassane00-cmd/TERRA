@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useState, useCallback } from "react";
 import { Languages, Plus, ThumbsUp, Loader2, BadgeCheck } from "lucide-react";
 
@@ -43,7 +44,7 @@ export default function LocalNames({ scientificName, currentUserId, currentUserR
   const load = useCallback(() => {
     if (!scientificName) return;
     setIsLoading(true);
-    fetch(`/api/local-names?scientificName=${encodeURIComponent(scientificName)}`)
+    apiFetch(`/api/local-names?scientificName=${encodeURIComponent(scientificName)}`)
       .then((res) => res.json())
       .then((data) => setNames(data.names || []))
       .catch(() => setNames([]))
@@ -70,7 +71,7 @@ export default function LocalNames({ scientificName, currentUserId, currentUserR
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/local-names", {
+      const res = await apiFetch("/api/local-names", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scientificName, language, languageName, name: nameInput.trim() }),
@@ -89,7 +90,7 @@ export default function LocalNames({ scientificName, currentUserId, currentUserR
   const upvote = async (n: LocalName) => {
     // Revoter = renvoyer la même contribution ; la route incrémente le compteur.
     try {
-      await fetch("/api/local-names", {
+      await apiFetch("/api/local-names", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scientificName, language: n.language, languageName: n.languageName, name: n.name }),
@@ -103,7 +104,7 @@ export default function LocalNames({ scientificName, currentUserId, currentUserR
   const verify = async (n: LocalName) => {
     if (!currentUserId) return;
     try {
-      await fetch("/api/local-names", {
+      await apiFetch("/api/local-names", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: n.id, userId: currentUserId }),

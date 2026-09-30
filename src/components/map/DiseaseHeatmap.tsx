@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import { AlertTriangle, Loader2 } from "lucide-react";
@@ -44,7 +45,7 @@ export default function DiseaseHeatmap({
     const controller = new AbortController();
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/disease-heatmap?days=${windowDays}`, { signal: controller.signal });
+      const res = await apiFetch(`/api/disease-heatmap?days=${windowDays}`, { signal: controller.signal });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setPoints(data.points || []);

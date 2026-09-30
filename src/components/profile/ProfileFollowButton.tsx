@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -17,7 +18,7 @@ export default function ProfileFollowButton({ userId, initialFollowing, signedIn
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`/api/users/${userId}/follow`, { method: "POST" });
+      const response = await apiFetch(`/api/users/${userId}/follow`, { method: "POST" });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Impossible de mettre à jour l’abonnement.");
       setFollowing(result.following);

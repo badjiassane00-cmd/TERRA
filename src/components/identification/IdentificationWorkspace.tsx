@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
@@ -67,7 +68,7 @@ export default function IdentificationWorkspace({ userId, userRole }: { userId: 
       let data: { result?: PlantIdentificationResult; candidates?: Array<{ scientific_name: string; common_names: string[]; probability: number }>; error?: string };
       if (mode === "life") {
         const predictions = await recognizeLifeLocally(file);
-        const response = await fetch("/api/identify-life", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ predictions }) });
+        const response = await apiFetch("/api/identify-life", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ predictions }) });
         data = await response.json();
         if (!response.ok) throw new Error(data.error || "L’identification du vivant a échoué.");
       } else {
@@ -75,7 +76,7 @@ export default function IdentificationWorkspace({ userId, userRole }: { userId: 
         if (mode === "disease") form.append("treatmentStage", treatmentStage);
         if (location) { form.append("lat", String(location.lat)); form.append("lng", String(location.lng)); }
         if (fieldSessionId) form.append("sessionId", fieldSessionId);
-        const response = await fetch("/api/identify", { method: "POST", body: form });
+        const response = await apiFetch("/api/identify", { method: "POST", body: form });
         data = await response.json();
         if (!response.ok) throw new Error(data.error || "L’analyse a échoué.");
       }

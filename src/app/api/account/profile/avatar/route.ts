@@ -1,11 +1,11 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
 import { isStorageConfigured, storePublicImage } from "@/server/media/object-storage";
 
 const MAX_REQUEST_LENGTH = 460_000;
-
-export async function PATCH(request: Request) {
+async function PATCHImpl(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour modifier votre photo." }, { status: 401 });
 
@@ -33,3 +33,6 @@ export async function PATCH(request: Request) {
   const user = await prisma.user.update({ where: { id: userId }, data: { avatarUrl: storedAvatarUrl }, select: { id: true, avatarUrl: true } });
   return NextResponse.json({ avatarUrl: user.avatarUrl });
 }
+
+
+export const PATCH = withApiErrors(PATCHImpl);

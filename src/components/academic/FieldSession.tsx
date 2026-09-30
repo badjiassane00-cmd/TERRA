@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useRef, useState } from "react";
 import { Radio, Users, Copy, Check, LogOut, Loader2, Leaf } from "lucide-react";
 
@@ -41,7 +42,7 @@ export default function FieldSession({ userId, onSessionChange }: FieldSessionPr
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadSession = (id: string) => {
-    fetch(`/api/field-sessions/${id}`)
+    apiFetch(`/api/field-sessions/${id}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.session) {
@@ -77,7 +78,7 @@ export default function FieldSession({ userId, onSessionChange }: FieldSessionPr
     setIsBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/field-sessions", {
+      const res = await apiFetch("/api/field-sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, title: title.trim(), courseName: courseName || null }),
@@ -102,7 +103,7 @@ export default function FieldSession({ userId, onSessionChange }: FieldSessionPr
     setIsBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/field-sessions/join", {
+      const res = await apiFetch("/api/field-sessions/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: joinCode.trim() }),
@@ -124,7 +125,7 @@ export default function FieldSession({ userId, onSessionChange }: FieldSessionPr
   const leaveOrEnd = async () => {
     if (!session) return;
     if (isSupervisor) {
-      await fetch(`/api/field-sessions/${session.id}`, {
+      await apiFetch(`/api/field-sessions/${session.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, active: false }),

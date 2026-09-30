@@ -1,9 +1,9 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../../lib/prisma";
 import { getSessionUserId } from "../../../../../lib/session";
 import { createCommunityNotification } from "@/server/notifications/notification.service";
-
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function POSTImpl(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour aimer cette observation." }, { status: 401 });
   const { id } = await params;
@@ -31,3 +31,6 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Impossible de mettre à jour cette appréciation." }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

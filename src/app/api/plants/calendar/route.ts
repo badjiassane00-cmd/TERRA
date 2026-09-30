@@ -1,5 +1,6 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { plantRepository } from "@/server/plants/plant.repository";
 
 function parseMonths(raw: string | null): number[] {
   try {
@@ -9,8 +10,7 @@ function parseMonths(raw: string | null): number[] {
     return [];
   }
 }
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const scientificName = searchParams.get("scientificName");
@@ -18,16 +18,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "scientificName requis" }, { status: 400 });
     }
 
-    const plant = await prisma.plant.findUnique({
-      where: { scientificName },
-      select: {
-        sowingMonths: true,
-        bloomingMonths: true,
-        harvestMonths: true,
-        watering: true,
-        sunlight: true,
-      },
-    });
+    const plant = await plantRepository.findCalendar(scientificName);
 
     return NextResponse.json({
       sowingMonths: parseMonths(plant?.sowingMonths ?? null),
@@ -45,3 +36,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

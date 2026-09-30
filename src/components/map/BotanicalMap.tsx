@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -83,7 +84,7 @@ export default function BotanicalMap({ region, type, userLocation }: BotanicalMa
         params.set("radius", "500");
       }
 
-      const response = await fetch(`/api/locations?${params.toString()}`);
+      const response = await apiFetch(`/api/locations?${params.toString()}`);
       const data = await response.json();
       const enriched = (data.data || []).map((loc: Location) => ({
         ...loc,

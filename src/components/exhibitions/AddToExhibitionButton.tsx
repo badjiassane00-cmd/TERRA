@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useState } from "react";
 import { BookOpen, Plus, Check, Loader2 } from "lucide-react";
 
@@ -34,7 +35,7 @@ export default function AddToExhibitionButton({
     setOpen((v) => !v);
     if (!open) {
       setIsLoading(true);
-      fetch(`/api/my-exhibitions?userId=${userId}`)
+      apiFetch(`/api/my-exhibitions?userId=${userId}`)
         .then((res) => res.json())
         .then((data) =>
           setExhibitions((data.exhibitions || []).map((e: { id: string; title: string }) => ({ id: e.id, title: e.title })))
@@ -47,7 +48,7 @@ export default function AddToExhibitionButton({
   const addTo = async (exhibitionId: string) => {
     setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/my-exhibitions/${exhibitionId}/items`, {
+      const res = await apiFetch(`/api/my-exhibitions/${exhibitionId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, scientificName, commonName, imageUrl }),
@@ -69,7 +70,7 @@ export default function AddToExhibitionButton({
     if (!newTitle.trim()) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/my-exhibitions", {
+      const res = await apiFetch("/api/my-exhibitions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, title: newTitle.trim() }),

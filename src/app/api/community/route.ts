@@ -1,3 +1,4 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
@@ -19,8 +20,7 @@ function safeImageUrl(value: unknown): string | null {
     return value === "" ? "" : null;
   }
 }
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const region = searchParams.get("region");
@@ -54,7 +54,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+
+
+export const GET = withApiErrors(GETImpl);
+
+async function POSTImpl(request: Request) {
   try {
     const authorId = await getSessionUserId();
     if (!authorId) {
@@ -126,3 +130,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const POST = withApiErrors(POSTImpl);

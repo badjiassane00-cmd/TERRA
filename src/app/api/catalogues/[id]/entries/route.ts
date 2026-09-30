@@ -1,9 +1,9 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
 import { ORGANISM_GROUPS } from "@/types/nature";
-
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function POSTImpl(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
   const { id } = await params;
@@ -17,3 +17,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const entry = await prisma.catalogEntry.create({ data: { catalogId: id, name, group, scientificName: typeof body.scientificName === "string" ? body.scientificName.trim().slice(0, 160) || null : null, imageUrl: typeof body.imageUrl === "string" ? body.imageUrl.trim().slice(0, 1000) || null : null, note: typeof body.note === "string" ? body.note.trim().slice(0, 1000) || null : null, position } });
   return NextResponse.json({ entry }, { status: 201 });
 }
+
+
+export const POST = withApiErrors(POSTImpl);

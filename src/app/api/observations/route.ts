@@ -1,7 +1,7 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { inaturalistService } from "@/server/inaturalist/inaturalist.service";
-
-export async function GET(request: Request) {
+async function GETImpl(request: Request) {
   const { searchParams } = new URL(request.url);
   const scientificName = searchParams.get("scientificName")?.trim();
   const latitude = Number(searchParams.get("lat"));
@@ -17,3 +17,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Les observations terrain sont indisponibles pour le moment." }, { status: 502 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

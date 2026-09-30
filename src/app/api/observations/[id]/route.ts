@@ -1,10 +1,10 @@
+import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { observationRepository } from "@/server/observations/observation.repository";
 import { publicCoordinates } from "@/server/observations/location";
 import { inaturalistService } from "@/server/inaturalist/inaturalist.service";
-
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function GETImpl(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const observation = await observationRepository.findById(id);
@@ -24,3 +24,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+
+export const GET = withApiErrors(GETImpl);

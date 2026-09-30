@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api-client";
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, LoaderCircle, Mic, Radio, Square, Upload } from "lucide-react";
 
@@ -21,7 +22,7 @@ export default function SoundRecorder() {
     setBusy(true); setMessage("Analyse de l’enregistrement…"); setResults([]);
     try {
       const form = new FormData(); form.set("audio", blob, "observation.webm");
-      const response = await fetch("/api/sound-identification", { method: "POST", body: form });
+      const response = await apiFetch("/api/sound-identification", { method: "POST", body: form });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Identification sonore indisponible.");
       const candidates: Candidate[] = Array.isArray(result.species) ? result.species : Array.isArray(result.results) ? result.results : [];
