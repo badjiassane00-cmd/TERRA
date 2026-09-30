@@ -6,8 +6,8 @@ import NatureAppHeader from "@/components/navigation/NatureAppHeader";
 import { getSessionUser } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: "Explorer les publications — SunuNature",
-  description: "Découvrez les plantes, insectes et animaux observés et partagés par la communauté SunuNature.",
+  title: "Explorer les publications — TERRA",
+  description: "Découvrez les plantes, insectes et animaux observés et partagés par la communauté TERRA.",
 };
 
 export default async function ExplorerPage() {
@@ -21,7 +21,7 @@ export default async function ExplorerPage() {
         <div className="nature-explorer-copy">
           <span><Compass size={15} /> 03 — LE RÉSEAU</span>
           <h1 id="explorer-title">Un réseau social<br />pour la <em>nature</em> africaine.</h1>
-          <p>SunuNature relie naturalistes, chercheurs, écoles et curieux autour d’une même mission : documenter la biodiversité du continent.</p>
+          <p>TERRA relie naturalistes, chercheurs, écoles et curieux autour d’une même mission : documenter la biodiversité du continent.</p>
           <ul><li>Partagez vos photos et observations de terrain</li><li>Suivez des espèces, des régions et des naturalistes</li><li>Contribuez aux identifications et aux projets participatifs</li></ul>
           <Link href="#publications" className="nature-explorer-identify-link">Explorer les publications <ArrowRight size={15} /></Link>
         </div>

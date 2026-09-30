@@ -105,7 +105,7 @@ function toPublicObservation(observation: INaturalistRawObservation) {
 
 async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(`${API_ROOT}${path}`, {
-    headers: { Accept: "application/json", "User-Agent": "SunuNature/1.0 (African biodiversity observations)" },
+    headers: { Accept: "application/json", "User-Agent": "TERRA/1.0 (African biodiversity observations)" },
     signal: AbortSignal.timeout(12_000),
     next: { revalidate: 300 },
   });

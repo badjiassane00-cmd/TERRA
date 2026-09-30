@@ -1,4 +1,4 @@
-// Service worker de SunuNature.
+// Service worker de TERRA.
 //
 // Correction importante : l'ancienne version de ce fichier contenait de
 // la syntaxe TypeScript ("event: any"), invalide en JavaScript pur —

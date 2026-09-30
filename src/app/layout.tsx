@@ -19,12 +19,12 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "SunuNature — Le réseau africain du vivant",
+  title: "TERRA — Le réseau africain du vivant",
   description: "Le réseau africain du vivant : observez, identifiez et partagez les plantes, insectes, oiseaux et animaux autour de vous.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "SunuNature",
+    title: "TERRA",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#8bc98d",
+  themeColor: "#71b879",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

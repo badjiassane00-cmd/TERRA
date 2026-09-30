@@ -20,7 +20,7 @@ export default function LocalBiodiversityAlerts() {
         if (!response.ok) throw new Error(data.error);
         setAlerts(data.alerts || []);
         setMessage(data.count ? `${data.count} observation(s) publique(s) dans les 30 derniers jours.` : "Aucune observation récente dans les 30 km. Cela ne signifie pas que les espèces sont absentes.");
-        if (data.count && "Notification" in window && Notification.permission === "granted") new Notification("SunuNature · Vie près de vous", { body: `${data.count} observation(s) publique(s) ont été partagées à proximité.` });
+        if (data.count && "Notification" in window && Notification.permission === "granted") new Notification("TERRA · Vie près de vous", { body: `${data.count} observation(s) publique(s) ont été partagées à proximité.` });
       } catch (error) { setMessage(error instanceof Error ? error.message : "Les alertes locales sont indisponibles."); }
     }, () => setMessage("Position non partagée. Vous pouvez réessayer depuis les réglages du navigateur."), { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
   };
@@ -28,7 +28,7 @@ export default function LocalBiodiversityAlerts() {
   const enableNotifications = async () => {
     if (!("Notification" in window)) { setNotificationMessage("Les notifications navigateur ne sont pas prises en charge ici."); return; }
     const permission = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
-    setNotificationMessage(permission === "granted" ? "Notifications locales activées sur cet appareil." : "Notifications refusées. Les alertes restent visibles dans SunuNature.");
+    setNotificationMessage(permission === "granted" ? "Notifications locales activées sur cet appareil." : "Notifications refusées. Les alertes restent visibles dans TERRA.");
   };
 
   return <article className="herbarium-card rounded-2xl p-5 xl:col-span-3">

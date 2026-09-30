@@ -99,7 +99,7 @@ export async function GET(request: Request) {
             case "recordedBy":
               return csvEscape(scan.user?.name);
             case "occurrenceRemarks":
-              return csvEscape("Collecté via SunuNature (identification assistée par IA, à vérifier)");
+              return csvEscape("Collecté via TERRA (identification assistée par IA, à vérifier)");
             default:
               return "";
           }

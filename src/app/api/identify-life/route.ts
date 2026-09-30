@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       const displayName = prediction.className.split(",")[0].trim();
       const query = latinName || displayName;
       const response = await fetch(`https://api.gbif.org/v1/species/match?name=${encodeURIComponent(query)}`, {
-        headers: { Accept: "application/json", "User-Agent": "SunuNature/1.0" }, signal: AbortSignal.timeout(7_000),
+        headers: { Accept: "application/json", "User-Agent": "TERRA/1.0" }, signal: AbortSignal.timeout(7_000),
       }).catch(() => null);
       const match = response?.ok ? await response.json().catch(() => null) : null;
       const scientificName = match?.scientificName || match?.canonicalName || query;

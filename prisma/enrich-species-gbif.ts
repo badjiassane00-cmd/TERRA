@@ -39,7 +39,7 @@ async function fetchFamily(family: string, limit: number): Promise<GbifSpecies[]
     limit: String(Math.min(limit, 1000)),
   });
   const response = await fetch(`${GBIF_BASE}?${params}`, {
-    headers: { Accept: "application/json", "User-Agent": "SunuNature/1.0" },
+    headers: { Accept: "application/json", "User-Agent": "TERRA/1.0" },
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) return [];

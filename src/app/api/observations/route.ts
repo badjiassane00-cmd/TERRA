@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(`${INATURALIST_API}?${params}`, {
-      headers: { Accept: "application/json", "User-Agent": "SunuNature/1.0" },
+      headers: { Accept: "application/json", "User-Agent": "TERRA/1.0" },
       signal: AbortSignal.timeout(8_000),
     });
     if (!response.ok) throw new Error("iNaturalist unavailable");

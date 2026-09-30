@@ -9,7 +9,7 @@ export default function ProfileShareButton({ displayName }: { displayName: strin
   async function share() {
     setError("");
     try {
-      const shareData = { title: `Galerie de ${displayName} — SunuNature`, url: window.location.href };
+      const shareData = { title: `Galerie de ${displayName} — TERRA`, url: window.location.href };
       if (navigator.share) await navigator.share(shareData);
       else { await navigator.clipboard.writeText(shareData.url); setCopied(true); window.setTimeout(() => setCopied(false), 2000); }
     } catch (shareError) {

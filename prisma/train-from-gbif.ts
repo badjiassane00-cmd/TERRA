@@ -18,7 +18,7 @@ async function getRealImages(scientificName: string, max: number) {
   });
   try {
     const r = await fetch(`${GBIF_OCC}?${params}`, {
-      headers: { Accept: "application/json", "User-Agent": "SunuNature/1.0" },
+      headers: { Accept: "application/json", "User-Agent": "TERRA/1.0" },
       signal: AbortSignal.timeout(10_000),
     });
     if (!r.ok) return [];

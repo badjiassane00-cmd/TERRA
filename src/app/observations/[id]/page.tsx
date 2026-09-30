@@ -7,7 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import { publicCoordinates } from "@/server/observations/location";
 import { observationRepository } from "@/server/observations/observation.repository";
 
-export const metadata: Metadata = { title: "Fiche d’observation — SunuNature" };
+export const metadata: Metadata = { title: "Fiche d’observation — TERRA" };
 
 export default async function ObservationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

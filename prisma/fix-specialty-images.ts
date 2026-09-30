@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 async function fetchWithRetry(url: string, retries = 5) {
   for (let i = 0; i < retries; i++) {
     const r = await fetch(url, {
-      headers: { Accept: "application/json", "User-Agent": "SunuNature/1.0" },
+      headers: { Accept: "application/json", "User-Agent": "TERRA/1.0" },
       signal: AbortSignal.timeout(10_000),
     });
     if (r.status === 429) {

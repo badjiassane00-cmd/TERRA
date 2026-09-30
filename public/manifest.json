@@ -1,10 +1,10 @@
 {
-  "name": "SunuNature — Le réseau africain du vivant",
-  "short_name": "SunuNature",
+  "name": "TERRA — Le réseau africain du vivant",
+  "short_name": "TERRA",
   "description": "Le réseau africain du vivant : observez et partagez les plantes, insectes, oiseaux et animaux.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f3efe3",
+  "background_color": "#f7faf5",
   "theme_color": "#8bc98d",
   "orientation": "portrait-primary",
   "icons": [

@@ -29,8 +29,8 @@ async function sendEmail(to: string, message: DeliveryMessage) {
     body: JSON.stringify({
       from: process.env.RESEND_FROM_EMAIL,
       to: [to],
-      subject: `SunuNature · ${message.title}`,
-      html: `<main style="font-family:Arial,sans-serif;max-width:560px;margin:32px auto;padding:26px;border:1px solid #e4ede1;border-radius:16px;color:#263c2e"><h1 style="font-size:21px;color:#5d9d69">${escapeHtml(message.title)}</h1><p style="line-height:1.65">${escapeHtml(message.body)}</p><a href="${escapeHtml(process.env.APP_URL || "http://localhost:3000")}${escapeHtml(message.href)}" style="display:inline-block;margin-top:12px;padding:12px 17px;border-radius:999px;background:#76b980;color:#183c25;text-decoration:none;font-weight:bold">Ouvrir SunuNature</a></main>`,
+      subject: `TERRA · ${message.title}`,
+      html: `<main style="font-family:Arial,sans-serif;max-width:560px;margin:32px auto;padding:26px;border:1px solid #e4ede1;border-radius:16px;color:#263c2e"><h1 style="font-size:21px;color:#5d9d69">${escapeHtml(message.title)}</h1><p style="line-height:1.65">${escapeHtml(message.body)}</p><a href="${escapeHtml(process.env.APP_URL || "http://localhost:3000")}${escapeHtml(message.href)}" style="display:inline-block;margin-top:12px;padding:12px 17px;border-radius:999px;background:#76b980;color:#183c25;text-decoration:none;font-weight:bold">Ouvrir TERRA</a></main>`,
     }),
     signal: AbortSignal.timeout(15_000),
   });
@@ -74,7 +74,7 @@ export async function sendTestNotification(userId: string, channel: Notification
   if (!isConfigured(channel)) throw new Error(`Le fournisseur ${channel} n’est pas configuré sur le serveur.`);
   const target = channel === "email" ? user.email : user.phoneNumber;
   if (!target) throw new Error("Renseignez d’abord un numéro de téléphone international.");
-  await sendChannel(user, channel, { title: "Votre nature vous écrit", body: "Les notifications SunuNature sont bien connectées." , href: "/notifications" });
+  await sendChannel(user, channel, { title: "Votre nature vous écrit", body: "Les notifications TERRA sont bien connectées." , href: "/notifications" });
 }
 
 export async function createCommunityNotification(input: {

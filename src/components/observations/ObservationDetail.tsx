@@ -101,7 +101,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
 
   async function shareObservation() {
     try {
-      if (navigator.share) await navigator.share({ title: `${observation.plantName} · SunuNature`, text: `Une rencontre avec ${observation.plantName} au ${observation.region}.`, url: window.location.href });
+      if (navigator.share) await navigator.share({ title: `${observation.plantName} · TERRA`, text: `Une rencontre avec ${observation.plantName} au ${observation.region}.`, url: window.location.href });
       else await navigator.clipboard.writeText(window.location.href);
       setCopied(true); window.setTimeout(() => setCopied(false), 1800);
     } catch (shareError) {
@@ -124,7 +124,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
 
   return (
     <main className="observation-detail-page">
-      <nav className="observation-detail-topbar"><BackLink href="/observations" label="Retour aux observations" /><Link href="/" className="observation-detail-brand"><span>✳</span> SunuNature</Link></nav>
+      <nav className="observation-detail-topbar"><BackLink href="/observations" label="Retour aux observations" /><Link href="/" className="observation-detail-brand"><span>✳</span> TERRA</Link></nav>
       <div className="observation-detail-breadcrumb"><Link href="/">Accueil</Link><span>/</span><Link href="/observations">Observations</Link><span>/</span><span>{observation.plantName}</span></div>
 
       <section className="observation-detail-hero">

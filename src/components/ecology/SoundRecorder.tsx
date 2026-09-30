@@ -60,6 +60,6 @@ export default function SoundRecorder() {
     </div>
     {(busy || message) && <p className="mt-3 flex items-center gap-2 text-xs text-foreground/70" aria-live="polite">{busy && <LoaderCircle className="h-4 w-4 animate-spin"/>}{message}</p>}
     {results.length > 0 && <ul className="mt-3 space-y-1">{results.map((result) => <li key={result} className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-primary"/>{result}</li>)}</ul>}
-    <p className="mt-3 text-[11px] text-foreground/50">SunuNature ne conserve pas l’audio. Il est transmis au moteur configuré; consultez sa politique de conservation.</p>
+    <p className="mt-3 text-[11px] text-foreground/50">TERRA ne conserve pas l’audio. Il est transmis au moteur configuré; consultez sa politique de conservation.</p>
   </article>;
 }

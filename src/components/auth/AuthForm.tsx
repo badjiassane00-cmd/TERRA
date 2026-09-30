@@ -46,7 +46,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <main className="auth-shell">
       <div className="auth-photo-panel">
-        <Link href="/" className="auth-brand"><span className="auth-brand-mark"><Leaf size={20} /></span><span>SunuNature<small>LE RÉSEAU DU VIVANT</small></span></Link>
+        <Link href="/" className="auth-brand"><span className="auth-brand-mark"><Leaf size={20} /></span><span>TERRA<small>LE RÉSEAU DU VIVANT</small></span></Link>
         <div className="auth-photo-content">
           <span className="auth-kicker"><Sparkles size={14} /> LA NATURE NOUS RELIE</span>
           <h1>Le vivant est<br />plus riche <em>ensemble.</em></h1>
@@ -59,7 +59,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
       <section className="auth-form-panel">
         <BackLink href="/" className="auth-back" label="Retour à l’accueil" />
         <div className="auth-form-card">
-          <div className="auth-mobile-mark"><span className="auth-brand-mark"><Leaf size={18} /></span><span>SunuNature</span></div>
+          <div className="auth-mobile-mark"><span className="auth-brand-mark"><Leaf size={18} /></span><span>TERRA</span></div>
           <span className="auth-form-kicker">{isSignup ? "VOTRE CARNET COMMENCE ICI" : "HEUREUX DE VOUS RETROUVER"}</span>
           <h2>{isSignup ? "Rejoignez le mouvement." : "Ravi de vous revoir."}</h2>
           <p className="auth-form-intro">{isSignup ? "Créez votre espace et partagez vos rencontres avec le vivant." : "Connectez-vous pour retrouver vos observations et votre communauté."}</p>
@@ -72,7 +72,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
             {!isSignup && <div className="auth-remember"><label><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} /> Se souvenir de moi</label><span><ShieldCheck size={14} /> Session sécurisée</span></div>}
             <button className="auth-submit" type="submit" disabled={pending}>{pending ? "Un instant…" : isSignup ? "Créer mon compte" : "Me connecter"}<ArrowRight size={17} /></button>
           </form>
-          <p className="auth-switch">{isSignup ? "Déjà parmi nous ?" : "Vous découvrez SunuNature ?"} <Link href={isSignup ? "/connexion" : "/inscription"}>{isSignup ? "Se connecter" : "Créer un compte"}</Link></p>
+          <p className="auth-switch">{isSignup ? "Déjà parmi nous ?" : "Vous découvrez TERRA ?"} <Link href={isSignup ? "/connexion" : "/inscription"}>{isSignup ? "Se connecter" : "Créer un compte"}</Link></p>
           <div className="auth-privacy"><ShieldCheck size={15} /> Vos observations et vos données restent protégées.</div>
         </div>
       </section>

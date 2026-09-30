@@ -11,7 +11,7 @@ const FALLBACK_KNOWLEDGE: Record<string, string> = {
   "default": "Je suis votre assistant botanique. Posez-moi des questions sur les plantes, leur entretien, leurs maladies, ou utilisez le mode identification par photo pour une analyse détaillée.",
 };
 
-const SYSTEM_PROMPT = `Tu es l'assistant vocal de SunuNature, une application d'identification et de diagnostic des plantes.
+const SYSTEM_PROMPT = `Tu es l'assistant vocal de TERRA, une application d'identification et de diagnostic des plantes.
 Réponds en français, en 2 à 4 phrases maximum, de façon claire et pratique (entretien, maladies, usages médicinaux/ornementaux/comestibles, floraison, toxicité).
 Si l'utilisateur mentionne une plante précise et que tu la reconnais, termine ta réponse par une ligne séparée au format exact :
 PLANTE: <nom usuel>

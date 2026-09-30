@@ -12,8 +12,8 @@ type HeaderUser = {
 export default function NatureAppHeader({ user }: { user: HeaderUser | null }) {
   return (
     <header className="nature-identifier-header nature-app-header">
-      <Link href="/" className="nature-identifier-brand" aria-label="SunuNature, reconnaître le vivant">
-        <Leaf size={22} /> SunuNature
+      <Link href="/" className="nature-identifier-brand" aria-label="TERRA, reconnaître le vivant">
+        <Leaf size={22} /> TERRA
       </Link>
       <nav aria-label="Navigation principale">
         <Link href="/"><Camera size={16} /> Reconnaître</Link>

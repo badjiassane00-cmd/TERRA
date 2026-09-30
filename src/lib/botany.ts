@@ -61,7 +61,7 @@ const GBIF = "https://api.gbif.org/v1";
 
 async function json(url: string) {
   const response = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": "SunuNature/1.0" },
+    headers: { Accept: "application/json", "User-Agent": "TERRA/1.0" },
     signal: AbortSignal.timeout(8_000),
   });
   if (!response.ok) throw new Error(`Source botanique indisponible (${response.status})`);

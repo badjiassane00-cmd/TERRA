@@ -24,7 +24,7 @@ type Observation = {
   latitude: number | null;
   longitude: number | null;
   user: { name: string };
-  source?: "SunuNature" | "iNaturalist";
+  source?: "TERRA" | "iNaturalist";
   sourceUrl?: string;
   photoAttribution?: string;
   photoLicense?: string | null;
@@ -33,7 +33,7 @@ type Observation = {
 export default function ObservationExplorer() {
   const [observations, setObservations] = useState<Observation[]>([]);
   const [group, setGroup] = useState("ALL");
-  const [source, setSource] = useState<"iNaturalist" | "SunuNature">("iNaturalist");
+  const [source, setSource] = useState<"iNaturalist" | "TERRA">("iNaturalist");
   const [region, setRegion] = useState("ALL");
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"grid" | "list" | "map">("grid");
@@ -52,7 +52,7 @@ export default function ObservationExplorer() {
       if (!response.ok) throw new Error(payload.error || "Les observations ne sont pas disponibles.");
       setObservations(source === "iNaturalist"
         ? (payload.observations || []).map((item: Omit<Observation, "user"> & { observer: string }) => ({ ...item, user: { name: item.observer } }))
-        : (payload.data || []).map((item: Observation) => ({ ...item, source: "SunuNature" as const })));
+        : (payload.data || []).map((item: Observation) => ({ ...item, source: "TERRA" as const })));
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Impossible de charger les observations.");
     } finally {
@@ -96,7 +96,7 @@ export default function ObservationExplorer() {
 
       <div className="observation-source-switch" role="tablist" aria-label="Source des observations">
         <button role="tab" aria-selected={source === "iNaturalist"} className={source === "iNaturalist" ? "selected" : ""} onClick={() => setSource("iNaturalist")}>iNaturalist Afrique <ExternalLink size={14} /></button>
-        <button role="tab" aria-selected={source === "SunuNature"} className={source === "SunuNature" ? "selected" : ""} onClick={() => setSource("SunuNature")}>Communauté SunuNature</button>
+        <button role="tab" aria-selected={source === "TERRA"} className={source === "TERRA" ? "selected" : ""} onClick={() => setSource("TERRA")}>Communauté TERRA</button>
       </div>
       <section className="observation-explorer-toolbar" aria-label="Filtres des observations">
         <label className="observation-search"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Espèce, lieu, naturaliste…" /></label>

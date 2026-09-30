@@ -268,7 +268,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     const url = `${window.location.origin}/observations/${post.id}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: `${post.plantName} · SunuNature`, text: `Une rencontre avec ${post.plantName} observée au ${post.region}.`, url });
+        await navigator.share({ title: `${post.plantName} · TERRA`, text: `Une rencontre avec ${post.plantName} observée au ${post.region}.`, url });
       } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(url);
       } else {

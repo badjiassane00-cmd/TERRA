@@ -12,7 +12,7 @@ export default async function IdentificationPage() {
       <IdentificationWorkspace userId={user?.id || null} userRole={role || null} />
       <footer className="nature-identifier-footer">
         <BackLink href="/" label="Accueil reconnaissance" />
-        <span>SunuNature · Observer · Comprendre · Protéger</span>
+        <span>TERRA · Observer · Comprendre · Protéger</span>
       </footer>
     </main>
   );

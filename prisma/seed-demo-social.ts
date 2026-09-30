@@ -12,7 +12,7 @@ const DEMO_PROFILES = [
   { email: "awa.diop@demo.sununature.invalid", name: "Awa Diop", institution: "Compte de démonstration · Botanique", bio: "Galerie démo — plantes et arbres observés en Afrique." },
   { email: "fatou.bah@demo.sununature.invalid", name: "Fatou Bah", institution: "Compte de démonstration · Entomologie", bio: "Galerie démo — insectes et pollinisateurs." },
   { email: "lamine.sow@demo.sununature.invalid", name: "Lamine Sow", institution: "Compte de démonstration · Faune", bio: "Galerie démo — animaux, oiseaux et faune africaine." },
-  { email: "sunu.nature@demo.sununature.invalid", name: "Équipe SunuNature", institution: "Compte de démonstration", bio: "Profil fictif qui présente des observations publiques réutilisables, avec leurs crédits." },
+  { email: "sunu.nature@demo.sununature.invalid", name: "Équipe TERRA", institution: "Compte de démonstration", bio: "Profil fictif qui présente des observations publiques réutilisables, avec leurs crédits." },
 ];
 const COMMENT_TEXTS = [
   "Quelqu’un connaît son nom dans une langue locale ?",
@@ -59,7 +59,7 @@ async function fetchObservations(taxonId: number): Promise<INatObservation[]> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       response = await fetch(`${API}?${params}`, {
-        headers: { Accept: "application/json", "User-Agent": "SunuNature demo seed (licensed photo attribution)" },
+        headers: { Accept: "application/json", "User-Agent": "TERRA demo seed (licensed photo attribution)" },
         signal: AbortSignal.timeout(25_000),
       });
       if (response.ok) break;
@@ -118,7 +118,7 @@ async function main() {
     const scientificName = source.taxon?.name || name;
     const coords = source.location?.split(",").map(Number) || [];
     const originalObserver = source.user?.name || source.user?.login || "observateur iNaturalist";
-    const sourceDescription = `Observation réelle publiée par ${originalObserver} sur iNaturalist. Profil de démonstration SunuNature : cette publication relaie la fiche source et ne prétend pas que le compte fictif a observé l’espèce.`;
+    const sourceDescription = `Observation réelle publiée par ${originalObserver} sur iNaturalist. Profil de démonstration TERRA : cette publication relaie la fiche source et ne prétend pas que le compte fictif a observé l’espèce.`;
     const post = await prisma.communityPost.upsert({
       where: { sourceUrl },
       update: {

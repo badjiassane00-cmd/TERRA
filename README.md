@@ -1,4 +1,4 @@
-# SunuNature — Le réseau africain du vivant
+# TERRA — Le réseau africain du vivant
 
 Réseau social naturaliste africain pour observer, identifier et partager les plantes, insectes, oiseaux, mammifères et autres formes de vie. Les observations sont stockées dans PostgreSQL via Prisma; les comptes sont protégés par mot de passe haché et cookie de session httpOnly.
 
@@ -74,7 +74,7 @@ Le calendrier vivant est calculé par pays à partir des observations publiques 
 
 ### Sons de la nature
 
-L’interface permet d’enregistrer ou d’importer un court audio. Pour obtenir les propositions d’espèces, configurez un service d’analyse auto-hébergé compatible avec `POST multipart/form-data` contenant `audio` (et éventuellement `latitude`/`longitude`). La réponse JSON doit contenir `species` ou `results`, un tableau avec des champs comme `name`, `scientificName`, `commonName` et `confidence`. Configurez `SOUND_IDENTIFICATION_API_URL` et, si nécessaire, `SOUND_IDENTIFICATION_API_KEY`. SunuNature relaie l’audio aux utilisateurs connectés et ne l’enregistre pas dans sa base; vérifiez les règles de conservation du fournisseur du modèle.
+L’interface permet d’enregistrer ou d’importer un court audio. Pour obtenir les propositions d’espèces, configurez un service d’analyse auto-hébergé compatible avec `POST multipart/form-data` contenant `audio` (et éventuellement `latitude`/`longitude`). La réponse JSON doit contenir `species` ou `results`, un tableau avec des champs comme `name`, `scientificName`, `commonName` et `confidence`. Configurez `SOUND_IDENTIFICATION_API_URL` et, si nécessaire, `SOUND_IDENTIFICATION_API_KEY`. TERRA relaie l’audio aux utilisateurs connectés et ne l’enregistre pas dans sa base; vérifiez les règles de conservation du fournisseur du modèle.
 
 Les brouillons de publication photo hors connexion sont conservés sur l’appareil (deux au maximum), puis renvoyés automatiquement au retour du réseau et de la session utilisateur. Une clé idempotente évite les doublons si la réponse du serveur s’est perdue; appliquez la nouvelle migration Prisma après mise à jour.
 

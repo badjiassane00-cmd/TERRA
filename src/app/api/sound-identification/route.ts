@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 
 // Compatible with a self-hosted acoustic classifier. Keep the provider URL and
-// credentials server-side; no audio is saved by SunuNature.
+// credentials server-side; no audio is saved by TERRA.
 export async function POST(request: Request) {
   if (!await getSessionUserId()) return NextResponse.json({ error: "Connectez-vous pour analyser un enregistrement." }, { status: 401 });
   const endpoint = process.env.SOUND_IDENTIFICATION_API_URL;
