@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ArrowRight, Compass } from "lucide-react";
 import Link from "next/link";
 import CommunityFeed from "@/components/community/CommunityFeed";
-import NatureAppHeader from "@/components/navigation/NatureAppHeader";
 import { getSessionUser } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -16,7 +15,6 @@ export default async function ExplorerPage() {
 
   return (
     <main className="nature-explorer-page">
-      <NatureAppHeader user={user ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl } : null} />
       <section className="nature-explorer-intro" id="reseau" aria-labelledby="explorer-title">
         <div className="nature-explorer-copy">
           <span><Compass size={15} /> 03 — LE RÉSEAU</span>

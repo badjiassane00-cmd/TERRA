@@ -33,6 +33,7 @@ model User {
   communityIdentifications CommunityIdentification[]
   notifications Notification[]
   exhibitions   Exhibition[]
+  catalogs      NatureCatalog[]
   fieldSessions FieldSession[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -365,6 +366,38 @@ model Exhibition {
   updatedAt   DateTime          @updatedAt
 
   @@map("exhibitions")
+}
+
+
+model NatureCatalog {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  isPublic    Boolean        @default(false)
+  entries     CatalogEntry[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([userId, updatedAt])
+  @@map("nature_catalogs")
+}
+
+model CatalogEntry {
+  id             String        @id @default(cuid())
+  catalogId      String
+  catalog        NatureCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+  name           String
+  scientificName String?
+  group          OrganismGroup @default(PLANT)
+  imageUrl       String?
+  note           String?
+  position       Int           @default(0)
+  createdAt      DateTime      @default(now())
+
+  @@index([catalogId, position])
+  @@map("catalog_entries")
 }
 
 model ExhibitionItem {
