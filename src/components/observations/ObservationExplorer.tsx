@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, CalendarDays, ExternalLink, LayoutGrid, List, LoaderCircle, MapPin, MapPinned, Search, SlidersHorizontal } from "lucide-react";
-import BackLink from "@/components/navigation/BackLink";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismGroup } from "@/types/nature";
 import type { ObservationPin } from "./ObservationMap";
 
@@ -86,7 +85,6 @@ export default function ObservationExplorer() {
     <main className="observations-explorer">
       <header className="observations-explorer-heading">
         <div>
-          <BackLink href="/" label="Retour à l’accueil" className="observations-back-link" />
           <span className="observation-overline"><span /> LE CARNET DU VIVANT</span>
           <h1>Observations de la nature</h1>
           <p>Explorez les découvertes naturalistes du monde entier et les histoires de terrain partagées par la communauté.</p>
