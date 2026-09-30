@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       if (scanUserId) {
       const top = topCandidates[0];
       let plant = await prisma.plant.findFirst({
-        where: { scientificName: { contains: top.scientificName, mode: "insensitive" } },
+        where: { scientificName: { contains: top.scientificName } },
       });
 
       if (!plant) {

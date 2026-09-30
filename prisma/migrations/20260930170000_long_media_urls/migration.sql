@@ -1,0 +1,2 @@
+ALTER TABLE `users` MODIFY `avatarUrl` LONGTEXT NULL;
+ALTER TABLE `community_posts` MODIFY `imageUrl` LONGTEXT NOT NULL, MODIFY `thumbnailUrl` LONGTEXT NULL;

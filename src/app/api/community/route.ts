@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
 import { ORGANISM_GROUPS } from "@/types/nature";
 import { publicCoordinates } from "@/server/observations/location";
+import { isImageDataUrl, isStorageConfigured, storePublicImage } from "@/server/media/object-storage";
 
 const MAX_IMAGE_DATA_URL_LENGTH = 1_250_000;
 const MAX_REQUEST_LENGTH = 1_450_000;
@@ -103,8 +104,21 @@ export async function POST(request: Request) {
       if (existing) return NextResponse.json({ error: "Identifiant de publication déjà utilisé." }, { status: 409 });
     }
 
+    let storedImageUrl = imageUrl;
+    let storedThumbnailUrl = thumbnailUrl;
+    if (isImageDataUrl(imageUrl) || isImageDataUrl(thumbnailUrl)) {
+      if (!isStorageConfigured()) return NextResponse.json({ error: "Le stockage photo n’est pas encore configuré." }, { status: 503 });
+      try {
+        [storedImageUrl, storedThumbnailUrl] = await Promise.all([
+          storePublicImage(imageUrl, "observations"),
+          storePublicImage(thumbnailUrl, "observations"),
+        ]);
+      } catch (error) {
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Envoi photo impossible." }, { status: 400 });
+      }
+    }
     const post = await prisma.communityPost.create({
-      data: { userId: authorId, plantName, scientificName, imageUrl, thumbnailUrl, region, description, organismGroup, observedAt, latitude, longitude, locationVisibility, clientSubmissionId },
+      data: { userId: authorId, plantName, scientificName, imageUrl: storedImageUrl, thumbnailUrl: storedThumbnailUrl, region, description, organismGroup, observedAt, latitude, longitude, locationVisibility, clientSubmissionId },
     });
     return NextResponse.json({ observation: { ...post, ...publicCoordinates(post, authorId) } }, { status: 201 });
   } catch (error) {

@@ -64,8 +64,8 @@ export async function POST(request: Request) {
         const existingPlant = await prisma.plant.findFirst({
           where: {
             OR: [
-              { scientificName: { contains: speciesName, mode: "insensitive" } },
-              { commonNames: { contains: speciesName, mode: "insensitive" } },
+              { scientificName: { contains: speciesName } },
+              { commonNames: { contains: speciesName } },
             ],
           },
           select: {

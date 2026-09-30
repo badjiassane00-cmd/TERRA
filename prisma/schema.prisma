@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -13,8 +13,8 @@ model User {
   password      String
   name          String
   institution   String?
-  bio           String?
-  avatarUrl     String?
+  bio           String?   @db.Text
+  avatarUrl     String?   @db.LongText
   phoneNumber   String?
   notifyEmail   Boolean   @default(false)
   notifySms     Boolean   @default(false)
@@ -34,6 +34,7 @@ model User {
   notifications Notification[]
   exhibitions   Exhibition[]
   catalogs      NatureCatalog[]
+  mediaAssets   MediaAsset[]
   fieldSessions FieldSession[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -44,7 +45,7 @@ model User {
 model Plant {
   id              String    @id @default(cuid())
   scientificName  String    @unique
-  commonNames     String    @default("[]")
+  commonNames     String    @default("[]") @db.VarChar(1000)
   kingdom         String?   // règne, ex: Plantae
   phylum          String?   // embranchement, ex: Tracheophyta
   taxClass        String?   // classe, ex: Magnoliopsida
@@ -52,19 +53,19 @@ model Plant {
   family          String?
   genus           String?
   species         String?
-  description     String?
-  taxonomy        String?
+  description     String?   @db.Text
+  taxonomy        String?   @db.Text
   medicinal       Boolean?
-  edibleParts     String    @default("[]")
-  toxicity        String    @default("[]")
+  edibleParts     String    @default("[]") @db.VarChar(1000)
+  toxicity        String    @default("[]") @db.VarChar(1000)
   watering        String?
   sunlight        String?
   soil            String?
   growthRate      String?
-  sowingMonths    String    @default("[]") // mois de semis/plantation, ex: ["6","7"]
-  bloomingMonths  String    @default("[]") // mois de floraison
-  harvestMonths   String    @default("[]") // mois de récolte
-  imageUrl        String?
+  sowingMonths    String    @default("[]") @db.VarChar(1000) // mois de semis/plantation, ex: ["6","7"]
+  bloomingMonths  String    @default("[]") @db.VarChar(1000) // mois de floraison
+  harvestMonths   String    @default("[]") @db.VarChar(1000) // mois de récolte
+  imageUrl        String?   @db.VarChar(2048)
   gbifId          String?
   iNaturalistId   String?
   diseases        PlantDisease[]
@@ -81,8 +82,8 @@ model Plant {
 model Disease {
   id          String    @id @default(cuid())
   name        String    @unique
-  description String?
-  treatment   String    @default("[]")
+  description String? @db.Text
+  treatment   String    @default("[]") @db.VarChar(4000)
   confidence  Float?
   plants      PlantDisease[]
   createdAt   DateTime  @default(now())
@@ -112,8 +113,8 @@ model Location {
   region        String
   speciesCount  Int           @default(0)
   type          LocationType
-  description   String?
-  bloomingMonths String?      @default("[]")
+  description   String? @db.Text
+  bloomingMonths String?      @default("[]") @db.VarChar(4000)
   plants        LocationPlant[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -137,11 +138,11 @@ model ScanHistory {
   id          String   @id @default(cuid())
   userId      String
   plantId     String?
-  imageUrl    String?
+  imageUrl    String? @db.LongText
   result      Json?
   lat         Float?
   lng         Float?
-  courseName  String?  // contexte pédagogique, ex: "TP Botanique L2 - Sortie Bandia"
+  courseName  String? @db.VarChar(500)  // contexte pédagogique, ex: "TP Botanique L2 - Sortie Bandia"
   objective   String?  // objectif de l'observation dans ce contexte
   sessionId   String?  // rattachement à une session de terrain en direct
   session     FieldSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
@@ -160,7 +161,7 @@ model FieldSession {
   id           String        @id @default(cuid())
   code         String        @unique
   title        String
-  courseName   String?
+  courseName   String?       @db.VarChar(500)
   supervisorId String
   supervisor   User          @relation(fields: [supervisorId], references: [id], onDelete: Cascade)
   active       Boolean       @default(true)
@@ -189,10 +190,10 @@ model CommunityPost {
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   plantName     String
   scientificName String
-  imageUrl      String
-  thumbnailUrl  String?
+  imageUrl      String @db.LongText
+  thumbnailUrl  String? @db.LongText
   region        String
-  description   String?
+  description   String? @db.Text
   organismGroup OrganismGroup @default(PLANT)
   observedAt DateTime?
   latitude Float?
@@ -223,7 +224,7 @@ model GamificationProfile {
   userId    String   @unique
   points    Int      @default(0)
   level     Int      @default(1)
-  badges    String   @default("[]")
+  badges    String   @default("[]") @db.VarChar(4000)
   streak    Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -253,8 +254,8 @@ model TrainingData {
   userId        String?
   plantName     String
   scientificName String
-  imageUrl      String
-  label         String
+  imageUrl      String @db.LongText
+  label         String @db.VarChar(500)
   confidence     Float?
   isVerified    Boolean   @default(false)
   usedForTraining Boolean @default(false)
@@ -269,12 +270,12 @@ model ModelVersion {
   id            String    @id @default(cuid())
   version       String    @unique
   name          String
-  description   String?
+  description   String? @db.Text
   accuracy       Float?
   loss           Float?
   trainingDataCount Int
   status        ModelStatus @default(DRAFT)
-  modelUrl      String?
+  modelUrl      String? @db.VarChar(2048)
   deployed       Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -357,8 +358,8 @@ model Exhibition {
   userId      String
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
-  description String?
-  coverImage  String?
+  description String? @db.Text
+  coverImage  String? @db.VarChar(2048)
   theme       String?           // ex: "médicinale", "jardin de ville", "espèces menacées"
   isPublic    Boolean           @default(false)
   items       ExhibitionItem[]
@@ -374,7 +375,7 @@ model NatureCatalog {
   userId      String
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
-  description String?
+  description String? @db.Text
   isPublic    Boolean        @default(false)
   entries     CatalogEntry[]
   createdAt   DateTime       @default(now())
@@ -384,6 +385,19 @@ model NatureCatalog {
   @@map("nature_catalogs")
 }
 
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  objectKey   String   @unique @db.VarChar(512)
+  contentType String   @db.VarChar(100)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("media_assets")
+}
+
 model CatalogEntry {
   id             String        @id @default(cuid())
   catalogId      String
@@ -391,8 +405,8 @@ model CatalogEntry {
   name           String
   scientificName String?
   group          OrganismGroup @default(PLANT)
-  imageUrl       String?
-  note           String?
+  imageUrl       String? @db.VarChar(2048)
+  note           String? @db.Text
   position       Int           @default(0)
   createdAt      DateTime      @default(now())
 
@@ -407,7 +421,7 @@ model ExhibitionItem {
   plantId      String
   plant        Plant      @relation(fields: [plantId], references: [id], onDelete: Cascade)
   note         String?
-  imageUrl     String?
+  imageUrl     String?    @db.VarChar(2048)
   position     Int        @default(0)
   addedAt      DateTime   @default(now())
 
@@ -439,7 +453,7 @@ model CommunityComment {
   id String @id @default(cuid())
   postId String
   userId String
-  body String
+  body String @db.Text
   isDemo Boolean @default(false)
   post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -493,9 +507,9 @@ model UserFollow {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  title     String
-  body      String
-  href      String
+  title     String @db.VarChar(500)
+  body      String @db.Text
+  href      String @db.VarChar(2048)
   kind      String   @default("community")
   readAt    DateTime?
   createdAt DateTime @default(now())

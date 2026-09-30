@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         removed: false,
         locationVisibility: "PUBLIC",
         observedAt: { gte: since },
-        ...(region ? { region: { contains: region, mode: "insensitive" as const } } : {}),
+        ...(region ? { region: { contains: region } } : {}),
       },
       select: {
         plantName: true,

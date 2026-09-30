@@ -1,13 +1,13 @@
 # TERRA — Le réseau mondial du vivant
 
-Réseau social naturaliste international pour observer, identifier et partager les plantes, insectes, oiseaux, mammifères et autres formes de vie. Les observations sont stockées dans PostgreSQL via Prisma; les comptes sont protégés par mot de passe haché et cookie de session httpOnly.
+Réseau social naturaliste international pour observer, identifier et partager les plantes, insectes, oiseaux, mammifères et autres formes de vie. Les observations sont stockées dans MySQL via Prisma et les photos utilisateur dans un stockage objet S3 compatible; les comptes sont protégés par mot de passe haché et cookie de session httpOnly.
 
 ## Fonctionnalités
 
 ### Réseau naturaliste
 - ✅ Fil communautaire multi-groupes du vivant avec localisation par pays/région
 - ✅ Connexion et inscription dédiées
-- ✅ Base PostgreSQL relationnelle gérée par Prisma et migrations versionnées
+- ✅ Base MySQL relationnelle gérée par Prisma et migrations versionnées; médias servis depuis un bucket MinIO privé
 
 ### Core
 - ✅ Identification de plantes par photo via Pl@ntNet, enrichie par GBIF
@@ -35,10 +35,10 @@ Réseau social naturaliste international pour observer, identifier et partager l
 - ✅ Notifications navigateur
 
 ### Technique
-- ✅ Next.js 14 + TypeScript + Tailwind CSS
-- ✅ Prisma ORM + SQLite (PostgreSQL-ready)
+- ✅ Next.js 16 + TypeScript + Tailwind CSS
+- ✅ Prisma ORM + MySQL 8 + MinIO (API S3 compatible)
 - ✅ API Routes : `/api/identify`, `/api/auth`, `/api/locations`, `/api/voice-assistant`, `/api/community`, `/api/gamification`
-- ✅ Base de données relationnelle complète (User, Plant, Disease, Location, ScanHistory, Favorite, CommunityPost, GamificationProfile, Reminder)
+- ✅ Base de données relationnelle MySQL complète et stockage privé des images
 
 ## Installation
 
@@ -55,7 +55,7 @@ Copiez `.env.example` vers `.env.local` et remplissez les clés :
 cp .env.example .env.local
 ```
 
-### APIs nécessaires :
+### Variables de configuration :
 
 | Variable | Description | Obtention |
 |----------|-------------|-----------|
@@ -63,8 +63,8 @@ cp .env.example .env.local
 | `OPENWEATHER_API_KEY` | Météo pour rappels intelligents | https://openweathermap.org/api |
 | `GOOGLE_MAPS_API_KEY` | Cartographie avancée | https://console.cloud.google.com/apis/credentials |
 | `GOOGLE_TRANSLATE_API_KEY` | Traduction vocale | https://cloud.google.com/translate |
-| `CLOUDINARY_*` | Stockage d'images | https://cloudinary.com/ |
-| `NEXTAUTH_SECRET` | Authentification sécurisée | `openssl rand -base64 32` |
+| `MEDIA_S3_*` | Stockage des photos dans MinIO/S3 | Voir la configuration ci-dessous |
+| `JWT_SECRET` | Authentification sécurisée TERRA | `openssl rand -base64 32` |
 
 Les plantes sont identifiées par Pl@ntNet avec `PLANTNET_API_KEY`. Le mode « Insectes & animaux » classe l’image sur l’appareil avec MobileNet puis rapproche les étiquettes de GBIF via `/api/identify-life`; la photo ne quitte pas le navigateur. MobileNet reconnaît des catégories ImageNet et peut manquer certaines espèces rares ou proches.
 
@@ -78,14 +78,39 @@ L’interface permet d’enregistrer ou d’importer un court audio. Pour obteni
 
 Les brouillons de publication photo hors connexion sont conservés sur l’appareil (deux au maximum), puis renvoyés automatiquement au retour du réseau et de la session utilisateur. Une clé idempotente évite les doublons si la réponse du serveur s’est perdue; appliquez la nouvelle migration Prisma après mise à jour.
 
-## Base de données
+## Base MySQL et médias MinIO
+
+Le dépôt utilise maintenant MySQL 8.4 et un stockage S3 compatible pour les images. Lancer MySQL localement :
+
+```bash
+docker compose up -d mysql
+```
+
+Configurer `.env.local` avec l’URL MySQL `mysql://terra:terra-local-password@127.0.0.1:3309/terra` et les variables `MEDIA_S3_*` de votre serveur MinIO. TERRA utilise un bucket privé et sert les images publiques par ses propres routes, tandis que les images personnelles exigent la session de leur propriétaire. Aucun serveur MinIO local n’est inclus : l’image officielle n’est actuellement pas récupérable depuis les registres testés et le dépôt amont est archivé; raccordez un serveur MinIO que vous gérez ou choisissez un autre stockage S3 compatible avant l’usage des photos.
+
+Les migrations PostgreSQL historiques sont conservées dans `prisma/migrations-postgresql`. La nouvelle migration MySQL est indépendante. Avant de remplacer `DATABASE_URL`, gardez sa valeur PostgreSQL dans `LEGACY_POSTGRES_URL`, puis configurez la cible MySQL dans `DATABASE_URL` et lancez les commandes dans cet ordre :
+
+```bash
+npm run prisma:generate
+npm run db:deploy
+CONFIRM_POSTGRES_TO_MYSQL=yes npm run db:transfer:mysql
+# Après avoir configuré et démarré MinIO
+npm run media:externalize
+```
+
+Le transfert ne modifie pas PostgreSQL et s’arrête si la cible MySQL contient déjà des lignes. Les photos déjà intégrées restent visibles dans MySQL tant que MinIO n’est pas configuré. `npm run media:externalize` les envoie ensuite vers le bucket privé, puis TERRA les sert via ses routes publiques ou par la session de leur propriétaire.
+
+### Prisma
 
 ```bash
 # Générer le client Prisma
 npm run prisma:generate
 
-# Appliquer les migrations
+# Appliquer les migrations en développement
 npm run prisma:migrate
+
+# Déployer les migrations validées
+npm run db:deploy
 
 # Seed la base de données
 npm run prisma:seed

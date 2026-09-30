@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
+import { isStorageConfigured, storePublicImage } from "@/server/media/object-storage";
 
-const MAX_IMAGE_BYTES = 320_000;
 const MAX_REQUEST_LENGTH = 460_000;
-const IMAGE_DATA_URL = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/;
 
 export async function PATCH(request: Request) {
   const userId = await getSessionUserId();
@@ -23,22 +22,14 @@ export async function PATCH(request: Request) {
   if (avatarUrl !== null && typeof avatarUrl !== "string") {
     return NextResponse.json({ error: "Format de photo invalide." }, { status: 400 });
   }
+  let storedAvatarUrl: string | null = null;
   if (typeof avatarUrl === "string") {
-    const match = IMAGE_DATA_URL.exec(avatarUrl);
-    if (!match) return NextResponse.json({ error: "Utilisez une image JPEG, PNG ou WebP." }, { status: 400 });
-    const bytes = Buffer.from(match[2], "base64");
-    if (bytes.length === 0 || bytes.length > MAX_IMAGE_BYTES) {
-      return NextResponse.json({ error: "La photo doit faire moins de 320 Ko." }, { status: 413 });
-    }
-    const type = match[1];
-    const validSignature = type === "jpeg"
-      ? bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
-      : type === "png"
-        ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
-        : bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
-    if (!validSignature) return NextResponse.json({ error: "Le fichier image semble endommagé." }, { status: 400 });
+    if (!avatarUrl.startsWith("data:image/")) return NextResponse.json({ error: "Envoyez une image JPEG, PNG ou WebP." }, { status: 400 });
+    if (!isStorageConfigured()) return NextResponse.json({ error: "Le stockage photo n’est pas encore configuré." }, { status: 503 });
+    try { storedAvatarUrl = await storePublicImage(avatarUrl, "avatars"); }
+    catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Image invalide." }, { status: 400 }); }
   }
 
-  const user = await prisma.user.update({ where: { id: userId }, data: { avatarUrl }, select: { id: true, avatarUrl: true } });
+  const user = await prisma.user.update({ where: { id: userId }, data: { avatarUrl: storedAvatarUrl }, select: { id: true, avatarUrl: true } });
   return NextResponse.json({ avatarUrl: user.avatarUrl });
 }

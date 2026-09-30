@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-terra-local-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-terra}
+      MYSQL_USER: ${MYSQL_USER:-terra}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-terra-local-password}
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3309}:3306"
+    volumes:
+      - terra_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+
+volumes:
+  terra_mysql_data:
