@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- identification and similar images use dynamic provider URLs or data URLs */
 
 import { Leaf, Bug, Bird, PawPrint, AlertTriangle, Info, Droplets, Sun, Wind, FlaskConical } from "lucide-react";
 import LocalNames from "./LocalNames";

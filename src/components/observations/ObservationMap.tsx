@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Leaflet popup photos are dynamically supplied */
 
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
@@ -34,7 +35,7 @@ export default function ObservationMap({ observations }: { observations: Observa
           <Marker key={observation.id} position={[observation.latitude, observation.longitude]} icon={marker}>
             <Popup>
               <a className="observation-map-popup" href={`/observations/${observation.id}`}>
-                {observation.imageUrl && <img src={observation.imageUrl} alt="" />}
+                {observation.imageUrl ? <img src={observation.imageUrl} alt="" /> : null}
                 <strong>{observation.name}</strong>
                 <span>{observation.group} · {observation.region}</span>
                 <small>{observation.date}</small>

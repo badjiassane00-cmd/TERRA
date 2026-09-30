@@ -16,7 +16,7 @@ interface ScanResult {
 // Regroupe les scans d'un même utilisateur par plante pour construire
 // un carnet de suivi : évolution de la confiance d'identification et
 // des maladies détectées dans le temps pour une même espèce.
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const userId = await getSessionUserId();
 

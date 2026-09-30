@@ -5,7 +5,7 @@ import { getSessionUserId } from "../../../../lib/session";
 
 // Tout ce qui attend une validation institutionnelle : noms locaux
 // non vérifiés et publications communautaires non certifiées.
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const moderator = await requireModerator(await getSessionUserId());
     if (!moderator) {

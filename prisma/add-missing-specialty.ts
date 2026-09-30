@@ -19,11 +19,6 @@ const MISSING: Record<string, { commonNames: string[]; description: string; spec
   "Aframomum melegueta": { commonNames: ["Graine de Paradis", "Malaguette", "Maniguette"], description: "Herbe aromatique d'Afrique de l'Ouest dont les graines (graines de Paradis) servaient d'épice précieuse au Moyen Âge. Propriétés médicinales reconnues.", specialty: "Médicinale", height: "1-2m", leaves: "Longues, lancéolées, alternes", flowers: "Blanches à lèvre rouge", fruits: "Capsules rouges à graines aromatiques", care: "Sous-bois humide, sol riche", blooming: ["juin", "juillet"] },
 };
 
-interface NativeRange {
-  country?: string;
-  locality?: string;
-  establishmentMeans?: string;
-}
 
 async function fetchWithRetry(url: string, retries = 4) {
   for (let i = 0; i < retries; i++) {
@@ -84,8 +79,6 @@ async function getNativeRange(scientificName: string) {
 async function main() {
   // 1. Ajout des espèces manquantes avec localités natives
   for (const [scientificName, info] of Object.entries(MISSING)) {
-    const _existing = await prisma.plant.findUnique({ where: { scientificName } });
-
     const ranges = await getNativeRange(scientificName);
     const occCountries = await getOccCountries(scientificName);
     // Préfère les aires natives ; découpe les chaînes multi-pays ; merge avec observations
@@ -107,7 +100,7 @@ async function main() {
       nativeCountries: [...new Set(nativeCountries)].slice(0, 30),
     };
 
-    const _plant = await prisma.plant.upsert({
+    await prisma.plant.upsert({
       where: { scientificName },
       update: { taxonomy: JSON.stringify(characteristics), description: info.description, watering: info.care, medicinal: info.specialty === "Médicinale" },
       create: {

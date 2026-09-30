@@ -1,6 +1,7 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- observation photos use API-provided hosts */
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Compass, ExternalLink, MapPin, Users } from "lucide-react";
 
 type Sighting = { id: number; observedOn: string; observer: string; place: string; photo: string | null; url: string };
@@ -9,31 +10,33 @@ export default function NearbySightings({ scientificName, location }: { scientif
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [total, setTotal] = useState<number | null>(null);
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
-  const isInitialMount = useRef(true);
+  const latitude = location?.lat;
+  const longitude = location?.lng;
 
-  const loadSightings = useCallback(async () => {
-    if (!scientificName || !location) return;
-    const controller = new AbortController();
+  const loadSightings = useCallback(async (signal: AbortSignal) => {
+    if (!scientificName || latitude === undefined || longitude === undefined) return;
     setState("loading");
     try {
-      const params = new URLSearchParams({ scientificName, lat: String(location.lat), lng: String(location.lng) });
-      const response = await fetch(`/api/observations?${params}`, { signal: controller.signal });
+      const params = new URLSearchParams({ scientificName, lat: String(latitude), lng: String(longitude) });
+      const response = await fetch(`/api/observations?${params}`, { signal });
       if (!response.ok) throw new Error();
       const data = await response.json();
+      if (signal.aborted) return;
       setSightings(data.sightings || []);
       setTotal(data.total ?? 0);
       setState("idle");
     } catch (error) {
-      if (error instanceof Error && error.name !== "AbortError") setState("error");
+      if (!signal.aborted && error instanceof Error && error.name !== "AbortError") setState("error");
     }
-  }, [scientificName, location?.lat, location?.lng]);
+  }, [scientificName, latitude, longitude]);
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    loadSightings();
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => void loadSightings(controller.signal), 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [loadSightings]);
 
   if (!scientificName || !location) return null;

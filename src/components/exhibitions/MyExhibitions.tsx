@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- QR image URLs are generated dynamically by the QR provider */
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";

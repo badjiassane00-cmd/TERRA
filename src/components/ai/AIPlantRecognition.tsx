@@ -1,8 +1,9 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- selected local image previews use data URLs */
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, X, Loader2, Brain, TrendingUp, Award, RefreshCw, Check, XCircle, MapPin, Leaf, FlaskConical, Users, Globe, Zap } from "lucide-react";
+import { Camera, X, Loader2, Brain, TrendingUp, Award, Check, XCircle, Leaf, Users, Globe, Zap } from "lucide-react";
 
 interface PlantData {
   family?: string;

@@ -31,7 +31,7 @@ function weatherCacheKey(lat: number, lng: number) {
   return `${lat.toFixed(2)},${lng.toFixed(2)}`;
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const userId = await getSessionUserId();
 

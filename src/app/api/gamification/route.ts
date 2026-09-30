@@ -13,7 +13,7 @@ const POINTS_BY_ACTION: Record<string, number> = {
   daily_login: 5,
 };
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const userId = await getSessionUserId();
 

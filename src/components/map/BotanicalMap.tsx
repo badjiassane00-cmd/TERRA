@@ -65,7 +65,8 @@ export default function BotanicalMap({ region, type, userLocation }: BotanicalMa
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState(type || "all");
   const [selectedSeason, setSelectedSeason] = useState<string>(currentMonth);
-  const [showUserLocation, setShowUserLocation] = useState(false);
+  const [detectedLocation, setDetectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const currentUserLocation = detectedLocation ?? userLocation;
   const [geoError, setGeoError] = useState<string | null>(null);
   const isInitialMount = useRef(true);
 
@@ -76,9 +77,9 @@ export default function BotanicalMap({ region, type, userLocation }: BotanicalMa
       if (region) params.set("region", region);
       if (filterType && filterType !== "all") params.set("type", filterType);
       if (selectedSeason && selectedSeason !== "all") params.set("season", selectedSeason);
-      if (userLocation) {
-        params.set("lat", userLocation.lat.toString());
-        params.set("lng", userLocation.lng.toString());
+      if (currentUserLocation) {
+        params.set("lat", currentUserLocation.lat.toString());
+        params.set("lng", currentUserLocation.lng.toString());
         params.set("radius", "500");
       }
 
@@ -94,7 +95,7 @@ export default function BotanicalMap({ region, type, userLocation }: BotanicalMa
     } finally {
       setLoading(false);
     }
-  }, [region, filterType, selectedSeason, userLocation]);
+  }, [region, filterType, selectedSeason, currentUserLocation]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -112,9 +113,7 @@ export default function BotanicalMap({ region, type, userLocation }: BotanicalMa
     setGeoError(null);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const { latitude, longitude } = position.coords;
-        setShowUserLocation(true);
-        await fetchLocations();
+        setDetectedLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
       },
       (error) => {
         setGeoError(error.message);
@@ -220,10 +219,10 @@ export default function BotanicalMap({ region, type, userLocation }: BotanicalMa
             attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <MapController userLocation={userLocation} />
-          {showUserLocation && userLocation && (
+          <MapController userLocation={currentUserLocation} />
+          {currentUserLocation && (
             <Marker
-              position={[userLocation.lat, userLocation.lng]}
+              position={[currentUserLocation.lat, currentUserLocation.lng]}
               icon={L.divIcon({
                 className: "user-location",
                 html: `

@@ -40,9 +40,6 @@ const TAXA: DemoSpecies[] = [
   { taxonId: 47170, group: OrganismGroup.FUNGUS, profileIndex: 0 }, // Fungi
 ];
 
-function expectedIconic(taxonId: number) {
-  return ({ 47126: "Plantae", 47158: "Insecta", 3: "Aves", 40151: "Mammalia", 26036: "Reptilia", 20978: "Amphibia", 47170: "Fungi" } as Record<number, string>)[taxonId];
-}
 
 function isAfricanPlace(place: string) {
   const lower = place.toLocaleLowerCase("fr");

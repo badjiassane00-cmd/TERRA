@@ -1,8 +1,9 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- image previews come from local FileReader data URLs */
 
 import { useCallback, useState, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
+import { Camera, Upload, X } from "lucide-react";
 
 interface PhotoUploadProps {
   onImageUpload: (file: File) => void;
@@ -128,6 +129,7 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
         </div>
       ) : (
         <div className="relative rounded-xl overflow-hidden border border-border bg-paper">
+          {/* Local FileReader data URLs are intentionally rendered without the image optimizer. */}
           <img
             src={preview}
             alt="Aperçu de la plante"

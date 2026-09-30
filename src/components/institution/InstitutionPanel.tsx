@@ -54,7 +54,6 @@ export default function InstitutionPanel({ userId }: InstitutionPanelProps) {
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (userId) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, load]);
 
   const verifyName = async (id: string) => {

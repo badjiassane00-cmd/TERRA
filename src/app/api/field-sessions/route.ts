@@ -13,7 +13,7 @@ function generateCode(): string {
   return code;
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const sessionUserId = await getSessionUserId();
     if (!sessionUserId) {
