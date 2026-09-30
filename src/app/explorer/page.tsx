@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowRight, Compass, Leaf } from "lucide-react";
+import { ArrowRight, Compass } from "lucide-react";
 import Link from "next/link";
 import CommunityFeed from "@/components/community/CommunityFeed";
 import NatureAppHeader from "@/components/navigation/NatureAppHeader";
@@ -17,15 +17,20 @@ export default async function ExplorerPage() {
   return (
     <main className="nature-explorer-page">
       <NatureAppHeader user={user ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl } : null} />
-      <section className="nature-explorer-intro">
-        <span><Compass size={15} /> LE FIL DU VIVANT</span>
-        <h1>Explorer les rencontres<br />de la communauté.</h1>
-        <p>Plantes, insectes, oiseaux et animaux observés à travers l’Afrique. Chaque publication enrichit notre connaissance du vivant.</p>
-        <Link href="/" className="nature-explorer-identify-link"><Leaf size={16} /> Identifier une espèce <ArrowRight size={15} /></Link>
+      <section className="nature-explorer-intro" id="reseau" aria-labelledby="explorer-title">
+        <div className="nature-explorer-copy">
+          <span><Compass size={15} /> 03 — LE RÉSEAU</span>
+          <h1 id="explorer-title">Un réseau social<br />pour la <em>nature</em> africaine.</h1>
+          <p>SunuNature relie naturalistes, chercheurs, écoles et curieux autour d’une même mission : documenter la biodiversité du continent.</p>
+          <ul><li>Partagez vos photos et observations de terrain</li><li>Suivez des espèces, des régions et des naturalistes</li><li>Contribuez aux identifications et aux projets participatifs</li></ul>
+          <Link href="#publications" className="nature-explorer-identify-link">Explorer les publications <ArrowRight size={15} /></Link>
+        </div>
+        <span className="nature-explorer-image-credit">OBSERVATIONS PARTAGÉES · AFRIQUE DE L’OUEST</span>
       </section>
-      <div className="nature-explorer-feed-wrap">
-        <CommunityFeed currentUserId={user?.id} currentUserRole={role} />
-      </div>
+      <section className="nature-explorer-publications" id="publications" aria-label="Publications de la communauté">
+        <div className="nature-explorer-section-heading"><div><span>LE CARNET COLLECTIF</span><h2>Rencontres récentes</h2></div><Link href="/observations">Carte et observations <ArrowRight size={15} /></Link></div>
+        <div className="nature-explorer-feed-wrap"><CommunityFeed currentUserId={user?.id} currentUserRole={role} /></div>
+      </section>
     </main>
   );
 }

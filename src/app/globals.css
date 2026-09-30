@@ -573,3 +573,48 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .nature-explorer-feed-wrap{max-width:1240px;margin:0 auto;padding:0 24px 55px}
 .nature-explorer-feed-wrap .nature-social-feed{padding-top:0}
 @media(max-width:680px){.nature-app-header{align-items:flex-start;padding:14px}.nature-app-header nav{justify-content:flex-end;flex-wrap:wrap;gap:10px}.nature-app-header nav>a{font-size:0}.nature-app-header nav>a svg{width:19px;height:19px}.nature-app-header nav .nature-app-header-profile{font-size:0}.nature-app-header-profile .nature-app-header-avatar{width:30px;height:30px}.nature-explorer-intro{margin:24px auto 18px;padding:0 16px}.nature-explorer-feed-wrap{padding:0 14px 40px}}
+
+
+/* Direction artistique inspirée de BioAfrica : cinéma, terre et or. */
+.nature-identifier-page{background:#1a130c;color:#f2ece4}
+.nature-app-header{position:sticky;top:0;z-index:60;max-width:none;margin:0;padding:13px max(24px,calc((100vw - 1240px)/2));border-color:#ffffff1a;background:#1a130ced;color:#f2ece4;backdrop-filter:blur(16px)}
+.nature-app-header .nature-identifier-brand{color:#f2ece4}.nature-app-header .nature-identifier-brand svg{color:#e8c93c}
+.nature-app-header nav>a{color:#e4d8c6}.nature-app-header nav>a:hover{color:#e8c93c}.nature-app-header .nature-notification-bell{color:#e4d8c6}
+.nature-identifier-workspace{max-width:1380px;margin:0 auto 56px;padding:22px clamp(16px,4vw,52px) 0}
+.nature-identifier-hero{position:relative;isolation:isolate;min-height:340px;border:1px solid #e8c93c4a;border-radius:4px;background:#211911 url('/images/bioafrica-identifier.webp') center 48%/cover no-repeat;box-shadow:0 26px 80px #0005}
+.nature-identifier-hero:before{position:absolute;z-index:0;inset:0;background:linear-gradient(90deg,#1a130cf2 0%,#1a130cdd 42%,#1a130c55 100%);content:""}
+.nature-identifier-hero-copy,.nature-identifier-hero-art{position:relative;z-index:1}.nature-identifier-hero-copy{padding:clamp(28px,5vw,60px)}
+.nature-identifier-eyebrow{color:#e8c93c;letter-spacing:.17em}
+.nature-identifier-hero h1{max-width:700px;color:#f5efe5;font-size:clamp(39px,6.1vw,72px);line-height:.96}
+.nature-identifier-hero h1 em{color:#e8c93c;font-weight:600}
+.nature-identifier-hero-copy>p{max-width:520px;color:#e0d4c3;font-size:13px}
+.nature-identifier-hero-art{background:linear-gradient(135deg,#241a0f30,#e8c93c0d);color:#f3e8d0}
+.nature-identifier-hero-art>span{color:#e8c93c}
+.nature-identifier-hero-art>strong{font-size:clamp(22px,2.7vw,34px)}
+.nature-identifier-orbit{color:#eedb93}.nature-identifier-orbit>svg:first-child{filter:drop-shadow(0 0 24px #e8c93c65)}
+.nature-hero-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:8px}
+.nature-hero-cta,.nature-hero-secondary{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:42px;border-radius:999px;padding:0 17px;font-size:10px;font-weight:800;text-decoration:none}
+.nature-hero-cta{background:#e8c93c;color:#1a130c;transition:transform .2s,background .2s}.nature-hero-cta:hover{transform:translateY(-2px);background:#f1d953}
+.nature-hero-secondary{border:1px solid #f2ece455;color:#f2ece4}.nature-hero-secondary:hover{border-color:#e8c93c;color:#e8c93c}
+.nature-identifier-trust{gap:9px 18px}.nature-identifier-trust>span{color:#e4d6ba}
+.nature-identifier-layout{scroll-margin-top:90px}
+.nature-identifier-footer{max-width:1380px;color:#a89a8a}.nature-identifier-footer>a{color:#e8c93c}
+.nature-explorer-page{background:#1a130c;color:#f2ece4}
+.nature-explorer-intro{position:relative;isolation:isolate;display:flex;min-height:min(78svh,790px);max-width:none;align-items:center;margin:0;padding:clamp(90px,12vw,160px) max(24px,calc((100vw - 1240px)/2));background:#1a130c url('/images/bioafrica-reseau.webp') center 45%/cover no-repeat}
+.nature-explorer-intro:before{position:absolute;z-index:0;inset:0;background:linear-gradient(90deg,#1a130cf2 0%,#1a130cd9 43%,#1a130c55 100%),linear-gradient(0deg,#1a130c66,transparent 35%);content:""}
+.nature-explorer-copy{position:relative;z-index:1;width:min(100%,700px)}
+.nature-explorer-copy>span{display:inline-flex;align-items:center;gap:9px;color:#e8c93c;font-size:10px;font-weight:700;letter-spacing:.18em}
+.nature-explorer-copy h1{margin:18px 0;color:#f2ece4;font:600 clamp(42px,6.4vw,78px)/.98 var(--font-fraunces),Georgia,serif;letter-spacing:-.04em}
+.nature-explorer-copy h1 em{color:#e8c93c;font-weight:600}
+.nature-explorer-copy>p{max-width:600px;color:#e4d8c7;font-size:clamp(13px,1.35vw,17px);line-height:1.6}
+.nature-explorer-copy ul{display:grid;gap:9px;margin:20px 0 0;padding:0;list-style:none}
+.nature-explorer-copy li{display:flex;align-items:center;gap:10px;color:#e9e0d2;font-size:12px}.nature-explorer-copy li:before{width:6px;height:6px;border-radius:50%;background:#e8c93c;content:""}
+.nature-explorer-identify-link{margin-top:25px;background:#e8c93c;color:#1a130c}
+.nature-explorer-image-credit{position:absolute;z-index:1;right:max(24px,calc((100vw - 1240px)/2));bottom:24px;color:#f1e8d8b5;font-size:8px;font-weight:700;letter-spacing:.15em}
+.nature-explorer-publications{padding:45px 0 60px;background:#1a130c;scroll-margin-top:70px}
+.nature-explorer-section-heading{display:flex;max-width:1240px;align-items:end;justify-content:space-between;gap:18px;margin:0 auto;padding:0 24px 23px}
+.nature-explorer-section-heading>div>span{color:#c99a2e;font-size:9px;font-weight:800;letter-spacing:.17em}
+.nature-explorer-section-heading h2{margin:6px 0 0;color:#f2ece4;font:500 clamp(27px,4vw,39px)/1.05 var(--font-fraunces),Georgia,serif}
+.nature-explorer-section-heading>a{display:inline-flex;align-items:center;gap:7px;color:#e8c93c;font-size:10px;font-weight:750;text-decoration:none}
+.nature-explorer-feed-wrap{max-width:1288px}.nature-explorer-feed-wrap .nature-feed-heading h3{color:#f2ece4}.nature-explorer-feed-wrap .nature-feed-heading p{color:#a89a8a}
+@media(max-width:680px){.nature-app-header{align-items:center;padding:11px 14px}.nature-identifier-workspace{margin-bottom:36px;padding:13px 14px 0}.nature-identifier-hero{min-height:0;grid-template-columns:1fr;background-position:62% center}.nature-identifier-hero:before{background:linear-gradient(90deg,#1a130cf2,#1a130cbb 75%,#1a130c75)}.nature-identifier-hero-copy{padding:30px 21px}.nature-identifier-hero h1{font-size:clamp(39px,11vw,53px)}.nature-identifier-hero-copy>p{font-size:11px}.nature-identifier-hero-art{display:none}.nature-hero-cta,.nature-hero-secondary{min-height:39px;padding:0 12px;font-size:9px}.nature-identifier-trust{display:grid;gap:7px;margin-top:13px}.nature-explorer-intro{min-height:690px;align-items:flex-end;padding:95px 21px 75px;background-position:58% center}.nature-explorer-intro:before{background:linear-gradient(0deg,#1a130cf5 0%,#1a130ccc 51%,#1a130c32 100%)}.nature-explorer-copy h1{font-size:clamp(41px,12vw,58px)}.nature-explorer-copy>p{font-size:12px}.nature-explorer-copy li{font-size:10px}.nature-explorer-image-credit{right:17px;bottom:15px;font-size:7px}.nature-explorer-publications{padding-top:28px}.nature-explorer-section-heading{align-items:flex-start;flex-direction:column;padding:0 16px 16px}.nature-explorer-feed-wrap{padding-right:14px;padding-left:14px}}
