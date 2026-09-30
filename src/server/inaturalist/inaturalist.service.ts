@@ -135,4 +135,20 @@ export const inaturalistService = {
     const observation = data.results?.[0];
     return observation ? toPublicObservation(observation) : null;
   },
+
+  async nearby(options: { scientificName: string; latitude: number; longitude: number; radius?: number; perPage?: number }) {
+    const params = new URLSearchParams({
+      taxon_name: options.scientificName.slice(0, 120), lat: String(options.latitude), lng: String(options.longitude),
+      radius: String(options.radius ?? 50), quality_grade: "research", photos: "true",
+      per_page: String(options.perPage ?? 6), order_by: "observed_on", order: "desc",
+    });
+    const data = await apiGet<{ total_results?: number; results?: INaturalistRawObservation[] }>(`/observations?${params}`);
+    return {
+      total: data.total_results || 0,
+      sightings: (data.results || []).map((item) => {
+        const observation = toPublicObservation(item);
+        return { id: Number(observation.id), observedOn: observation.observedAt, observer: observation.observer, place: observation.region, photo: observation.imageUrl || null, url: observation.sourceUrl };
+      }),
+    };
+  },
 };

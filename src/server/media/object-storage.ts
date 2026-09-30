@@ -1,43 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { CreateBucketCommand, GetObjectCommand, HeadBucketCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { S3MediaStorageAdapter } from "./s3-storage.adapter";
 
 const MAX_MEDIA_BYTES = 8 * 1024 * 1024;
 const MIME_EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
 type ImageMime = keyof typeof MIME_EXTENSIONS;
-let client: S3Client | null = null;
-let bucketReady: Promise<void> | null = null;
-
-function getConfig() {
-  const endpoint = process.env.MEDIA_S3_ENDPOINT;
-  const bucket = process.env.MEDIA_S3_BUCKET;
-  const accessKeyId = process.env.MEDIA_S3_ACCESS_KEY;
-  const secretAccessKey = process.env.MEDIA_S3_SECRET_KEY;
-  if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) throw new Error("Le stockage média S3/MinIO n’est pas configuré.");
-  return { endpoint, bucket, accessKeyId, secretAccessKey };
-}
-
-function getClient() {
-  if (client) return client;
-  const config = getConfig();
-  client = new S3Client({ endpoint: config.endpoint, region: process.env.MEDIA_S3_REGION || "us-east-1", forcePathStyle: process.env.MEDIA_S3_FORCE_PATH_STYLE !== "false", credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey } });
-  return client;
-}
-
-async function ensureBucket() {
-  if (bucketReady) return bucketReady;
-  const { bucket } = getConfig();
-  bucketReady = (async () => {
-    try { await getClient().send(new HeadBucketCommand({ Bucket: bucket })); }
-    catch {
-      try { await getClient().send(new CreateBucketCommand({ Bucket: bucket })); }
-      catch (error) {
-        const name = error instanceof Error ? error.name : "";
-        if (name !== "BucketAlreadyExists" && name !== "BucketAlreadyOwnedByYou") throw error;
-      }
-    }
-  })().catch((error) => { bucketReady = null; throw error; });
-  return bucketReady;
-}
+const storage = new S3MediaStorageAdapter();
 
 function decodeImageDataUrl(dataUrl: string): { bytes: Buffer; mime: ImageMime } {
   const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(dataUrl);
@@ -55,10 +22,8 @@ export function isStorageConfigured() { return Boolean(process.env.MEDIA_S3_ENDP
 
 async function storeImage(value: string, category: "avatars" | "observations" | "private") {
   const { bytes, mime } = decodeImageDataUrl(value);
-  const { bucket } = getConfig();
-  await ensureBucket();
   const key = `${category}/${randomUUID()}.${MIME_EXTENSIONS[mime]}`;
-  await getClient().send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: bytes, ContentType: mime, CacheControl: "private, max-age=0, no-store" }));
+  await storage.put(key, bytes, mime);
   return { key, mime };
 }
 
@@ -73,8 +38,5 @@ export async function storePrivateImage(value: string) {
 }
 
 export async function readStoredImage(key: string) {
-  const { bucket } = getConfig();
-  const result = await getClient().send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-  if (!result.Body) return null;
-  return { body: result.Body.transformToWebStream(), contentType: result.ContentType || "application/octet-stream", contentLength: result.ContentLength };
+  return storage.get(key);
 }
