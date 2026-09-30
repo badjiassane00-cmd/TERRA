@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { localNameRepository } from "@/server/local-names/local-name.repository";
 import { requireModerator } from "../../../../lib/moderation";
 import { getSessionUserId } from "../../../../lib/session";
 
@@ -18,10 +18,7 @@ async function PATCHImpl(
       return NextResponse.json({ error: "Réservé aux comptes institution" }, { status: 403 });
     }
 
-    const localName = await prisma.localName.update({
-      where: { id },
-      data: { verified: true, verifiedBy: moderator.name },
-    });
+    const localName = await localNameRepository.verify(id, moderator.name);
 
     return NextResponse.json({ localName });
   } catch (error) {
@@ -45,7 +42,7 @@ async function DELETEImpl(
       return NextResponse.json({ error: "Réservé aux comptes institution" }, { status: 403 });
     }
 
-    await prisma.localName.delete({ where: { id } });
+    await localNameRepository.delete(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erreur DELETE /api/local-names/[id]:", error);

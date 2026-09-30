@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { localNameRepository } from "@/server/local-names/local-name.repository";
 import { requireModerator } from "../../../lib/moderation";
 import { getSessionUserId } from "../../../lib/session";
 
@@ -16,14 +16,7 @@ async function GETImpl(request: Request) {
       return NextResponse.json({ error: "scientificName requis" }, { status: 400 });
     }
 
-    const plant = await prisma.plant.findUnique({
-      where: { scientificName },
-      select: {
-        localNames: {
-          orderBy: [{ votes: "desc" }, { createdAt: "asc" }],
-        },
-      },
-    });
+    const plant = await localNameRepository.listForPlant(scientificName);
 
     return NextResponse.json({ names: plant?.localNames ?? [] });
   } catch (error) {
@@ -51,29 +44,7 @@ async function POSTImpl(request: Request) {
     // On crée la fiche plante minimale si elle n'existe pas encore
     // (une contribution de nom local ne doit pas dépendre d'un scan
     // préalable enregistré en base).
-    const plant = await prisma.plant.upsert({
-      where: { scientificName },
-      update: {},
-      create: { scientificName },
-    });
-
-    const localName = await prisma.localName.upsert({
-      where: {
-        plantId_language_name: {
-          plantId: plant.id,
-          language,
-          name,
-        },
-      },
-      update: { votes: { increment: 1 } },
-      create: {
-        plantId: plant.id,
-        language,
-        languageName,
-        name,
-        contributedBy: contributedBy || null,
-      },
-    });
+    const localName = await localNameRepository.add({ scientificName, language, languageName, name, contributedBy: contributedBy || null });
 
     return NextResponse.json({ localName });
   } catch (error) {
@@ -101,10 +72,7 @@ async function PATCHImpl(request: Request) {
       return NextResponse.json({ error: "Réservé aux comptes institution" }, { status: 403 });
     }
 
-    const localName = await prisma.localName.update({
-      where: { id },
-      data: { verified: true },
-    });
+    const localName = await localNameRepository.verify(id);
 
     return NextResponse.json({ localName });
   } catch (error) {

@@ -1,18 +1,8 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { fieldSessionService } from "@/server/field-sessions/field-session.service";
 import { getSessionUserId } from "../../../lib/session";
 
-function generateCode(): string {
-  // Code court, lisible à l'oral pour le communiquer sur le terrain
-  // sans ambiguïté (pas de 0/O ni 1/I).
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 5; i++) {
-    code += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return code;
-}
 async function GETImpl() {
   try {
     const sessionUserId = await getSessionUserId();
@@ -20,12 +10,7 @@ async function GETImpl() {
       return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
     }
 
-    const sessions = await prisma.fieldSession.findMany({
-      where: { supervisorId: sessionUserId },
-      include: { _count: { select: { entries: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    });
+    const sessions = await fieldSessionService.listForSupervisor(sessionUserId);
 
     return NextResponse.json({ sessions });
   } catch (error) {
@@ -52,17 +37,7 @@ async function POSTImpl(request: Request) {
       return NextResponse.json({ error: "title est requis" }, { status: 400 });
     }
 
-    let code = generateCode();
-    // Évite (très rare) une collision de code entre deux sessions actives.
-    for (let attempts = 0; attempts < 5; attempts++) {
-      const existing = await prisma.fieldSession.findUnique({ where: { code } });
-      if (!existing) break;
-      code = generateCode();
-    }
-
-    const session = await prisma.fieldSession.create({
-      data: { code, title: title.trim(), courseName: courseName || null, supervisorId: sessionUserId },
-    });
+    const session = await fieldSessionService.create({ title, courseName, supervisorId: sessionUserId });
 
     return NextResponse.json({ session });
   } catch (error) {

@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { fieldSessionService } from "@/server/field-sessions/field-session.service";
 import { getSessionUserId } from "../../../../lib/session";
 
 // Détail d'une session avec la liste des relevés déjà soumis — appelée
@@ -12,15 +12,7 @@ async function GETImpl(
 ) {
   try {
     const { id } = await params;
-    const session = await prisma.fieldSession.findUnique({
-      where: { id },
-      include: {
-        entries: {
-          orderBy: { createdAt: "desc" },
-          include: { user: { select: { name: true } } },
-        },
-      },
-    });
+    const session = await fieldSessionService.findById(id);
 
     if (!session) {
       return NextResponse.json({ error: "Session introuvable" }, { status: 404 });
@@ -51,20 +43,12 @@ async function PATCHImpl(
     const body = await request.json();
     const { active } = body;
 
-    const session = await prisma.fieldSession.findUnique({ where: { id } });
-    if (!session) {
-      return NextResponse.json({ error: "Session introuvable" }, { status: 404 });
-    }
-    if (session.supervisorId !== sessionUserId) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
-    }
+    const result = await fieldSessionService.setActive(id, sessionUserId, Boolean(active));
+    if (result.kind === "missing") return NextResponse.json({ error: "Session introuvable" }, { status: 404 });
+    if (result.kind === "forbidden") return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    const session = result.session;
 
-    const updated = await prisma.fieldSession.update({
-      where: { id },
-      data: { active: Boolean(active) },
-    });
-
-    return NextResponse.json({ session: updated });
+    return NextResponse.json({ session });
   } catch (error) {
     console.error("Erreur PATCH /api/field-sessions/[id]:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

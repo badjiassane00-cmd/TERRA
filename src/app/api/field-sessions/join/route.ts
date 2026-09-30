@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { fieldSessionService } from "@/server/field-sessions/field-session.service";
 
 // Un étudiant rejoint une session via le code communiqué à l'oral sur
 // le terrain par l'encadrant.
@@ -13,10 +13,7 @@ async function POSTImpl(request: Request) {
       return NextResponse.json({ error: "Code requis" }, { status: 400 });
     }
 
-    const session = await prisma.fieldSession.findUnique({
-      where: { code },
-      include: { supervisor: { select: { name: true } } },
-    });
+    const session = await fieldSessionService.join(code);
 
     if (!session || !session.active) {
       return NextResponse.json(
