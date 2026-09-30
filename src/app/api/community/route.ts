@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       ? (requestedGroup as (typeof ORGANISM_GROUPS)[number])
       : "OTHER";
     const scientificName = typeof body.scientificName === "string" ? body.scientificName.trim().slice(0, 180) : "";
-    const region = typeof body.region === "string" ? body.region.trim().slice(0, 120) || "Afrique" : "Afrique";
+    const region = typeof body.region === "string" ? body.region.trim().slice(0, 120) || "Monde" : "Monde";
     const observedAt = typeof body.observedAt === "string" && body.observedAt
       ? new Date(body.observedAt)
       : new Date();

@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 const FALLBACK_KNOWLEDGE: Record<string, string> = {
   "quelle est cette plante": "Pour identifier une plante, utilisez le mode identification par photo dans la section principale. Notre IA analysera l'image et vous donnera le nom, les caractéristiques et les conseils d'entretien.",
   "comment arroser un baobab": "Le baobab nécessite un arrosage rare et espacé. Arrosez-le seulement lorsque le sol est complètement sec. En hiver, réduisez encore plus l'arrosage.",
-  "quelles plantes médicinales": "L'Afrique regorge de plantes médicinales : le Baobab (vitamine C), l'Acacia (gomme arabique), le Neem, le Moringa, et bien d'autres. Consultez l'exposition régionale pour découvrir les plantes de votre zone.",
+  "quelles plantes médicinales": "De nombreuses régions du monde possèdent des plantes médicinales : le Baobab (vitamine C), l'Acacia (gomme arabique), le Neem, le Moringa, et bien d'autres. Consultez l'exposition régionale pour découvrir les plantes de votre zone.",
   "quand fleurit l'acacia": "L'Acacia senegal fleurit généralement de septembre à novembre, selon la région. Les fleurs sont jaunes et très parfumées.",
   "comment soigner l'oïdium": "L'oïdium est une maladie fongique. Traitez-la avec un fongicide approprié, du bicarbonate de potassium, ou en améliorant la circulation d'air autour de la plante.",
   "default": "Je suis votre assistant botanique. Posez-moi des questions sur les plantes, leur entretien, leurs maladies, ou utilisez le mode identification par photo pour une analyse détaillée.",

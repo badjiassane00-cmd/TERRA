@@ -157,7 +157,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [locationVisibility, setLocationVisibility] = useState<"PUBLIC" | "APPROXIMATE" | "PRIVATE">("APPROXIMATE");
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [newOrganismGroup, setNewOrganismGroup] = useState<OrganismGroup>("PLANT");
-  const [newRegion, setNewRegion] = useState("Sénégal");
+  const [newRegion, setNewRegion] = useState("");
   const [postError, setPostError] = useState<string | null>(null);
   const visiblePosts = groupFilter === "ALL" ? posts : posts.filter((post) => post.organismGroup === groupFilter);
   const [showForm, setShowForm] = useState(false);
@@ -312,7 +312,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       catch { return false; }
       setPendingObservations(queue);
       setNewPost(""); setNewSpeciesName(""); setNewScientificName(""); setNewPhoto(null); setNewLocation(null);
-      setNewObservedAt(new Date().toISOString().slice(0, 10)); setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("Sénégal");
+      setNewObservedAt(new Date().toISOString().slice(0, 10)); setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
       setShowForm(false);
       return true;
     };
@@ -324,7 +324,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       if (!res.ok) throw new Error(result.error || "Publication impossible pour le moment.");
       setNewPost(""); setNewSpeciesName(""); setNewScientificName("");
       setNewObservedAt(new Date().toISOString().slice(0, 10)); setNewPhoto(null); setNewLocation(null);
-      setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("Sénégal");
+      setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
       setShowForm(false);
       window.dispatchEvent(new CustomEvent("sununature:observation-published", { detail: { organismGroup: newOrganismGroup } }));
       await loadPosts();
@@ -380,7 +380,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
           <div className="nature-feed-brand-avatar">✳</div>
           <div>
             <h3>Le fil du vivant</h3>
-            <p>Des rencontres sauvages, partagées depuis l’Afrique</p>
+            <p>Des rencontres sauvages partagées partout dans le monde</p>
           </div>
         </div>
         <button
@@ -417,9 +417,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
           <label className="observation-field-label">Date de l’observation
             <input type="date" value={newObservedAt} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setNewObservedAt(event.target.value)} className="herbarium-input mb-3" />
           </label>
-          <select value={newRegion} onChange={(event) => setNewRegion(event.target.value)} className="herbarium-input mb-3" aria-label="Pays ou région">
-            {["Sénégal", "Côte d’Ivoire", "Mali", "Burkina Faso", "Ghana", "Bénin", "Togo", "Niger", "Guinée", "Cameroun", "Kenya", "Afrique du Sud", "Autre région d’Afrique"].map((region) => <option key={region} value={region}>{region}</option>)}
-          </select>
+          <input value={newRegion} onChange={(event) => setNewRegion(event.target.value)} placeholder="Pays, région ou lieu dans le monde" className="herbarium-input mb-3" aria-label="Pays, région ou lieu" maxLength={120} required />
           <input
             value={newSpeciesName}
             onChange={(e) => setNewSpeciesName(e.target.value)}

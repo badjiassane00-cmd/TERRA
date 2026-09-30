@@ -53,7 +53,7 @@ function NatureSymbols() {
 
 export default function Plant3DShowcase() {
   return (
-    <div className="w-full h-full min-h-[260px]" aria-label="Illustration 3D de la biodiversité africaine" role="img">
+    <div className="w-full h-full min-h-[260px]" aria-label="Illustration 3D de la biodiversité mondiale" role="img">
       <Canvas camera={{ position: [0, 0.25, 6.5], fov: 35 }} dpr={[1, 1.5]} gl={{ antialias: true, alpha: true }}>
         <ambientLight intensity={1.3} />
         <directionalLight position={[4, 7, 5]} intensity={2.1} color="#fff1c8" />

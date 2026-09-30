@@ -89,19 +89,19 @@ export default function ObservationExplorer() {
           <BackLink href="/" label="Retour à l’accueil" className="observations-back-link" />
           <span className="observation-overline"><span /> LE CARNET DU VIVANT</span>
           <h1>Observations de la nature</h1>
-          <p>Explorez les découvertes naturalistes en Afrique et les histoires de terrain partagées par la communauté.</p>
+          <p>Explorez les découvertes naturalistes du monde entier et les histoires de terrain partagées par la communauté.</p>
         </div>
         <Link href="/connexion" className="observation-contribute-button"><MapPinned size={17} /> Ajouter une observation</Link>
       </header>
 
       <div className="observation-source-switch" role="tablist" aria-label="Source des observations">
-        <button role="tab" aria-selected={source === "iNaturalist"} className={source === "iNaturalist" ? "selected" : ""} onClick={() => setSource("iNaturalist")}>iNaturalist Afrique <ExternalLink size={14} /></button>
+        <button role="tab" aria-selected={source === "iNaturalist"} className={source === "iNaturalist" ? "selected" : ""} onClick={() => setSource("iNaturalist")}>iNaturalist · Monde <ExternalLink size={14} /></button>
         <button role="tab" aria-selected={source === "TERRA"} className={source === "TERRA" ? "selected" : ""} onClick={() => setSource("TERRA")}>Communauté TERRA</button>
       </div>
       <section className="observation-explorer-toolbar" aria-label="Filtres des observations">
         <label className="observation-search"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Espèce, lieu, naturaliste…" /></label>
         <label className="observation-select-wrap"><SlidersHorizontal size={15} /><select value={group} onChange={(event) => setGroup(event.target.value)}><option value="ALL">Tous les groupes</option>{ORGANISM_GROUPS.map((item) => <option key={item} value={item}>{ORGANISM_LABELS[item]}</option>)}</select></label>
-        <label className="observation-select-wrap"><MapPin size={15} /><select value={region} onChange={(event) => setRegion(event.target.value)}><option value="ALL">Toute l’Afrique</option>{Array.from(new Set(observations.map((item) => item.region))).sort().map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+        <label className="observation-select-wrap"><MapPin size={15} /><select value={region} onChange={(event) => setRegion(event.target.value)}><option value="ALL">Monde entier</option>{Array.from(new Set(observations.map((item) => item.region))).sort().map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
         <div className="observation-view-switch" aria-label="Mode d’affichage">
           <button aria-label="Grille" title="Grille" className={view === "grid" ? "selected" : ""} onClick={() => setView("grid")}><LayoutGrid size={17} /></button>
           <button aria-label="Liste" title="Liste" className={view === "list" ? "selected" : ""} onClick={() => setView("list")}><List size={18} /></button>

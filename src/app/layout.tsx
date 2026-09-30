@@ -19,8 +19,8 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "TERRA — Le réseau africain du vivant",
-  description: "Le réseau africain du vivant : observez, identifiez et partagez les plantes, insectes, oiseaux et animaux autour de vous.",
+  title: "TERRA — Le réseau mondial du vivant",
+  description: "Le réseau mondial du vivant : observez, identifiez et partagez les plantes, insectes, oiseaux et animaux autour de vous.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

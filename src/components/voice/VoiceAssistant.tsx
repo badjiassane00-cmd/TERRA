@@ -48,7 +48,7 @@ interface VoiceAssistantProps {
 const suggestedQuestions = [
   "Quelle est cette plante ?",
   "Comment arroser un baobab ?",
-  "Quelles plantes médicinales en Afrique ?",
+  "Quelles plantes médicinales dans ma région ?",
   "Quand fleurit l'acacia ?",
   "Comment soigner l'oïdium ?",
 ];

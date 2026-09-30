@@ -1,6 +1,6 @@
-# TERRA — Le réseau africain du vivant
+# TERRA — Le réseau mondial du vivant
 
-Réseau social naturaliste africain pour observer, identifier et partager les plantes, insectes, oiseaux, mammifères et autres formes de vie. Les observations sont stockées dans PostgreSQL via Prisma; les comptes sont protégés par mot de passe haché et cookie de session httpOnly.
+Réseau social naturaliste international pour observer, identifier et partager les plantes, insectes, oiseaux, mammifères et autres formes de vie. Les observations sont stockées dans PostgreSQL via Prisma; les comptes sont protégés par mot de passe haché et cookie de session httpOnly.
 
 ## Fonctionnalités
 
@@ -18,7 +18,7 @@ Réseau social naturaliste africain pour observer, identifier et partager les pl
 - ✅ Carte interactive des lieux botaniques (Leaflet + PostGIS-ready)
 - ✅ Observations naturalistes réelles à proximité (iNaturalist, avec consentement de géolocalisation)
 - ✅ Filtre saisonnier (qu'est-ce qui fleurit ce mois-ci)
-- ✅ Exposition botanique régionale avec régions d'Afrique
+- ✅ Exposition botanique mettant en avant les écosystèmes régionaux
 
 ### Expérience utilisateur
 - ✅ Design "herbier" moderne : palette claire, typo Fraunces, bordures fines
@@ -66,7 +66,7 @@ cp .env.example .env.local
 | `CLOUDINARY_*` | Stockage d'images | https://cloudinary.com/ |
 | `NEXTAUTH_SECRET` | Authentification sécurisée | `openssl rand -base64 32` |
 
-Les plantes sont identifiées par Pl@ntNet avec `PLANTNET_API_KEY`. Le mode « Insectes & animaux » classe l’image sur l’appareil avec MobileNet puis rapproche les étiquettes de GBIF via `/api/identify-life`; la photo ne quitte pas le navigateur. MobileNet reconnaît des catégories ImageNet et peut manquer des espèces africaines rares ou proches.
+Les plantes sont identifiées par Pl@ntNet avec `PLANTNET_API_KEY`. Le mode « Insectes & animaux » classe l’image sur l’appareil avec MobileNet puis rapproche les étiquettes de GBIF via `/api/identify-life`; la photo ne quitte pas le navigateur. MobileNet reconnaît des catégories ImageNet et peut manquer certaines espèces rares ou proches.
 
 Le calendrier vivant est calculé par pays à partir des observations publiques de la communauté sur 24 mois. Il mesure l’activité de partage et ne constitue pas une prévision de présence des espèces. Le réseau plantes–insectes repère des co-présences publiques dans le temps et l’espace; il ne démontre pas une pollinisation. Les alertes de proximité ne s’appuient que sur les observations publiques géolocalisées des 30 derniers jours et ne signalent pas l’absence d’espèces.
 

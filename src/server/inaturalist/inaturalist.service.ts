@@ -84,7 +84,7 @@ function toPublicObservation(observation: INaturalistRawObservation) {
     imageUrl: photo.imageUrl,
     photoAttribution: photo.attribution,
     photoLicense: photo.license,
-    region: observation.place_guess || "Afrique",
+    region: observation.place_guess || "Monde",
     description: observation.description || "Observation partagée sur iNaturalist.",
     observedAt: observation.observed_on || observation.created_at || null,
     createdAt: observation.created_at || observation.observed_on || new Date().toISOString(),
@@ -105,7 +105,7 @@ function toPublicObservation(observation: INaturalistRawObservation) {
 
 async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(`${API_ROOT}${path}`, {
-    headers: { Accept: "application/json", "User-Agent": "TERRA/1.0 (African biodiversity observations)" },
+    headers: { Accept: "application/json", "User-Agent": "TERRA/1.0 (biodiversity observations)" },
     signal: AbortSignal.timeout(12_000),
     next: { revalidate: 300 },
   });
@@ -116,7 +116,6 @@ async function apiGet<T>(path: string): Promise<T> {
 export const inaturalistService = {
   async list(options: { page: number; perPage: number; group?: OrganismGroup; query?: string }) {
     const params = new URLSearchParams({
-      swlat: "-35", swlng: "-20", nelat: "38", nelng: "52",
       photos: "true", order_by: "observed_on", order: "desc",
       quality_grade: "research,needs_id", page: String(options.page), per_page: String(options.perPage),
     });

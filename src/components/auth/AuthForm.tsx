@@ -50,8 +50,8 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
         <div className="auth-photo-content">
           <span className="auth-kicker"><Sparkles size={14} /> LA NATURE NOUS RELIE</span>
           <h1>Le vivant est<br />plus riche <em>ensemble.</em></h1>
-          <p>Chaque observation révèle un peu plus les trésors naturels de notre continent.</p>
-          <div className="auth-proof"><div className="auth-proof-avatars"><span>🌿</span><span>🦋</span><span>🐦</span></div><span>Des curieux de la nature<br /><strong>partout en Afrique</strong></span></div>
+          <p>Chaque observation révèle un peu plus les trésors naturels de notre planète.</p>
+          <div className="auth-proof"><div className="auth-proof-avatars"><span>🌿</span><span>🦋</span><span>🐦</span></div><span>Des curieux de la nature<br /><strong>partout dans le monde</strong></span></div>
         </div>
         <div className="auth-photo-caption"><span>12° 33′ N · SÉNÉGAL</span><span>LE MONDE SAUVAGE, TOUT PRÈS</span></div>
       </div>

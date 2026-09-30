@@ -67,7 +67,7 @@ export async function GET(request: Request) {
       currentMonth: { month: currentMonth, count: current.count, species: [...current.species].slice(0, 8) },
       nextMonth: { month: (currentMonth % 12) + 1, count: next.count, species: [...next.species].slice(0, 8) },
       relations: [...relations.values()].filter((relation) => relation.occurrences >= 2).sort((a, b) => b.occurrences - a.occurrences).slice(0, 12),
-      region: region || "Afrique",
+      region: region || "Monde",
       sourceCount: posts.length,
     });
   } catch (error) {
