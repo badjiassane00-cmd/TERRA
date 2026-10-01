@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { communityRepository } from "@/server/observations/community.repository";
 import { requireModerator } from "../../../../lib/moderation";
 import { getSessionUserId } from "../../../../lib/session";
 
@@ -31,7 +31,7 @@ async function PATCHImpl(
         ? { removed: true }
         : { removed: false };
 
-    const post = await prisma.communityPost.update({ where: { id }, data });
+    const post = await communityRepository.updatePost(id, data);
     return NextResponse.json({ post });
   } catch (error) {
     console.error("Erreur PATCH /api/community/[id]:", error);
@@ -55,7 +55,7 @@ async function DELETEImpl(
       return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
     }
 
-    const post = await prisma.communityPost.findUnique({ where: { id } });
+    const post = await communityRepository.findPost(id);
     if (!post) {
       return NextResponse.json({ error: "Publication introuvable" }, { status: 404 });
     }
@@ -67,7 +67,7 @@ async function DELETEImpl(
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    await prisma.communityPost.delete({ where: { id } });
+    await communityRepository.deletePost(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erreur DELETE /api/community/[id]:", error);

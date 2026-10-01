@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { identificationRepository } from "@/server/identification/identification.repository";
 import { getSessionUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -40,7 +40,7 @@ async function POSTImpl(request: Request) {
     }));
     const result = candidates[0];
     const userId = await getSessionUserId();
-    if (userId) await prisma.scanHistory.create({ data: { userId, result: result as object } });
+    if (userId) await identificationRepository.saveResult(userId, result as object);
     return NextResponse.json({ result, candidates, provider: "MobileNet + GBIF", imageSent: false, note: "Les suggestions visuelles sont approximatives et doivent être vérifiées." });
   } catch (error) {
     console.error("Local organism identification enrichment failed", error);

@@ -1,7 +1,7 @@
 import { distanceKm } from "@/lib/geo";
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { communityRepository } from "@/server/observations/community.repository";
 
 async function GETImpl(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,12 +14,7 @@ async function GETImpl(request: Request) {
 
   try {
     const since = new Date(Date.now() - 30 * 86_400_000);
-    const posts = await prisma.communityPost.findMany({
-      where: { removed: false, locationVisibility: "PUBLIC", observedAt: { gte: since }, latitude: { not: null }, longitude: { not: null } },
-      select: { id: true, plantName: true, scientificName: true, organismGroup: true, region: true, observedAt: true, latitude: true, longitude: true },
-      orderBy: { observedAt: "desc" },
-      take: 1000,
-    });
+    const posts = await communityRepository.findForLocalAlerts(since);
     const alerts = posts.flatMap((post) => {
       const km = distanceKm(lat, lng, post.latitude!, post.longitude!);
       return km <= radius ? [{ id: post.id, name: post.plantName, scientificName: post.scientificName, group: post.organismGroup, region: post.region, observedAt: post.observedAt, distanceKm: Math.round(km) }] : [];

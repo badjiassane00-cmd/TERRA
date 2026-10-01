@@ -1,6 +1,7 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { localNameRepository } from "@/server/local-names/local-name.repository";
+import { communityRepository } from "@/server/observations/community.repository";
 import { requireModerator } from "../../../../lib/moderation";
 import { getSessionUserId } from "../../../../lib/session";
 
@@ -14,17 +15,8 @@ async function GETImpl() {
     }
 
     const [pendingNames, pendingPosts] = await Promise.all([
-      prisma.localName.findMany({
-        where: { verified: false },
-        include: { plant: { select: { scientificName: true } } },
-        orderBy: { createdAt: "desc" },
-        take: 25,
-      }),
-      prisma.communityPost.findMany({
-        where: { verified: false, removed: false },
-        orderBy: { createdAt: "desc" },
-        take: 25,
-      }),
+      localNameRepository.findPending(),
+      communityRepository.findPendingPosts(),
     ]);
 
     return NextResponse.json({ pendingNames, pendingPosts });

@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { identificationRepository } from "@/server/identification/identification.repository";
 import { enrichWithGbif, normalizeDiseases, normalizePlantNet, type Identification } from "@/lib/botany";
 import { getSessionUserId } from "../../../lib/session";
 
@@ -50,7 +50,7 @@ async function POSTImpl(request: Request) {
     } else result = normalizePlantNet(raw);
 
     result = await enrichWithGbif(result);
-    if (userId) await saveScan(userId, result, hasCoords ? lat : null, hasCoords ? lng : null, sessionId);
+    if (userId) await identificationRepository.saveScan(userId, result, hasCoords ? lat : null, hasCoords ? lng : null, sessionId);
     return NextResponse.json({ result, mode, provider: "plantnet", quota: raw?.remainingIdentificationRequests });
   } catch (error) {
     console.error("Identification failed", error);
@@ -60,34 +60,4 @@ async function POSTImpl(request: Request) {
 
 
 
-export const POST = withApiErrors(POSTImpl);async function saveScan(userId: string, result: Identification, lat: number | null, lng: number | null, sessionId: string | null) {
-  const plant = await prisma.plant.upsert({
-    where: { scientificName: result.scientific_name },
-    update: {
-      commonNames: JSON.stringify(result.common_names),
-      kingdom: result.taxonomy?.kingdom,
-      phylum: result.taxonomy?.phylum,
-      taxClass: result.taxonomy?.class,
-      order: result.taxonomy?.order,
-      family: result.taxonomy?.family,
-      genus: result.taxonomy?.genus,
-      species: result.taxonomy?.species,
-      taxonomy: JSON.stringify(result.taxonomy),
-      gbifId: result.sources.gbif?.split("/").pop(),
-    },
-    create: {
-      scientificName: result.scientific_name,
-      commonNames: JSON.stringify(result.common_names),
-      kingdom: result.taxonomy?.kingdom,
-      phylum: result.taxonomy?.phylum,
-      taxClass: result.taxonomy?.class,
-      order: result.taxonomy?.order,
-      family: result.taxonomy?.family,
-      genus: result.taxonomy?.genus,
-      species: result.taxonomy?.species,
-      taxonomy: JSON.stringify(result.taxonomy),
-      gbifId: result.sources.gbif?.split("/").pop(),
-    },
-  });
-  await prisma.scanHistory.create({ data: { userId, plantId: plant.id, result: result as object, lat, lng, sessionId } });
-}
+export const POST = withApiErrors(POSTImpl);

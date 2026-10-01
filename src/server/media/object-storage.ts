@@ -40,3 +40,12 @@ export async function storePrivateImage(value: string) {
 export async function readStoredImage(key: string) {
   return storage.get(key);
 }
+
+export async function checkStorageReady() {
+  try {
+    await storage.checkReady();
+    return true;
+  } catch {
+    return false;
+  }
+}

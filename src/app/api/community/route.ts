@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { communityRepository } from "@/server/observations/community.repository";
 import { getSessionUserId } from "@/lib/session";
 import { ORGANISM_GROUPS } from "@/types/nature";
 import { publicCoordinates } from "@/server/observations/location";
@@ -30,15 +30,7 @@ async function GETImpl(request: Request) {
       ? (group as (typeof ORGANISM_GROUPS)[number])
       : undefined;
     const viewerId = await getSessionUserId();
-    const posts = await prisma.communityPost.findMany({
-      where: { removed: false, ...(region ? { region } : {}), ...(validGroup ? { organismGroup: validGroup } : {}) },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      include: {
-        user: { select: { id: true, name: true, institution: true, avatarUrl: true, isDemo: true, followers: { where: { followerId: viewerId || "__anonymous__" }, select: { id: true } } } },
-        postLikes: { where: { userId: viewerId || "__anonymous__" }, select: { id: true } },
-      },
-    });
+    const posts = await communityRepository.listPosts({ removed: false, ...(region ? { region } : {}), ...(validGroup ? { organismGroup: validGroup } : {}) }, viewerId, limit);
     return NextResponse.json({
       count: posts.length,
       data: posts.map((post) => {
@@ -103,7 +95,7 @@ async function POSTImpl(request: Request) {
     const requestedSubmissionId = typeof body.clientSubmissionId === "string" ? body.clientSubmissionId : null;
     const clientSubmissionId = requestedSubmissionId && /^[a-zA-Z0-9_-]{8,80}$/.test(requestedSubmissionId) ? requestedSubmissionId : null;
     if (clientSubmissionId) {
-      const existing = await prisma.communityPost.findUnique({ where: { clientSubmissionId } });
+      const existing = await communityRepository.findSubmission(clientSubmissionId);
       if (existing?.userId === authorId) return NextResponse.json({ observation: { ...existing, ...publicCoordinates(existing, authorId) }, duplicate: true });
       if (existing) return NextResponse.json({ error: "Identifiant de publication déjà utilisé." }, { status: 409 });
     }
@@ -121,9 +113,7 @@ async function POSTImpl(request: Request) {
         return NextResponse.json({ error: error instanceof Error ? error.message : "Envoi photo impossible." }, { status: 400 });
       }
     }
-    const post = await prisma.communityPost.create({
-      data: { userId: authorId, plantName, scientificName, imageUrl: storedImageUrl, thumbnailUrl: storedThumbnailUrl, region, description, organismGroup, observedAt, latitude, longitude, locationVisibility, clientSubmissionId },
-    });
+    const post = await communityRepository.createPost({ userId: authorId, plantName, scientificName, imageUrl: storedImageUrl, thumbnailUrl: storedThumbnailUrl, region, description, organismGroup, observedAt, latitude, longitude, locationVisibility, clientSubmissionId });
     return NextResponse.json({ observation: { ...post, ...publicCoordinates(post, authorId) } }, { status: 201 });
   } catch (error) {
     console.error("Erreur création observation:", error);

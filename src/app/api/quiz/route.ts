@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { plantRepository } from "@/server/plants/plant.repository";
 
 // Génère un quiz de reconnaissance botanique à partir des plantes déjà
 // enrichies en base (famille/genre issus de GBIF). Question type
@@ -32,10 +32,7 @@ async function GETImpl(request: Request) {
     const { searchParams } = new URL(request.url);
     const count = Math.min(parseInt(searchParams.get("count") || "5"), 15);
 
-    const plants = await prisma.plant.findMany({
-      where: { family: { not: null } },
-      select: { id: true, scientificName: true, commonNames: true, family: true, imageUrl: true },
-    });
+    const plants = await plantRepository.listWithFamilies();
 
     const families = Array.from(new Set(plants.map((p) => p.family).filter(Boolean))) as string[];
 

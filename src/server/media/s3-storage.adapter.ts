@@ -35,6 +35,10 @@ export class S3MediaStorageAdapter implements MediaStoragePort {
     })().catch((error) => { this.bucketReady = null; throw error; });
     return this.bucketReady;
   }
+  async checkReady() {
+    const { bucket } = this.config();
+    await this.getClient().send(new HeadBucketCommand({ Bucket: bucket }));
+  }
   async put(key: string, bytes: Buffer, contentType: string) {
     const { bucket } = this.config();
     await this.ensureBucket();

@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { communityRepository } from "@/server/observations/community.repository";
 
 /** Phenology and co-presence signals derived only from public community observations. */
 async function GETImpl(request: Request) {
@@ -8,25 +8,7 @@ async function GETImpl(request: Request) {
   try {
     const since = new Date();
     since.setFullYear(since.getFullYear() - 2);
-    const posts = await prisma.communityPost.findMany({
-      where: {
-        removed: false,
-        locationVisibility: "PUBLIC",
-        observedAt: { gte: since },
-        ...(region ? { region: { contains: region } } : {}),
-      },
-      select: {
-        plantName: true,
-        scientificName: true,
-        organismGroup: true,
-        region: true,
-        observedAt: true,
-        latitude: true,
-        longitude: true,
-      },
-      orderBy: { observedAt: "desc" },
-      take: 2500,
-    });
+    const posts = await communityRepository.findForEcology(since, region || undefined);
 
     const months = Array.from({ length: 12 }, (_, index) => ({ month: index + 1, count: 0, species: new Set<string>(), groups: new Set<string>() }));
     for (const post of posts) {

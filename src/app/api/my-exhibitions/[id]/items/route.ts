@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../../lib/prisma";
+import { exhibitionService } from "@/server/exhibitions/exhibition.service";
 import { getSessionUserId } from "../../../../../lib/session";
 async function POSTImpl(
   request: Request,
@@ -15,49 +15,18 @@ async function POSTImpl(
     const { id } = await params;
     const body = await request.json();
     const { plantId, scientificName, commonName, imageUrl, note } = body;
+    if (!plantId && !scientificName) return NextResponse.json({ error: "plantId ou scientificName requis" }, { status: 400 });
 
-    const exhibition = await prisma.exhibition.findUnique({ where: { id } });
-    if (!exhibition) {
-      return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
-    }
-    if (exhibition.userId !== sessionUserId) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
-    }
-
-    let resolvedPlantId = plantId;
-    if (!resolvedPlantId) {
-      if (!scientificName) {
-        return NextResponse.json(
-          { error: "plantId ou scientificName requis" },
-          { status: 400 }
-        );
-      }
-      const plant = await prisma.plant.upsert({
-        where: { scientificName },
-        update: {},
-        create: {
-          scientificName,
-          commonNames: commonName ? JSON.stringify([commonName]) : "[]",
-          imageUrl: imageUrl || null,
-        },
-      });
-      resolvedPlantId = plant.id;
-    }
-
-    const itemCount = await prisma.exhibitionItem.count({ where: { exhibitionId: id } });
-
-    const item = await prisma.exhibitionItem.upsert({
-      where: { exhibitionId_plantId: { exhibitionId: id, plantId: resolvedPlantId } },
-      update: { note: note ?? undefined, imageUrl: imageUrl ?? undefined },
-      create: {
-        exhibitionId: id,
-        plantId: resolvedPlantId,
-        note: note || null,
-        imageUrl: imageUrl || null,
-        position: itemCount,
-      },
-      include: { plant: true },
+    const result = await exhibitionService.addPlant(id, sessionUserId, {
+      plantId: typeof plantId === "string" ? plantId : undefined,
+      scientificName: typeof scientificName === "string" ? scientificName : undefined,
+      commonName: typeof commonName === "string" ? commonName : undefined,
+      imageUrl: typeof imageUrl === "string" ? imageUrl : null,
+      note: typeof note === "string" ? note : null,
     });
+    if (result.kind === "missing") return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
+    if (result.kind === "forbidden") return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    const item = result.item;
 
     return NextResponse.json({ item });
   } catch (error) {

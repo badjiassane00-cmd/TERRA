@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 export const localNameRepository = {
+  findPending() { return prisma.localName.findMany({ where: { verified: false }, include: { plant: { select: { scientificName: true } } }, orderBy: { createdAt: "desc" }, take: 25 }); },
   listForPlant(scientificName: string) {
     return prisma.plant.findUnique({ where: { scientificName }, select: { localNames: { orderBy: [{ votes: "desc" }, { createdAt: "asc" }] } } });
   },

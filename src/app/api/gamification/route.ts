@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { gamificationRepository } from "@/server/gamification/gamification.repository";
 import { getSessionUserId } from "../../../lib/session";
 
 // Barème serveur fixe par type d'action : on ne fait jamais confiance
@@ -21,20 +21,10 @@ async function GETImpl() {
       return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
     }
 
-    const profile = await prisma.gamificationProfile.findUnique({
-      where: { userId },
-    });
+    const profile = await gamificationRepository.find(userId);
 
     if (!profile) {
-      const newProfile = await prisma.gamificationProfile.create({
-        data: {
-          userId,
-          points: 0,
-          level: 1,
-          badges: "[]",
-          streak: 1,
-        },
-      });
+      const newProfile = await gamificationRepository.create(userId);
       return NextResponse.json(newProfile);
     }
 
@@ -63,20 +53,7 @@ async function POSTImpl(request: Request) {
     const { action } = body;
     const points = POINTS_BY_ACTION[action] ?? 0;
 
-    const profile = await prisma.gamificationProfile.upsert({
-      where: { userId },
-      update: {
-        points: { increment: points },
-        streak: action === "daily_login" ? { increment: 1 } : undefined,
-      },
-      create: {
-        userId,
-        points,
-        level: 1,
-        badges: "[]",
-        streak: 1,
-      },
-    });
+    const profile = await gamificationRepository.upsert(userId, points, action === "daily_login");
 
     // Recalcul du niveau (100 XP par niveau)
     const newLevel = Math.floor(profile.points / 100) + 1;
@@ -101,13 +78,7 @@ async function POSTImpl(request: Request) {
       }
     }
 
-    const updated = await prisma.gamificationProfile.update({
-      where: { userId },
-      data: {
-        level: newLevel,
-        badges: badgesChanged ? JSON.stringify(badges) : undefined,
-      },
-    });
+    const updated = await gamificationRepository.update(userId, newLevel, badgesChanged ? JSON.stringify(badges) : undefined);
 
     return NextResponse.json({
       ...updated,

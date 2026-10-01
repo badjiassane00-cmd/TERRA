@@ -3,15 +3,15 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { usePlantRecognition } from "./usePlantRecognition";
-import { Camera, X, Loader2, Brain, TrendingUp, Award, Check, XCircle, Leaf, Users, Globe, Zap } from "lucide-react";
+import { Camera, X, Brain, TrendingUp, Award, Check, XCircle, Leaf, Users, Zap } from "lucide-react";
 
 export default function AIPlantRecognition() {
   const {
     selectedImage, setSelectedImage, prediction, setPrediction, candidates, setCandidates, isAnalyzing,
-    trainingDataCount, modelVersion, isModelLoading, showTrainingPanel, setShowTrainingPanel,
-    isTraining, trainingProgress, modelAccuracy, newLabel, setNewLabel,
-    newScientificName, setNewScientificName, trainingStats, analysisMode,
-    setAnalysisMode, fileInputRef, handleImageUpload, addToTrainingData, trainModel,
+    trainingDataCount, showTrainingPanel, setShowTrainingPanel,
+    newLabel, setNewLabel,
+    newScientificName, setNewScientificName, trainingStats, trainingFeedback,
+    fileInputRef, handleImageUpload, addToTrainingData,
   } = usePlantRecognition();
 
   const getConfidenceColor = (confidence: string) => {
@@ -23,19 +23,6 @@ export default function AIPlantRecognition() {
     }
   };
 
-  if (isModelLoading) {
-    return (
-      <div className="herbarium-card rounded-xl p-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-            <p className="text-sm text-foreground/70">Chargement du modèle ensemble...</p>
-            <p className="text-xs text-foreground/50 mt-2">Plant.id + Pl@ntNet + Classifieur local</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="herbarium-card rounded-xl p-6">
@@ -45,19 +32,11 @@ export default function AIPlantRecognition() {
             <Brain className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h3 className="font-serif font-semibold text-foreground">IA Botanique Globale</h3>
-            <p className="text-xs text-foreground/60">Modèle: {modelVersion} • {trainingStats.species} espèces</p>
+            <h3 className="font-serif font-semibold text-foreground">Identification botanique</h3>
+            <p className="text-xs text-foreground/60">Pl@ntNet • {trainingStats.species} espèces proposées par la communauté</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <select
-            value={analysisMode}
-            onChange={(e) => setAnalysisMode(e.target.value as "fast" | "deep")}
-            className="herbarium-input text-xs py-1.5 px-3"
-          >
-            <option value="fast">Analyse rapide</option>
-            <option value="deep">Analyse approfondie</option>
-          </select>
           <button
             onClick={() => setShowTrainingPanel(!showTrainingPanel)}
             className="herbarium-button"
@@ -87,12 +66,10 @@ export default function AIPlantRecognition() {
                 Cliquez ou déposez une image
               </p>
               <p className="text-xs text-foreground/60">
-                Reconnaissance globale via 3 sources
+                Identification botanique avec Pl@ntNet
               </p>
               <div className="flex items-center justify-center gap-4 mt-4 text-xs text-foreground/50">
-                <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> Plant.id</span>
                 <span className="flex items-center gap-1"><Leaf className="w-3 h-3" /> Pl@ntNet</span>
-                <span className="flex items-center gap-1"><Brain className="w-3 h-3" /> Local</span>
               </div>
             </div>
           ) : (
@@ -303,72 +280,19 @@ export default function AIPlantRecognition() {
                 <Users className="w-4 h-4" />
                 Contribuer au dataset
               </button>
-              <span className="text-xs text-foreground/60">
-                {trainingDataCount} contributions
-              </span>
+              <span className="text-xs text-foreground/60">{trainingDataCount} contributions</span>
+              {trainingFeedback && <p role="status" className={`text-xs ${trainingFeedback.kind === "error" ? "text-red-700" : "text-primary"}`}>{trainingFeedback.text}</p>}
             </div>
 
             <div className="border-t border-border pt-4">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h5 className="text-sm font-medium text-foreground mb-1">
-                    Modèle ensemble global
-                  </h5>
-                  <p className="text-xs text-foreground/60">
-                    Précision: {(modelAccuracy * 100).toFixed(1)}% • Couverture mondiale
-                  </p>
-                </div>
-                <button
-                  onClick={trainModel}
-                  disabled={isTraining}
-                  className="herbarium-button herbarium-button-primary"
-                >
-                  {isTraining ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Amélioration...
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="w-4 h-4" />
-                      Améliorer le modèle
-                    </>
-                  )}
-                </button>
-              </div>
+              <p className="text-xs text-foreground/60 mb-4">Les contributions sont enregistrées pour examen. L’entraînement du modèle est effectué séparément par l’équipe scientifique.</p>
+              <h5 className="text-sm font-medium text-foreground mb-4">Données communautaires d’identification</h5>
 
-              {isTraining && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-foreground/70">Progression</span>
-                    <span className="text-xs text-foreground/60">{Math.round(trainingProgress)}%</span>
-                  </div>
-                  <div className="confidence-gauge">
-                    <div
-                      className="confidence-gauge-fill bg-primary"
-                      style={{ width: `${trainingProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-4 gap-3">
-                <div className="border border-border rounded-lg p-3 bg-paper text-center">
-                  <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold text-foreground">
-                    {(modelAccuracy * 100).toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-foreground/60">Précision</p>
-                </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="border border-border rounded-lg p-3 bg-paper text-center">
                   <Leaf className="w-4 h-4 text-accent mx-auto mb-1" />
-                  <p className="text-lg font-bold text-foreground">{trainingStats.species}+</p>
-                  <p className="text-xs text-foreground/60">Espèces</p>
-                </div>
-                <div className="border border-border rounded-lg p-3 bg-paper text-center">
-                  <Globe className="w-4 h-4 text-terracotta mx-auto mb-1" />
-                  <p className="text-lg font-bold text-foreground">{trainingStats.sources}</p>
-                  <p className="text-xs text-foreground/60">Sources</p>
+                  <p className="text-lg font-bold text-foreground">{trainingStats.species}</p>
+                  <p className="text-xs text-foreground/60">Espèces proposées</p>
                 </div>
                 <div className="border border-border rounded-lg p-3 bg-paper text-center">
                   <Award className="w-4 h-4 text-primary mx-auto mb-1" />

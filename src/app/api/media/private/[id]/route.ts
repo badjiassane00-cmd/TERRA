@@ -1,13 +1,13 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { mediaRepository } from "@/server/media/media.repository";
 import { getSessionUserId } from "@/lib/session";
 import { readStoredImage } from "@/server/media/object-storage";
 async function GETImpl(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connexion requise." }, { status: 401 });
   const { id } = await params;
-  const asset = await prisma.mediaAsset.findFirst({ where: { id, userId }, select: { objectKey: true, contentType: true } });
+  const asset = await mediaRepository.findOwnedAsset(id, userId);
   if (!asset) return NextResponse.json({ error: "Média introuvable." }, { status: 404 });
   try {
     const image = await readStoredImage(asset.objectKey);

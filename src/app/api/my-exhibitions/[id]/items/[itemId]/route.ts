@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../../../lib/prisma";
+import { exhibitionService } from "@/server/exhibitions/exhibition.service";
 import { getSessionUserId } from "../../../../../../lib/session";
 async function DELETEImpl(
   request: Request,
@@ -14,16 +14,11 @@ async function DELETEImpl(
 
     const { id, itemId } = await params;
 
-    const exhibition = await prisma.exhibition.findUnique({ where: { id } });
-    if (!exhibition) {
-      return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
-    }
-    if (exhibition.userId !== sessionUserId) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
-    }
-
-    await prisma.exhibitionItem.delete({ where: { id: itemId } });
-    return NextResponse.json({ success: true });
+    const result = await exhibitionService.removePlant(id, itemId, sessionUserId);
+    if (result === "missing") return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
+    if (result === "forbidden") return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    if (result === "item-missing") return NextResponse.json({ error: "Plante introuvable dans cette exposition" }, { status: 404 });
+        return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erreur DELETE /api/my-exhibitions/[id]/items/[itemId]:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

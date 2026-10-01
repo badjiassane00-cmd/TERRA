@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { reminderRepository } from "@/server/reminders/reminder.repository";
 import { ReminderType } from "@prisma/client";
 import { getWeatherSnapshot } from "../../../lib/weather";
 import { getSessionUserId } from "../../../lib/session";
@@ -39,10 +39,7 @@ async function GETImpl() {
       return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
     }
 
-    const reminders = await prisma.reminder.findMany({
-      where: { userId },
-      orderBy: { nextReminder: "asc" },
-    });
+    const reminders = await reminderRepository.listForUser(userId);
 
     // Enrichissement météo : un seul appel par zone géographique distincte,
     // uniquement pour les rappels d'arrosage géolocalisés.
@@ -112,19 +109,7 @@ async function POSTImpl(request: Request) {
       Number.isFinite(lat) &&
       Number.isFinite(lng);
 
-    const reminder = await prisma.reminder.create({
-      data: {
-        userId,
-        type: (TYPE_MAP[type] || "WATERING") as ReminderType,
-        plantName,
-        frequency: frequency || "weekly",
-        time: time || "08:00",
-        enabled: true,
-        nextReminder: new Date(Date.now() + interval),
-        lat: hasCoords ? lat : null,
-        lng: hasCoords ? lng : null,
-      },
-    });
+    const reminder = await reminderRepository.create({ userId, type: (TYPE_MAP[type] || "WATERING") as ReminderType, plantName, frequency: frequency || "weekly", time: time || "08:00", nextReminder: new Date(Date.now() + interval), lat: hasCoords ? lat : null, lng: hasCoords ? lng : null });
 
     return NextResponse.json(reminder);
   } catch (error) {
@@ -151,15 +136,12 @@ async function PATCHImpl(request: Request) {
       return NextResponse.json({ error: "Id requis" }, { status: 400 });
     }
 
-    const existing = await prisma.reminder.findUnique({ where: { id } });
-    if (!existing || existing.userId !== userId) {
+    const existing = await reminderRepository.findOwned(id, userId);
+    if (!existing) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    const reminder = await prisma.reminder.update({
-      where: { id },
-      data: { enabled },
-    });
+    const reminder = await reminderRepository.updateEnabled(id, enabled);
 
     return NextResponse.json(reminder);
   } catch (error) {
@@ -186,12 +168,12 @@ async function DELETEImpl(request: Request) {
       return NextResponse.json({ error: "Id requis" }, { status: 400 });
     }
 
-    const existing = await prisma.reminder.findUnique({ where: { id } });
-    if (!existing || existing.userId !== userId) {
+    const existing = await reminderRepository.findOwned(id, userId);
+    if (!existing) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    await prisma.reminder.delete({ where: { id } });
+    await reminderRepository.delete(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

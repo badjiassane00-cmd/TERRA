@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { observationRepository } from "@/server/observations/observation.repository";
 import { requireModerator } from "../../../../lib/moderation";
 import { getSessionUserId } from "../../../../lib/session";
 
@@ -56,15 +56,7 @@ async function GETImpl(request: Request) {
       }
     }
 
-    const scans = await prisma.scanHistory.findMany({
-      where: scope === "mine" ? { userId: sessionUserId } : undefined,
-      include: {
-        plant: true,
-        user: { select: { name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 5000, // garde-fou raisonnable pour un export en un seul fichier
-    });
+    const scans = await observationRepository.findForDarwinCore(scope === "mine" ? sessionUserId : null, 5000);
 
     const rows = scans
       .filter((scan) => scan.plant)

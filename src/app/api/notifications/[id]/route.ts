@@ -1,12 +1,12 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { notificationRepository } from "@/server/notifications/notification.repository";
 import { getSessionUserId } from "@/lib/session";
 async function PATCHImpl(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour gérer vos notifications." }, { status: 401 });
   const { id } = await params;
-  const result = await prisma.notification.updateMany({ where: { id, userId }, data: { readAt: new Date() } });
+  const result = await notificationRepository.markRead(userId, id);
   if (!result.count) return NextResponse.json({ error: "Notification introuvable." }, { status: 404 });
   return NextResponse.json({ success: true });
 }

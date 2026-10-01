@@ -1,7 +1,7 @@
 import { distanceKm } from "@/lib/geo";
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { locationRepository } from "@/server/locations/location.repository";
 import { LocationType, Prisma } from "@prisma/client";
 async function GETImpl(request: Request) {
   try {
@@ -26,16 +26,7 @@ async function GETImpl(request: Request) {
       }
     }
 
-    let locations = await prisma.location.findMany({
-      where,
-      include: {
-        plants: {
-          include: {
-            plant: true,
-          },
-        },
-      },
-    });
+    let locations = await locationRepository.list(where);
 
     if (season) {
       locations = locations.filter((loc) => {

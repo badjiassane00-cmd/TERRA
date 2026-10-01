@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { plantRepository } from "@/server/plants/plant.repository";
 
 interface PlantWithSpecialty {
   id: string;
@@ -46,15 +46,7 @@ async function GETImpl(request: Request) {
 
     const specialtyKeys = Object.keys(specialtyKeywords);
 
-    const allPlants = await prisma.plant.findMany({
-      include: {
-        diseases: {
-          include: {
-            disease: true,
-          },
-        },
-      },
-    });
+    const allPlants = await plantRepository.listForExhibition();
 
     const plantsWithSpecialty = allPlants.map((plant) => {
       const description = (plant.description || "").toLowerCase();

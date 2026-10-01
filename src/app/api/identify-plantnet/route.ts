@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { plantRepository } from "@/server/plants/plant.repository";
 
 interface PlantNetSpecies {
   name?: string;
@@ -61,24 +61,7 @@ async function POSTImpl(request: Request) {
         const speciesName = result.species?.name || result.species?.scientificName;
         if (!speciesName) return result;
 
-        const existingPlant = await prisma.plant.findFirst({
-          where: {
-            OR: [
-              { scientificName: { contains: speciesName } },
-              { commonNames: { contains: speciesName } },
-            ],
-          },
-          select: {
-            id: true,
-            description: true,
-            medicinal: true,
-            watering: true,
-            sunlight: true,
-            soil: true,
-            toxicity: true,
-            edibleParts: true,
-          },
-        });
+        const existingPlant = await plantRepository.findForEnrichment(speciesName);
 
         return {
           ...result,

@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { observationRepository } from "@/server/observations/observation.repository";
 
 // Regroupe les scans par cellule d'environ 5km pour anonymiser les
 // positions individuelles (on ne veut pas exposer le domicile précis
@@ -28,16 +28,7 @@ async function GETImpl(request: Request) {
     const days = Number(searchParams.get("days") || "180");
     const since = new Date(Date.now() - days * 86400000);
 
-    const scans = await prisma.scanHistory.findMany({
-      where: {
-        lat: { not: null },
-        lng: { not: null },
-        createdAt: { gte: since },
-      },
-      select: { lat: true, lng: true, result: true, createdAt: true },
-      take: 5000,
-      orderBy: { createdAt: "desc" },
-    });
+    const scans = await observationRepository.findForDiseaseHeatmap(since);
 
     const cells = new Map<
       string,

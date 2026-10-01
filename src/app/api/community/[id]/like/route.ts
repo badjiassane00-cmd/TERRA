@@ -1,7 +1,8 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../../lib/prisma";
+import { communityRepository } from "@/server/observations/community.repository";
 import { getSessionUserId } from "../../../../../lib/session";
+import { userRepository } from "@/server/users/user.repository";
 import { createCommunityNotification } from "@/server/notifications/notification.service";
 async function POSTImpl(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
@@ -9,21 +10,11 @@ async function POSTImpl(_request: Request, { params }: { params: Promise<{ id: s
   const { id } = await params;
   try {
     const [post, actor] = await Promise.all([
-      prisma.communityPost.findFirst({ where: { id, removed: false }, select: { userId: true, plantName: true } }),
-      prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
+      communityRepository.findVisiblePost(id),
+      userRepository.findName(userId),
     ]);
     if (!post) return NextResponse.json({ error: "Observation introuvable." }, { status: 404 });
-    const result = await prisma.$transaction(async (tx) => {
-      const existing = await tx.communityPostLike.findUnique({ where: { postId_userId: { postId: id, userId } } });
-      if (existing) {
-        await tx.communityPostLike.delete({ where: { id: existing.id } });
-        const post = await tx.communityPost.update({ where: { id }, data: { likes: { decrement: 1 } }, select: { likes: true } });
-        return { liked: false, likes: post.likes };
-      }
-      await tx.communityPostLike.create({ data: { postId: id, userId } });
-      const post = await tx.communityPost.update({ where: { id }, data: { likes: { increment: 1 } }, select: { likes: true } });
-      return { liked: true, likes: post.likes };
-    });
+    const result = await communityRepository.toggleLike(id, userId);
     if (result.liked && post.userId !== userId && actor) await createCommunityNotification({ userId: post.userId, actorName: actor.name, title: "Votre observation plaît à quelqu’un", body: `a aimé votre observation « ${post.plantName} ».`, href: `/observations/${id}`, kind: "like" }).catch((notificationError) => console.error("Notification appréciation:", notificationError));
     return NextResponse.json(result);
   } catch (error) {

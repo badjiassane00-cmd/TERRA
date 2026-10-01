@@ -1,6 +1,6 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { userRepository } from "@/server/users/user.repository";
 import { getSessionUserId } from "@/lib/session";
 import { isStorageConfigured, storePublicImage } from "@/server/media/object-storage";
 
@@ -30,7 +30,7 @@ async function PATCHImpl(request: Request) {
     catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Image invalide." }, { status: 400 }); }
   }
 
-  const user = await prisma.user.update({ where: { id: userId }, data: { avatarUrl: storedAvatarUrl }, select: { id: true, avatarUrl: true } });
+  const user = await userRepository.updateAvatar(userId, storedAvatarUrl);
   return NextResponse.json({ avatarUrl: user.avatarUrl });
 }
 
