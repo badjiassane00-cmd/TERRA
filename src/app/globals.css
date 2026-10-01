@@ -732,3 +732,23 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .terra-search-user small,.terra-search-species i{color:#778579;font-size:11px}
 @media(max-width:700px){.terra-search-page{padding:28px 15px 55px}.terra-search-results{grid-template-columns:1fr}.nature-post-photo{min-height:190px}.nature-story-viewer img,.nature-story-viewer video{height:70vh}}
 .observation-detail-video{display:block;width:100%;height:100%;min-height:390px;max-height:620px;object-fit:contain;background:#e8eee5}
+
+/* Repère persistant de navigation et publication prioritaire des observations */
+.nature-app-header nav>a.nature-nav-link{position:relative;min-height:38px;padding:0 10px;border:1px solid transparent;border-radius:10px;transition:color .18s ease,background-color .18s ease,border-color .18s ease}
+.nature-app-header nav>a.nature-nav-link:hover{background:#f2f7ef}
+.nature-app-header nav>a.nature-nav-link.active{border-color:#c6dfc0;background:#eaf5e7;color:#276d43;box-shadow:inset 0 0 0 1px #ffffff80}
+.nature-app-header nav>a.nature-nav-link.active:after{position:absolute;right:12px;bottom:-7px;left:12px;height:3px;border-radius:4px;background:#72b77a;content:""}
+.nature-app-header nav>a.nature-app-header-profile.active{border-color:#c6dfc0;background:#eaf5e7;color:#276d43}
+.observations-page{min-height:100vh;background:#f7f8f3}
+.observation-publish-first{max-width:1320px;margin:0 auto;padding:28px clamp(16px,5vw,78px) 0}
+.observation-publish-heading{margin:0 auto;max-width:680px;text-align:center}
+.observation-publish-heading>span{color:#57885e;font-size:10px;font-weight:850;letter-spacing:.16em}
+.observation-publish-heading h1{margin:10px 0;color:#294633;font:500 clamp(32px,4vw,48px)/1.08 var(--font-fraunces),Georgia,serif}
+.observation-publish-heading h1 em{color:#6eae73}
+.observation-publish-heading p{margin:0;color:#718075;font-size:13px}
+.observation-publish-first .nature-social-feed{max-width:850px;padding-top:18px}
+.observation-publish-first .nature-feed-heading{border:1px solid #e4ebdf;border-bottom:0;border-radius:17px 17px 0 0;background:#fff;padding:13px 16px 0}
+.observation-publish-first .nature-stories-strip{margin:0 auto;max-width:850px;border:1px solid #e4ebdf;border-top:0;border-bottom:0;background:#fff;padding:14px 18px 5px}
+.observation-publish-first .nature-social-feed>div.mb-6{margin:0!important;border:1px solid #e4ebdf!important;border-top:0!important;border-radius:0 0 17px 17px;background:#fff!important;padding:14px 18px 20px!important}
+.observations-page>.observations-explorer{margin-top:34px;border-top:1px solid #e5eae1}
+@media(max-width:680px){.nature-app-header nav>a.nature-nav-link{min-height:36px;padding:0 7px}.nature-app-header nav>a.nature-nav-link.active:after{right:8px;left:8px}.observation-publish-first{padding:20px 12px 0}.observation-publish-heading h1{font-size:32px}.observation-publish-heading p{font-size:11px}}

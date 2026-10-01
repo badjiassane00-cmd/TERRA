@@ -66,6 +66,7 @@ interface CommunityFeedProps {
   currentUserRole?: "user" | "admin" | "institution";
   groupFilter?: OrganismFilter;
   onGroupFilterChange?: (group: OrganismFilter) => void;
+  initialComposerOpen?: boolean;
 }
 
 interface ApiPost {
@@ -97,7 +98,7 @@ interface ApiPost {
 }
 
 
-export default function CommunityFeed({ currentUserId, currentUserRole, groupFilter = "ALL", onGroupFilterChange }: CommunityFeedProps) {
+export default function CommunityFeed({ currentUserId, currentUserRole, groupFilter = "ALL", onGroupFilterChange, initialComposerOpen = false }: CommunityFeedProps) {
   const router = useRouter();
   const isModerator = currentUserRole === "institution" || currentUserRole === "admin";
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -118,7 +119,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [newRegion, setNewRegion] = useState("");
   const [postError, setPostError] = useState<string | null>(null);
   const visiblePosts = groupFilter === "ALL" ? posts : posts.filter((post) => post.organismGroup === groupFilter);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(initialComposerOpen);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [pendingObservations, setPendingObservations] = useState<PendingObservation[]>([]);
