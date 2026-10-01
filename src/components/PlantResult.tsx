@@ -65,7 +65,7 @@ function ConfidenceGauge({ value, mode }: { value: number; mode: "identify" | "d
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-foreground/70">{mode === "disease" ? "Score du modèle" : "Fiabilité"}</span>
+        <span className="text-xs font-medium text-foreground/70">{mode === "disease" ? "Score du modèle" : mode === "life" ? "Score BioCLIP" : "Fiabilité"}</span>
         <span className="text-xs font-semibold text-foreground">{percent}%</span>
       </div>
       <div className="confidence-gauge">
@@ -75,7 +75,7 @@ function ConfidenceGauge({ value, mode }: { value: number; mode: "identify" | "d
         />
       </div>
       <p className="text-xs text-foreground/60 mt-1">
-        {mode === "disease" ? "Piste visuelle, à confirmer sur le terrain" : value > 0.8
+        {mode === "disease" ? "Piste visuelle, à confirmer sur le terrain" : mode === "life" ? "Similarité du modèle, à confirmer avec un spécialiste" : value > 0.8
           ? "Identification fiable"
           : value > 0.5
             ? "Résultat probable, vérifiez les détails"
@@ -125,7 +125,7 @@ export default function PlantResult({ result, isLoading, previewUrl, userId, use
   }
 
   const imageToShow = result.imageUrl || previewUrl;
-  const isBotanical = !result.sources?.provider?.includes("MobileNet") && !result.sources?.provider?.includes("Insect.id");
+  const isBotanical = mode !== "life";
   const TaxonIcon = isBotanical ? Leaf : result.taxonomy?.class === "Insecta" ? Bug : result.taxonomy?.class === "Aves" ? Bird : PawPrint;
 
   return (

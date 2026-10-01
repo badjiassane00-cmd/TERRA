@@ -5,22 +5,24 @@ Le Blueprint `render.yaml` décrit quatre services dans la région de Francfort 
 ## Avant la création
 
 1. Créer un dépôt Git privé sur GitHub et y pousser cette branche. Aucun dépôt distant Git n'est actuellement configuré dans ce projet.
-2. Dans Render, relier le dépôt et créer un Blueprint depuis `render.yaml`.
-3. Les trois services `1c-2g`/`0.5c-512mb` et les deux disques de 10 Go sont payants. Estimation actuelle : environ **87 USD/mois** (web 25, PlantVillage 25, MySQL 25, MinIO 7, disques 5), hors bande passante excédentaire, frais de l’espace de travail, taxes et crédits d’identification. Vérifier le tarif affiché par Render avant de créer les ressources.
+2. Dans Render, relier le dépôt et créer un Blueprint depuis la configuration de production complète.
+3. Tous les services et disques de cette configuration sont payants. Elle inclut désormais un service BioCLIP `1c-2g` avec un disque de 10 Go. Vérifier l’estimation affichée par Render avant toute création; le total dépend des tarifs et de la région du compte.
 
 ## Secrets et stockage
 
 - Render génère les mots de passe MySQL, le mot de passe racine MinIO et `JWT_SECRET`. Le Blueprint ne contient aucun secret.
 - Dans le service MinIO, téléverser le fichier de licence AIStor comme secret file nommé `minio.license`. Il sera disponible sous `/etc/secrets/minio.license`.
 - Créer le bucket privé `terra-media` dans MinIO, puis un utilisateur applicatif limité à ce bucket. Saisir ses clés dans `MEDIA_S3_ACCESS_KEY` et `MEDIA_S3_SECRET_KEY` du service web.
-- Saisir les clés Pl@ntNet et Insect.id dans le service web. La clé Insect.id refusée en local doit être remplacée par une clé propre au produit Insect.id avec des crédits affectés.
+- Saisir la clé Pl@ntNet dans le service web. Pour les insectes et animaux, TERRA utilise BioCLIP auto-hébergé, sans clé Insect.id.
 - Ne pas importer `.env` ou `.env.local` en bloc : ils contiennent des adresses locales `127.0.0.1` et des secrets de développement.
 
 ## Déploiement et contrôle
 
 Le service web construit Next.js, génère Prisma, applique les migrations par `preDeployCommand`, puis démarre sur `0.0.0.0:$PORT`. Le script de démarrage compose `DATABASE_URL`, `MEDIA_S3_ENDPOINT` et `DISEASE_MODEL_URL` à partir des noms DNS privés Render; il réessaie les migrations si MySQL n'a pas encore démarré.
 
-Après le premier déploiement, vérifier `/api/health`, créer une observation avec photo, tester l'identification végétale, le diagnostic PlantVillage et une reconnaissance Insect.id, puis contrôler les journaux et le solde de crédits du fournisseur.
+BioCLIP est volontairement séparé du Blueprint web gratuit : le modèle et ses données taxonomiques nécessitent plusieurs gigaoctets de mémoire et un cache persistant. La configuration complète `render.full.yaml` crée le service Docker et relie son adresse privée à TERRA. Le fichier `render.bioclip.yaml` permet aussi de déployer le modèle séparément. Le service et son disque sont payants; vérifiez le tarif affiché dans Render avant leur création. Sans ce service, l’API renvoie un message de configuration au lieu d’échouer sur une clé Insect.id.
+
+Après le premier déploiement, vérifier `/api/health`, créer une observation avec photo, tester l'identification végétale et, une fois BioCLIP connecté, tester l’identification d’un insecte ou d’un animal.
 
 ## Sauvegardes et limites
 

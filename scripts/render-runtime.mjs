@@ -28,6 +28,10 @@ export function configureRenderEnvironment() {
     process.env.DISEASE_MODEL_URL = `http://${process.env.DISEASE_MODEL_HOSTPORT}`;
   }
 
+  if (!process.env.BIOCLIP_API_URL && process.env.BIOCLIP_HOSTPORT) {
+    process.env.BIOCLIP_API_URL = `http://${process.env.BIOCLIP_HOSTPORT}`;
+  }
+
   process.env.APP_URL ||= process.env.RENDER_EXTERNAL_URL;
 }
 

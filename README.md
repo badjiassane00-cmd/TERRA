@@ -11,7 +11,7 @@ Réseau social naturaliste international pour observer, identifier et partager l
 
 ### Core
 - ✅ Identification de plantes par photo via Pl@ntNet, enrichie par GBIF
-- ✅ Reconnaissance locale des animaux, insectes, plantes et champignons via MobileNet, avec rapprochement taxonomique GBIF (la photo n’est pas envoyée)
+- ✅ Reconnaissance BioCLIP des insectes et animaux, avec candidats taxonomiques et une validation communautaire à confirmer
 - ✅ Détection visuelle de maladies (à confirmer avant traitement)
 - ✅ Assistant vocal botanique ( reconnaissance vocale + synthèse vocale)
 - ✅ Capture caméra pour identification via le moteur photo
@@ -61,7 +61,7 @@ cp .env.example .env
 | Variable | Description | Obtention |
 |----------|-------------|-----------|
 | `PLANTNET_API_KEY` | Identification des plantes | https://my.plantnet.org/ |
-| `INSECT_API_KEY` | Identification spécialisée des insectes avec Kindwise Insect.id | https://www.kindwise.com/insect-id |
+| `BIOCLIP_API_URL` | API privée du modèle BioCLIP | `http://127.0.0.1:8020` (Compose) |
 | `DISEASE_MODEL_URL` | URL du service local de diagnostic PlantVillage | `http://127.0.0.1:8010` (Compose) |
 | `OPENWEATHER_API_KEY` | Météo pour rappels intelligents | https://openweathermap.org/api |
 | `GOOGLE_MAPS_API_KEY` | Cartographie avancée | https://console.cloud.google.com/apis/credentials |
@@ -71,11 +71,11 @@ cp .env.example .env
 
 Les plantes sont identifiées par Pl@ntNet avec `PLANTNET_API_KEY`. Le mode « Santé végétale » utilise le modèle ouvert PlantVillage EfficientNet-B4 (licence MIT) servi par le conteneur `plant-disease`; lancez `docker compose up -d plant-disease` et configurez `DISEASE_MODEL_URL`. Il distingue 38 classes pour 14 cultures. Le jeu de données provient surtout d’images contrôlées : il ne couvre pas toutes les cultures ni les conditions réelles des champs, et ses scores ne constituent pas un diagnostic agronomique.
 
-Le mode « Insectes & invertébrés » envoie la photo à l’API Kindwise Insect.id avec `INSECT_API_KEY`, uniquement depuis le serveur TERRA et après un avertissement dans l’interface; la reconnaissance spécialisée nécessite une session connectée et peut consommer les crédits du compte fournisseur. Les autres animaux restent classés localement avec MobileNet puis rapprochés de GBIF via `/api/identify-life`; leur photo ne quitte pas le navigateur. MobileNet reconnaît des catégories ImageNet et peut manquer certaines espèces rares ou proches.
+Les insectes et animaux sont identifiés par BioCLIP, modèle ouvert d’Imageomics servi dans un conteneur privé. Pour le développement local, démarrez le service avec `docker compose up -d --build bioclip` et gardez `BIOCLIP_API_URL=http://127.0.0.1:8020` dans `.env.local`. Le premier démarrage télécharge le modèle et ses références taxonomiques; prévoyez plusieurs gigaoctets de RAM, de stockage et un téléchargement initial conséquent. La photo est transmise au service BioCLIP de TERRA. Les résultats sont des suggestions visuelles à confirmer, pas des diagnostics taxonomiques certains.
 
 Le calendrier vivant est calculé par pays à partir des observations publiques de la communauté sur 24 mois. Il mesure l’activité de partage et ne constitue pas une prévision de présence des espèces. Le réseau plantes–insectes repère des co-présences publiques dans le temps et l’espace; il ne démontre pas une pollinisation. Les alertes de proximité ne s’appuient que sur les observations publiques géolocalisées des 30 derniers jours et ne signalent pas l’absence d’espèces.
 
-`PLANTNET_API_KEY` reste réservée à l’identification botanique via `/api/identify`. `INSECT_API_KEY` est lue uniquement par le serveur; ne la préfixez pas avec `NEXT_PUBLIC_`. Les résultats taxonomiques peuvent être enrichis par [GBIF](https://www.gbif.org/). Une suggestion de maladie doit être confirmée sur le terrain par un professionnel avant toute intervention.
+`PLANTNET_API_KEY` reste réservée à l’identification botanique via `/api/identify`. BioCLIP est auto-hébergé et ne nécessite pas de clé fournisseur. Les résultats taxonomiques peuvent être enrichis par [GBIF](https://www.gbif.org/). Une suggestion de maladie doit être confirmée sur le terrain par un professionnel avant toute intervention.
 
 ### Sons de la nature
 
@@ -85,7 +85,7 @@ Les brouillons de publication photo hors connexion sont conservés sur l’appar
 
 ## Déploiement sur Render
 
-La configuration multi-service et les étapes Render sont décrites dans [le guide de déploiement Render](docs/render-deployment.md). Le Blueprint crée TERRA, MySQL, MinIO AIStor et le modèle PlantVillage dans un réseau privé.
+La configuration multi-service et les étapes Render sont décrites dans [le guide de déploiement Render](docs/render-deployment.md). Le Blueprint de production `render.full.yaml` crée TERRA, MySQL, MinIO AIStor, PlantVillage et BioCLIP dans un réseau privé. Ces services requièrent des forfaits payants; vérifiez le coût total dans Render avant de les créer.
 
 ## Base MySQL et médias MinIO
 

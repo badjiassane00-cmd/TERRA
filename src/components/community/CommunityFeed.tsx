@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, Sparkles, ArrowRight } from "lucide-react";
+import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, Sparkles, ArrowRight, Camera, Upload } from "lucide-react";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismFilter, type OrganismGroup } from "@/types/nature";
 import { compressObservationPhoto, photoLicenseUrl, type ObservationPhotos } from "@/lib/observation-media";
 
@@ -105,6 +105,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [newObservedAt, setNewObservedAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [newPhoto, setNewPhoto] = useState<ObservationPhotos | null>(null);
   const [newLocation, setNewLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationMessage, setLocationMessage] = useState("");
   const [locationVisibility, setLocationVisibility] = useState<"PUBLIC" | "APPROXIMATE" | "PRIVATE">("APPROXIMATE");
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [newOrganismGroup, setNewOrganismGroup] = useState<OrganismGroup>("PLANT");
@@ -244,6 +245,31 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     } catch { /* Le compte reste affiché si l’abonnement échoue. */ }
   };
 
+  const addObservationPhoto = async (file: File) => {
+    setPostError(null);
+    setPhotoProcessing(true);
+    try {
+      setNewPhoto(await compressObservationPhoto(file));
+      if (!navigator.geolocation) {
+        setLocationMessage("La géolocalisation n’est pas disponible sur cet appareil.");
+      } else {
+        setLocationMessage("Demande d’autorisation de position…");
+        navigator.geolocation.getCurrentPosition(
+          ({ coords }) => {
+            setNewLocation({ latitude: coords.latitude, longitude: coords.longitude });
+            setLocationMessage("Position de la photo ajoutée. Sa visibilité reste approximative par défaut.");
+          },
+          () => setLocationMessage("Position non ajoutée. Vous pouvez autoriser la géolocalisation ou publier sans coordonnées."),
+          { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+        );
+      }
+    } catch (error) {
+      setPostError(error instanceof Error ? error.message : "Impossible de charger la photo.");
+    } finally {
+      setPhotoProcessing(false);
+    }
+  };
+
   const publishPost = async () => {
     if (!newSpeciesName.trim() || !newPost.trim() || !newPhoto) return;
     setPosting(true);
@@ -262,7 +288,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       try { localStorage.setItem("sununature:pending-observations", JSON.stringify(queue)); }
       catch { return false; }
       setPendingObservations(queue);
-      setNewPost(""); setNewSpeciesName(""); setNewScientificName(""); setNewPhoto(null); setNewLocation(null);
+      setNewPost(""); setNewSpeciesName(""); setNewScientificName(""); setNewPhoto(null); setNewLocation(null); setLocationMessage("");
       setNewObservedAt(new Date().toISOString().slice(0, 10)); setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
       setShowForm(false);
       return true;
@@ -274,7 +300,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Publication impossible pour le moment.");
       setNewPost(""); setNewSpeciesName(""); setNewScientificName("");
-      setNewObservedAt(new Date().toISOString().slice(0, 10)); setNewPhoto(null); setNewLocation(null);
+      setNewObservedAt(new Date().toISOString().slice(0, 10)); setNewPhoto(null); setNewLocation(null); setLocationMessage("");
       setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
       setShowForm(false);
       window.dispatchEvent(new CustomEvent("sununature:observation-published", { detail: { organismGroup: newOrganismGroup } }));
@@ -345,26 +371,20 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
 
       {showForm && (
         <div className="mb-6 p-4 bg-paper border border-border rounded-lg">
-          <select
-            value={newOrganismGroup}
-            onChange={(event) => setNewOrganismGroup(event.target.value as OrganismGroup)}
-            className="herbarium-input mb-3"
-            aria-label="Groupe du vivant"
-          >
-            {ORGANISM_GROUPS.map((group) => <option key={group} value={group}>{ORGANISM_LABELS[group]}</option>)}
-          </select>
-          <label className="observation-field-label">Photo de l’observation
-            <input type="file" accept="image/jpeg,image/png,image/webp" className="herbarium-input mb-3" disabled={photoProcessing} onChange={async (event) => {
-              const file = event.target.files?.[0];
-              if (!file) return;
-              setPostError(null);
-              setPhotoProcessing(true);
-              try { setNewPhoto(await compressObservationPhoto(file)); }
-              catch (error) { setPostError(error instanceof Error ? error.message : "Impossible de charger la photo."); }
-              finally { setPhotoProcessing(false); }
-            }} />
+          <div className="mb-3">
+            <p className="observation-field-label">Commencez par votre photo</p>
+            <div className="flex flex-wrap gap-2">
+              <label className="herbarium-button herbarium-button-primary cursor-pointer"><Camera size={16} /> Prendre une photo<input type="file" accept="image/*" capture="environment" className="sr-only" disabled={photoProcessing} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void addObservationPhoto(file); }} /></label>
+              <label className="herbarium-button cursor-pointer"><Upload size={16} /> Télécharger une photo<input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={photoProcessing} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void addObservationPhoto(file); }} /></label>
+            </div>
+            {photoProcessing && <p className="mt-2 text-xs text-foreground/60" role="status">Préparation de la photo…</p>}
+          </div>
+          {newPhoto && <div className="observation-photo-preview"><Image src={newPhoto.thumbnailUrl} alt="Aperçu de l’observation" width={480} height={320} unoptimized /><button type="button" aria-label="Retirer la photo" onClick={() => { setNewPhoto(null); setNewLocation(null); setLocationMessage(""); }}><X size={16} /></button></div>}
+          <label className="observation-field-label">Type d’être vivant
+            <select value={newOrganismGroup} onChange={(event) => setNewOrganismGroup(event.target.value as OrganismGroup)} className="herbarium-input mb-3" aria-label="Type d’être vivant">
+              {ORGANISM_GROUPS.map((group) => <option key={group} value={group}>{ORGANISM_LABELS[group]}</option>)}
+            </select>
           </label>
-          {newPhoto && <div className="observation-photo-preview"><Image src={newPhoto.thumbnailUrl} alt="Aperçu de l’observation" width={480} height={320} unoptimized /><button type="button" aria-label="Retirer la photo" onClick={() => setNewPhoto(null)}><X size={16} /></button></div>}
           <label className="observation-field-label">Date de l’observation
             <input type="date" value={newObservedAt} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setNewObservedAt(event.target.value)} className="herbarium-input mb-3" />
           </label>
@@ -377,7 +397,12 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             maxLength={120}
           />
           <input value={newScientificName} onChange={(event) => setNewScientificName(event.target.value)} placeholder="Nom scientifique (si vous le connaissez)" className="herbarium-input mb-3" maxLength={180} />
-          <div className="observation-location-row"><button type="button" className="herbarium-button" onClick={() => navigator.geolocation?.getCurrentPosition(({ coords }) => setNewLocation({ latitude: coords.latitude, longitude: coords.longitude }), () => setPostError("Position introuvable. Vous pouvez publier sans coordonnées."))}><LocateFixed size={15} /> {newLocation ? "Position ajoutée" : "Ajouter ma position"}</button><select aria-label="Confidentialité de la position" value={locationVisibility} onChange={(event) => setLocationVisibility(event.target.value as typeof locationVisibility)} className="herbarium-input"><option value="APPROXIMATE">Position approximative</option><option value="PUBLIC">Position visible</option><option value="PRIVATE">Position privée</option></select></div>
+          <div className="observation-location-row"><button type="button" className="herbarium-button" onClick={() => {
+            if (!navigator.geolocation) { setLocationMessage("La géolocalisation n’est pas disponible sur cet appareil."); return; }
+            setLocationMessage("Recherche de la position…");
+            navigator.geolocation.getCurrentPosition(({ coords }) => { setNewLocation({ latitude: coords.latitude, longitude: coords.longitude }); setLocationMessage("Position ajoutée à l’observation."); }, () => setLocationMessage("Position introuvable. Vous pouvez publier sans coordonnées."), { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 });
+          }}><LocateFixed size={15} /> {newLocation ? "Actualiser ma position" : "Ajouter ma position"}</button><select aria-label="Confidentialité de la position" value={locationVisibility} onChange={(event) => setLocationVisibility(event.target.value as typeof locationVisibility)} className="herbarium-input"><option value="APPROXIMATE">Position approximative</option><option value="PUBLIC">Position visible</option><option value="PRIVATE">Position privée</option></select></div>
+          {locationMessage && <p className="mt-2 text-xs text-foreground/60" role="status">{locationMessage}</p>}
           <textarea
             value={newPost}
             onChange={(e) => setNewPost(e.target.value)}

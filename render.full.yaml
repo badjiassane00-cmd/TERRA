@@ -50,6 +50,22 @@ services:
         - services/plant-disease/**
         - render.yaml
 
+  - type: pserv
+    name: terra-bioclip
+    runtime: docker
+    dockerfilePath: services/bioclip/Dockerfile
+    dockerContext: services/bioclip
+    plan: 1c-2g
+    region: frankfurt
+    disk:
+      name: terra-bioclip-model-cache
+      mountPath: /models
+      sizeGB: 10
+    buildFilter:
+      paths:
+        - services/bioclip/**
+        - render.full.yaml
+
   - type: web
     name: terra-web
     runtime: node
@@ -109,6 +125,11 @@ services:
           type: pserv
           name: terra-plant-disease
           property: hostport
+      - key: BIOCLIP_HOSTPORT
+        fromService:
+          type: pserv
+          name: terra-bioclip
+          property: hostport
       - key: APP_URL
         fromService:
           type: web
@@ -117,6 +138,4 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: PLANTNET_API_KEY
-        sync: false
-      - key: INSECT_API_KEY
         sync: false

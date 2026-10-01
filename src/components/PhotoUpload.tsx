@@ -35,6 +35,7 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
     accept: {
         "image/jpeg": [".jpeg", ".jpg"],
         "image/png": [".png"],
+        "image/webp": [".webp"],
     },
     maxFiles: 1,
     disabled: isLoading,

@@ -1,4 +1,19 @@
 services:
+  bioclip:
+    build: ./services/bioclip
+    container_name: terra-bioclip
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8020:8000"
+    volumes:
+      - terra_bioclip_models:/models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 600s
+
   plant-disease:
     build: ./services/plant-disease
     container_name: terra-plant-disease
@@ -50,6 +65,7 @@ services:
 volumes:
   terra_mysql_data:
   terra_minio_data:
+  terra_bioclip_models:
 
 secrets:
   minio-license:

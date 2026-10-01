@@ -1,52 +1,57 @@
-import { withApiErrors } from "@/server/http/api-handler";
-import { NextResponse } from "next/server";
-import { identificationRepository } from "@/server/identification/identification.repository";
 import { getSessionUserId } from "@/lib/session";
+import { identificationRepository } from "@/server/identification/identification.repository";
+import { bioClipIdentificationAdapter, type BioClipGroup } from "@/server/identification/bioclip.adapter";
+import { ApiError, withApiErrors } from "@/server/http/api-handler";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-type LocalPrediction = { className: string; probability: number };
-async function POSTImpl(request: Request) {
-  try {
-    const body = await request.json();
-    const predictions = Array.isArray(body.predictions) ? body.predictions.slice(0, 5) as LocalPrediction[] : [];
-    if (!predictions.length || predictions.some((item) => typeof item.className !== "string" || item.className.length > 180 || !Number.isFinite(item.probability))) {
-      return NextResponse.json({ error: "Aucune prédiction locale valide n’a été reçue." }, { status: 400 });
-    }
-    const candidates = await Promise.all(predictions.map(async (prediction) => {
-      const latinName = prediction.className.match(/\b[A-Z][a-z-]+\s+[a-z-]+\b/)?.[0];
-      const displayName = prediction.className.split(",")[0].trim();
-      const query = latinName || displayName;
-      const response = await fetch(`https://api.gbif.org/v1/species/match?name=${encodeURIComponent(query)}`, {
-        headers: { Accept: "application/json", "User-Agent": "TERRA/1.0" }, signal: AbortSignal.timeout(7_000),
-      }).catch(() => null);
-      const match = response?.ok ? await response.json().catch(() => null) : null;
-      const scientificName = match?.scientificName || match?.canonicalName || query;
-      const taxonKey = match?.usageKey || match?.key;
-      let commonNames = [displayName];
-      if (taxonKey) {
-        const namesResponse = await fetch(`https://api.gbif.org/v1/species/${taxonKey}/vernacularNames`, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(5_000) }).catch(() => null);
-        const names = namesResponse?.ok ? await namesResponse.json().catch(() => []) : [];
-        const preferred = Array.isArray(names) ? names.find((name: { language?: string }) => ["fra", "fr"].includes(name.language?.toLowerCase() || "")) || names.find((name: { language?: string }) => ["eng", "en"].includes(name.language?.toLowerCase() || "")) : null;
-        if (preferred?.vernacularName && !commonNames.includes(preferred.vernacularName)) commonNames = [preferred.vernacularName, ...commonNames];
-      }
-      const result = {
-        id: scientificName, scientific_name: scientificName, common_names: commonNames,
-        probability: Math.max(0, Math.min(1, prediction.probability)),
-        taxonomy: { kingdom: match?.kingdom, phylum: match?.phylum, class: match?.class, order: match?.order, family: match?.family, genus: match?.genus, species: match?.species },
-        description: "Suggestion visuelle générée sur votre appareil. Le nom scientifique est rapproché du référentiel taxonomique GBIF.",
-        sources: { provider: "MobileNet sur l’appareil", ...(taxonKey ? { gbif: `https://www.gbif.org/species/${taxonKey}` } : {}) },
-      };
-      return { ...result, matchType: match?.matchType || null };
-    }));
-    const result = candidates[0];
-    const userId = await getSessionUserId();
-    if (userId) await identificationRepository.saveResult(userId, result as object);
-    return NextResponse.json({ result, candidates, provider: "MobileNet + GBIF", imageSent: false, note: "Les suggestions visuelles sont approximatives et doivent être vérifiées." });
-  } catch (error) {
-    console.error("Local organism identification enrichment failed", error);
-    return NextResponse.json({ error: "Impossible d’enrichir ces suggestions taxonomiques." }, { status: 500 });
-  }
-}
 
+async function POSTImpl(request: Request) {
+  const formData = await request.formData();
+  const image = formData.get("image");
+  const groupValue = formData.get("group");
+  const group: BioClipGroup = groupValue === "insects" || groupValue === "all" ? groupValue : "animals";
+
+  if (!(image instanceof File)) throw new ApiError("Prenez ou choisissez une photo nette du vivant.", 400);
+  if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) throw new ApiError("Utilisez une image JPEG, PNG ou WebP.", 415);
+  if (image.size > 10 * 1024 * 1024) throw new ApiError("L’image ne doit pas dépasser 10 Mo.", 413);
+
+  const identified = await bioClipIdentificationAdapter.identify(image, group);
+  if (!identified.length) throw new ApiError("BioCLIP n’a pas trouvé de piste dans ce groupe. Essayez une photo plus nette ou un autre type de vivant.", 422);
+
+  const candidates = identified.map((candidate) => ({
+    scientific_name: candidate.scientific_name,
+    common_names: candidate.common_name ? [candidate.common_name] : [candidate.scientific_name],
+    probability: candidate.probability,
+    taxonomy: candidate.taxonomy,
+    description: "Suggestion visuelle BioCLIP à confirmer par la communauté naturaliste.",
+  }));
+  const result = candidates[0];
+  const userId = await getSessionUserId();
+  if (userId && result) {
+    await identificationRepository.saveCandidates(
+      userId,
+      result.scientific_name,
+      result.common_names[0],
+      result.description,
+      JSON.stringify({ provider: "BioCLIP", group, candidates }),
+    );
+  }
+
+  return NextResponse.json({
+    provider: "BioCLIP",
+    result: result ? {
+      id: result.scientific_name,
+      scientific_name: result.scientific_name,
+      common_names: result.common_names,
+      probability: result.probability,
+      description: result.description,
+      taxonomy: result.taxonomy,
+      sources: { provider: "BioCLIP · Imageomics" },
+    } : null,
+    candidates,
+    note: "Identification assistée à vérifier sur le terrain; la photo est analysée par le service BioCLIP hébergé par TERRA.",
+  });
+}
 
 export const POST = withApiErrors(POSTImpl);

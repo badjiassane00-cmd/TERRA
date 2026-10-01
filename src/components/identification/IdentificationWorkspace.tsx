@@ -13,7 +13,6 @@ import AIPlantRecognition from "@/components/ai/AIPlantRecognition";
 import ARView from "@/components/ar/ARView";
 import VoiceAssistant from "@/components/voice/VoiceAssistant";
 import FieldSession from "@/components/academic/FieldSession";
-import { recognizeLifeLocally } from "@/lib/local-life-recognition";
 
 interface PlantIdentificationResult {
   id: string;
@@ -68,14 +67,10 @@ export default function IdentificationWorkspace({ userId, userRole }: { userId: 
     try {
       let data: { result?: PlantIdentificationResult; candidates?: Array<{ scientific_name: string; common_names: string[]; probability: number }>; error?: string };
       if (mode === "life") {
-        let response: Response;
-        if (lifeTarget === "insects") {
-          const form = new FormData(); form.append("image", file);
-          response = await apiFetch("/api/identify-insect", { method: "POST", body: form });
-        } else {
-          const predictions = await recognizeLifeLocally(file);
-          response = await apiFetch("/api/identify-life", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ predictions }) });
-        }
+        const form = new FormData();
+        form.append("image", file);
+        form.append("group", lifeTarget);
+        const response = await apiFetch("/api/identify-life", { method: "POST", body: form });
         data = await response.json();
         if (!response.ok) throw new Error(data.error || "L’identification du vivant a échoué.");
       } else {
@@ -104,7 +99,7 @@ export default function IdentificationWorkspace({ userId, userRole }: { userId: 
   return <div className="nature-identifier-workspace">
     <section className="nature-identifier-hero"><video className="nature-identifier-hero-video" autoPlay muted loop playsInline preload="metadata" poster="/images/terra-hero.webp" aria-hidden="true" tabIndex={-1}><source src="/videos/terra-biodiversity.mp4" type="video/mp4" /></video><div className="nature-identifier-hero-copy"><span className="nature-identifier-eyebrow"><Sparkles size={14} /> TERRA · LE RÉSEAU MONDIAL DU VIVANT</span><h1>Photographiez la<br /><em>vie</em> autour de vous.</h1><p>Plante, insecte, oiseau ou mammifère : partagez une image, obtenez des pistes d’identification et enrichissez les savoirs du terrain.</p><div className="nature-hero-actions"><Link href="#reconnaissance" className="nature-hero-cta">Commencer une identification <ArrowRight size={16} /></Link><Link href="/explorer" className="nature-hero-secondary">Découvrir le réseau</Link></div><div className="nature-identifier-trust"><span><BadgeCheck size={15} /> Une proposition, à confirmer</span><span><Trees size={15} /> Des savoirs naturalistes partagés partout</span></div></div><div className="nature-identifier-hero-art"><span>01 / OBSERVER</span><div className="nature-identifier-orbit"><Leaf /><Bug /><span>✳</span></div><strong>Observer.<br />Comprendre.<br />Transmettre.</strong></div></section>
     <div className="nature-identifier-layout"><section className="nature-identifier-main" id="reconnaissance"><div className="nature-mode-selector" id="identifier">{MODES.map(({ id, label, note, icon: Icon }) => <button key={id} className={mode === id ? "active" : ""} onClick={() => { setMode(id); setResult(null); setError(""); }}><span><Icon size={18} /></span><strong>{label}</strong><small>{note}</small></button>)}</div>
-      {mode === "life" && <><div className="nature-mode-selector" aria-label="Type de vivant"><button className={lifeTarget === "insects" ? "active" : ""} onClick={() => { setLifeTarget("insects"); setResult(null); }}><span><Bug size={18} /></span><strong>Insectes & invertébrés</strong><small>Modèle spécialisé</small></button><button className={lifeTarget === "animals" ? "active" : ""} onClick={() => { setLifeTarget("animals"); setResult(null); }}><span><Trees size={18} /></span><strong>Autres animaux</strong><small>Analyse locale</small></button></div><p className="nature-identifier-note"><Zap size={14} /> {lifeTarget === "insects" ? "Pour reconnaître les insectes et invertébrés, la photo est envoyée de façon sécurisée à Kindwise Insect.id. Connectez-vous pour lancer l’analyse. Les résultats sont des pistes à confirmer." : "L’analyse des autres animaux se fait localement sur votre appareil ; la photo n’est pas envoyée. MobileNet peut manquer des espèces rares ou proches."}</p></>}
+      {mode === "life" && <><div className="nature-mode-selector" aria-label="Type de vivant"><button className={lifeTarget === "insects" ? "active" : ""} onClick={() => { setLifeTarget("insects"); setResult(null); }}><span><Bug size={18} /></span><strong>Insectes & invertébrés</strong><small>BioCLIP · espèces du vivant</small></button><button className={lifeTarget === "animals" ? "active" : ""} onClick={() => { setLifeTarget("animals"); setResult(null); }}><span><Trees size={18} /></span><strong>Autres animaux</strong><small>BioCLIP · espèces du vivant</small></button></div><p className="nature-identifier-note"><Zap size={14} /> BioCLIP propose des espèces proches à partir de la photo. L’image est envoyée au service BioCLIP de TERRA pour analyse; vérifiez toujours les suggestions avec la communauté ou une personne spécialiste.</p></>}
       {mode === "disease" && <p className="nature-identifier-note"><AlertTriangle size={14} /> Modèle open source PlantVillage (38 classes de cultures). Le résultat est une piste visuelle et ne remplace pas un diagnostic agronomique ; espèces et conditions de terrain limitées.</p>}
       {mode === "disease" && <div className="nature-treatment-choice"><span><AlertTriangle size={16} /> Moment du diagnostic</span>{(["before", "after"] as const).map((stage) => <button key={stage} onClick={() => setTreatmentStage(stage)} className={treatmentStage === stage ? "active" : ""}>{stage === "before" ? "Avant traitement" : "Après traitement"}</button>)}</div>}
       <div className="nature-identifier-tools"><button onClick={requestLocation} className={location ? "enabled" : ""}><Crosshair size={16} /> {location ? "Position activée" : "Ajouter ma position"}</button>{userId && <span><BadgeCheck size={14} /> Session de terrain disponible dans votre espace</span>}</div>

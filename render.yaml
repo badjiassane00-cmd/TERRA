@@ -28,5 +28,3 @@ services:
         generateValue: true
       - key: PLANTNET_API_KEY
         sync: false
-      - key: INSECT_API_KEY
-        sync: false

@@ -1,0 +1,16 @@
+services:
+  - type: pserv
+    name: terra-bioclip
+    runtime: docker
+    dockerfilePath: services/bioclip/Dockerfile
+    dockerContext: services/bioclip
+    plan: 1c-2g
+    region: frankfurt
+    disk:
+      name: terra-bioclip-model-cache
+      mountPath: /models
+      sizeGB: 10
+    buildFilter:
+      paths:
+        - services/bioclip/**
+        - render.bioclip.yaml
