@@ -3,6 +3,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useMyExhibitions } from "./useMyExhibitions";
+import { apiFetch } from "@/lib/api-client";
 import { parseCommonNames } from "./types";
 import {
   BookOpen,
@@ -23,19 +24,27 @@ interface MyExhibitionsProps {
   userId: string;
 }
 
-
-interface MyExhibitionsProps {
-  userId: string;
-}
-
 export default function MyExhibitions({ userId }: MyExhibitionsProps) {
   const {
     exhibitions, isLoading, showCreateForm, setShowCreateForm, newTitle, setNewTitle,
     newTheme, setNewTheme, newPublic, setNewPublic, isCreating, openId, detail,
-    detailLoading, plantInput, setPlantInput, isAddingPlant, copiedId, qrOpenId, setQrOpenId,
+    detailLoading, plantInput, setPlantInput, isAddingPlant, mediaImageUrl, setMediaImageUrl, mediaVideoUrl, setMediaVideoUrl, mediaUploading, setMediaUploading, copiedId, qrOpenId, setQrOpenId,
     createExhibition, deleteExhibition, togglePublic, addPlant, removePlant,
     sharePublicLink, toggleOpen,
   } = useMyExhibitions(userId);
+
+  async function uploadExhibitionMedia(file?: File) {
+    if (!file) return;
+    setMediaUploading(true);
+    try {
+      const form = new FormData(); form.set("file", file);
+      const response = await apiFetch("/api/media/upload", { method: "POST", body: form });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Téléversement impossible.");
+      if (data.mediaType === "video") setMediaVideoUrl(data.videoUrl); else setMediaImageUrl(data.imageUrl);
+    } catch { /* Le choix du média peut être relancé sans perdre l’exposition. */ }
+    finally { setMediaUploading(false); }
+  }
 
   return (
     <div className="botanical-card rounded-2xl p-6">
@@ -178,7 +187,7 @@ export default function MyExhibitions({ userId }: MyExhibitionsProps) {
                                     key={item.id}
                                     className="flex items-center gap-2 p-2 bg-white border border-border rounded-lg text-xs"
                                   >
-                                    <Leaf className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                                    {item.videoUrl ? <video src={item.videoUrl} poster={item.imageUrl || undefined} controls className="exhibition-item-media" /> : item.imageUrl ? <img src={item.imageUrl} alt="" className="exhibition-item-media" /> : <Leaf className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
                                     <div className="flex-1 min-w-0">
                                       <p className="font-medium text-foreground truncate">
                                         {commonNames[0] || item.plant.scientificName}
@@ -207,9 +216,10 @@ export default function MyExhibitions({ userId }: MyExhibitionsProps) {
                               placeholder="Nom scientifique à ajouter (ex: Adansonia digitata)"
                               className="text-xs border border-border rounded px-2 py-1.5 flex-1 min-w-[180px]"
                             />
+                            <label className="text-xs cursor-pointer">Ajouter photo/vidéo<input type="file" accept="image/*,video/mp4,video/webm,video/quicktime" className="block max-w-48" disabled={mediaUploading} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; void uploadExhibitionMedia(file); }} /></label>
                             <button
                               onClick={() => addPlant(ex.id)}
-                              disabled={isAddingPlant || !plantInput.trim()}
+                              disabled={isAddingPlant || mediaUploading || (!plantInput.trim() && !mediaImageUrl && !mediaVideoUrl)}
                               className="text-xs px-3 py-1.5 bg-primary text-white rounded disabled:opacity-50 flex items-center gap-1"
                             >
                               <Plus className="w-3 h-3" />

@@ -20,7 +20,7 @@ export const exhibitionRepository = {
     return prisma.exhibition.update({ where: { id }, data });
   },
   delete(id: string) { return prisma.exhibition.delete({ where: { id } }); },
-  addPlant(input: { exhibitionId: string; plantId?: string; scientificName?: string; commonName?: string; imageUrl?: string | null; note?: string | null }) {
+  addPlant(input: { exhibitionId: string; plantId?: string; scientificName?: string; commonName?: string; imageUrl?: string | null; videoUrl?: string | null; note?: string | null }) {
     return prisma.$transaction(async (tx) => {
       let plantId = input.plantId;
       if (!plantId && input.scientificName) {
@@ -31,8 +31,8 @@ export const exhibitionRepository = {
       const position = await tx.exhibitionItem.count({ where: { exhibitionId: input.exhibitionId } });
       return tx.exhibitionItem.upsert({
         where: { exhibitionId_plantId: { exhibitionId: input.exhibitionId, plantId } },
-        update: { note: input.note ?? undefined, imageUrl: input.imageUrl ?? undefined },
-        create: { exhibitionId: input.exhibitionId, plantId, note: input.note || null, imageUrl: input.imageUrl || null, position },
+        update: { note: input.note ?? undefined, imageUrl: input.imageUrl ?? undefined, videoUrl: input.videoUrl ?? undefined },
+        create: { exhibitionId: input.exhibitionId, plantId, note: input.note || null, imageUrl: input.imageUrl || null, videoUrl: input.videoUrl || null, position },
         include: { plant: true },
       });
     });

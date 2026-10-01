@@ -9,7 +9,7 @@ export const exhibitionService = {
     return exhibitionRepository.create({ ...input, title });
   },
   findById: (id: string) => exhibitionRepository.findById(id),
-  async addPlant(exhibitionId: string, userId: string, input: { plantId?: string; scientificName?: string; commonName?: string; imageUrl?: string | null; note?: string | null }) {
+  async addPlant(exhibitionId: string, userId: string, input: { plantId?: string; scientificName?: string; commonName?: string; imageUrl?: string | null; videoUrl?: string | null; note?: string | null }) {
     const owner = await exhibitionRepository.findOwner(exhibitionId);
     if (!owner) return { kind: "missing" as const };
     if (owner.userId !== userId) return { kind: "forbidden" as const };

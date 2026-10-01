@@ -13,6 +13,7 @@ export interface ExhibitionItem {
   id: string;
   note: string | null;
   imageUrl: string | null;
+  videoUrl: string | null;
   plant: {
     id: string;
     scientificName: string;

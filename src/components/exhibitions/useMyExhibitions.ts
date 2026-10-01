@@ -18,6 +18,9 @@ export function useMyExhibitions(userId: string) {
   const [detailLoading, setDetailLoading] = useState(false);
   const [plantInput, setPlantInput] = useState("");
   const [isAddingPlant, setIsAddingPlant] = useState(false);
+  const [mediaImageUrl, setMediaImageUrl] = useState("");
+  const [mediaVideoUrl, setMediaVideoUrl] = useState("");
+  const [mediaUploading, setMediaUploading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const isInitialMount = useRef(true);
 
@@ -100,16 +103,16 @@ export function useMyExhibitions(userId: string) {
   };
 
   const addPlant = async (exhibitionId: string) => {
-    if (!plantInput.trim()) return;
+    if (!plantInput.trim() && !mediaImageUrl && !mediaVideoUrl) return;
     setIsAddingPlant(true);
     try {
       const res = await apiFetch(`/api/my-exhibitions/${exhibitionId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, scientificName: plantInput.trim() }),
+        body: JSON.stringify({ userId, scientificName: plantInput.trim() || undefined, imageUrl: mediaImageUrl || undefined, videoUrl: mediaVideoUrl || undefined }),
       });
       if (!res.ok) throw new Error();
-      setPlantInput("");
+      setPlantInput(""); setMediaImageUrl(""); setMediaVideoUrl("");
       loadDetail(exhibitionId);
       loadList();
     } catch {
@@ -140,7 +143,7 @@ export function useMyExhibitions(userId: string) {
   return {
     exhibitions, isLoading, showCreateForm, setShowCreateForm, newTitle, setNewTitle,
     newTheme, setNewTheme, newPublic, setNewPublic, isCreating, openId, detail,
-    detailLoading, plantInput, setPlantInput, isAddingPlant, copiedId, qrOpenId, setQrOpenId,
+    detailLoading, plantInput, setPlantInput, isAddingPlant, mediaImageUrl, setMediaImageUrl, mediaVideoUrl, setMediaVideoUrl, mediaUploading, setMediaUploading, copiedId, qrOpenId, setQrOpenId,
     createExhibition, deleteExhibition, togglePublic, addPlant, removePlant,
     sharePublicLink, toggleOpen,
   };

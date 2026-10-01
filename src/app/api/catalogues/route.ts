@@ -17,8 +17,7 @@ async function POSTImpl(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
   const body = await request.json();
-  const title = typeof body.title === "string" ? body.title.trim().slice(0, 100) : "";
-  if (!title) return NextResponse.json({ error: "Donnez un nom au catalogue." }, { status: 400 });
+  const title = typeof body.title === "string" ? body.title.trim().slice(0, 100) || "Catalogue sans titre" : "Catalogue sans titre";
   const catalog = await catalogueRepository.create({ userId, title, description: typeof body.description === "string" ? body.description.trim().slice(0, 500) || null : null, isPublic: Boolean(body.isPublic) });
   return NextResponse.json({ catalog }, { status: 201 });
 }

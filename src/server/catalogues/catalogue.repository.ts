@@ -11,7 +11,7 @@ export const catalogueRepository = {
   findOwned(catalogId: string, userId: string) {
     return prisma.natureCatalog.findFirst({ where: { id: catalogId, userId }, select: { id: true } });
   },
-  async createEntry(input: { catalogId: string; name: string; group: OrganismGroup; scientificName: string | null; imageUrl: string | null; note: string | null }) {
+  async createEntry(input: { catalogId: string; name: string; group: OrganismGroup; scientificName: string | null; imageUrl: string | null; videoUrl: string | null; note: string | null }) {
     const position = await prisma.catalogEntry.count({ where: { catalogId: input.catalogId } });
     return prisma.catalogEntry.create({ data: { ...input, position } });
   },

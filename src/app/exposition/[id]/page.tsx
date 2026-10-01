@@ -8,6 +8,8 @@ import BackLink from "@/components/navigation/BackLink";
 interface ExhibitionItem {
   id: string;
   note: string | null;
+  imageUrl: string | null;
+  videoUrl: string | null;
   plant: {
     scientificName: string;
     commonNames: string;
@@ -111,6 +113,7 @@ export default function PublicExhibitionPage() {
                   const commonNames = parseCommonNames(item.plant.commonNames);
                   return (
                     <div key={item.id} className="border border-border rounded-lg p-4">
+                      {item.videoUrl ? <video src={item.videoUrl} poster={item.imageUrl || undefined} controls playsInline className="public-exhibition-media" /> : item.imageUrl && <img src={item.imageUrl} alt={commonNames[0] || item.plant.scientificName} className="public-exhibition-media" />}
                       <div className="flex items-center gap-2 mb-2">
                         <Leaf className="w-4 h-4 text-primary" />
                         <p className="font-medium text-foreground">
