@@ -1,0 +1,122 @@
+services:
+  - type: pserv
+    name: terra-mysql
+    runtime: image
+    image:
+      url: docker.io/library/mysql:8.4
+    plan: 1c-2g
+    region: frankfurt
+    disk:
+      name: terra-mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_DATABASE
+        value: terra
+      - key: MYSQL_USER
+        value: terra_app
+      - key: MYSQL_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+
+  - type: pserv
+    name: terra-minio
+    runtime: image
+    image:
+      url: quay.io/minio/aistor/minio:RELEASE.2026-09-19T17-05-25Z
+    dockerCommand: server --license /etc/secrets/minio.license --console-address :9001 /data
+    plan: 0.5c-512mb
+    region: frankfurt
+    disk:
+      name: terra-media-data
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: MINIO_ROOT_USER
+        value: terra-root
+      - key: MINIO_ROOT_PASSWORD
+        generateValue: true
+
+  - type: pserv
+    name: terra-plant-disease
+    runtime: docker
+    dockerfilePath: services/plant-disease/Dockerfile
+    dockerContext: services/plant-disease
+    plan: 1c-2g
+    region: frankfurt
+    buildFilter:
+      paths:
+        - services/plant-disease/**
+        - render.yaml
+
+  - type: web
+    name: terra-web
+    runtime: node
+    plan: 1c-2g
+    region: frankfurt
+    buildCommand: npm ci --include=dev && npm run prisma:generate && npm run build
+    preDeployCommand: node scripts/render-migrate.mjs
+    startCommand: node scripts/render-start.mjs
+    healthCheckPath: /api/health
+    buildFilter:
+      paths:
+        - src/**
+        - public/**
+        - prisma/**
+        - scripts/**
+        - package.json
+        - package-lock.json
+        - render.yaml
+        - next.config.ts
+        - .node-version
+        - tsconfig.json
+        - eslint.config.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MYSQL_HOSTPORT
+        fromService:
+          type: pserv
+          name: terra-mysql
+          property: hostport
+      - key: MYSQL_DATABASE
+        value: terra
+      - key: MYSQL_USER
+        value: terra_app
+      - key: MYSQL_PASSWORD
+        fromService:
+          type: pserv
+          name: terra-mysql
+          envVarKey: MYSQL_PASSWORD
+      - key: MEDIA_S3_HOSTPORT
+        fromService:
+          type: pserv
+          name: terra-minio
+          property: hostport
+      - key: MEDIA_S3_BUCKET
+        value: terra-media
+      - key: MEDIA_S3_REGION
+        value: us-east-1
+      - key: MEDIA_S3_ACCESS_KEY
+        sync: false
+      - key: MEDIA_S3_SECRET_KEY
+        sync: false
+      - key: MEDIA_S3_FORCE_PATH_STYLE
+        value: "true"
+      - key: DISEASE_MODEL_HOSTPORT
+        fromService:
+          type: pserv
+          name: terra-plant-disease
+          property: hostport
+      - key: APP_URL
+        fromService:
+          type: web
+          name: terra-web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PLANTNET_API_KEY
+        sync: false
+      - key: INSECT_API_KEY
+        sync: false

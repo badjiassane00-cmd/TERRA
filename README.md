@@ -83,6 +83,10 @@ L’interface permet d’enregistrer ou d’importer un court audio. Pour obteni
 
 Les brouillons de publication photo hors connexion sont conservés sur l’appareil (deux au maximum), puis renvoyés automatiquement au retour du réseau et de la session utilisateur. Une clé idempotente évite les doublons si la réponse du serveur s’est perdue; appliquez la nouvelle migration Prisma après mise à jour.
 
+## Déploiement sur Render
+
+La configuration multi-service et les étapes Render sont décrites dans [le guide de déploiement Render](docs/render-deployment.md). Le Blueprint crée TERRA, MySQL, MinIO AIStor et le modèle PlantVillage dans un réseau privé.
+
 ## Base MySQL et médias MinIO
 
 Le dépôt utilise MySQL 8.4 et MinIO AIStor pour les images. Pour démarrer les services locaux, placez votre licence AIStor dans `minio.license` à la racine du dépôt (ce fichier est ignoré par Git), définissez des mots de passe MySQL et MinIO uniques dans `.env`, configurez les identifiants média côté TERRA dans `.env.local`, puis lancez :
