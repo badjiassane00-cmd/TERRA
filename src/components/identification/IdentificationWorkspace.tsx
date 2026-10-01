@@ -21,7 +21,7 @@ interface PlantIdentificationResult {
   common_names: string[];
   probability: number;
   description?: string;
-  taxonomy?: { family?: string; genus?: string; species?: string };
+  taxonomy?: { kingdom?: string; phylum?: string; class?: string; order?: string; family?: string; genus?: string; species?: string };
   medicinal?: boolean;
   edible_parts?: string[];
   toxicity?: string[];
@@ -43,9 +43,9 @@ const MODES: Array<{ id: Mode; label: string; note: string; icon: typeof Leaf }>
   { id: "disease", label: "Santé végétale", note: "Signes & maladies", icon: FlaskConical },
 ];
 
-export default function IdentificationWorkspace({ userId, userRole }: { userId: string | null; userRole: "user" | "admin" | "institution" | null }) {
-  const [mode, setMode] = useState<Mode>("identify");
-  const [lifeTarget, setLifeTarget] = useState<"insects" | "animals" | "fish" | "all">("all");
+export default function IdentificationWorkspace({ userId, userRole, initialMode = "identify", initialLifeTarget = "all", initialRegion = "" }: Readonly<{ userId: string | null; userRole: "user" | null | "admin" | "institution"; initialMode?: Mode; initialLifeTarget?: "insects" | "animals" | "fish" | "all"; initialRegion?: string }>) {
+  const [mode, setMode] = useState<Mode>(initialMode);
+  const [lifeTarget, setLifeTarget] = useState<"insects" | "animals" | "fish" | "all">(initialLifeTarget);
   const [treatmentStage, setTreatmentStage] = useState<"before" | "after">("before");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<PlantIdentificationResult | null>(null);
@@ -116,7 +116,7 @@ export default function IdentificationWorkspace({ userId, userRole }: { userId: 
       {mode === "disease" && <div className="nature-treatment-choice"><span><AlertTriangle size={16} /> Moment du diagnostic</span>{(["before", "after"] as const).map((stage) => <button key={stage} onClick={() => setTreatmentStage(stage)} className={treatmentStage === stage ? "active" : ""}>{stage === "before" ? "Avant traitement" : "Après traitement"}</button>)}</div>}
       <div className="nature-identifier-tools"><button onClick={requestLocation} className={location ? "enabled" : ""}><Crosshair size={16} /> {location ? "Position activée" : "Ajouter ma position"}</button>{userId && <span><BadgeCheck size={14} /> Session de terrain disponible dans votre espace</span>}</div>
       {userId && <div className="nature-field-session"><FieldSession userId={userId} onSessionChange={setFieldSessionId} /></div>}
-      <div className="nature-recognition-grid"><div><PhotoUpload onImageUpload={identifyPhoto} isLoading={busy} onPreviewChange={updatePreview} />{error && <div className="nature-identifier-error" role="alert">{error}</div>}</div><div className="nature-identification-result"><PlantResult result={result} isLoading={busy} previewUrl={preview} userId={userId || undefined} userRole={userRole || undefined} mode={mode} />{result && <IdentificationSharingActions key={`${mode}:${result.id}:${imageFile?.name}:${imageFile?.size}:${imageFile?.lastModified}`} result={result} imageFile={imageFile} mode={mode} lifeTarget={lifeTarget} userId={userId} />}{result && <NearbySightings scientificName={result.scientific_name} location={location} />}</div></div>
+      <div className="nature-recognition-grid"><div><PhotoUpload onImageUpload={identifyPhoto} isLoading={busy} onPreviewChange={updatePreview} />{error && <div className="nature-identifier-error" role="alert">{error}</div>}</div><div className="nature-identification-result"><PlantResult result={result} isLoading={busy} previewUrl={preview} userId={userId || undefined} userRole={userRole || undefined} mode={mode} />{result && <IdentificationSharingActions key={`${mode}:${result.id}:${imageFile?.name}:${imageFile?.size}:${imageFile?.lastModified}`} result={result} imageFile={imageFile} mode={mode} lifeTarget={lifeTarget} userId={userId} region={initialRegion} />}{result && <NearbySightings scientificName={result.scientific_name} location={location} />}</div></div>
     </section><aside className="nature-identifier-side"><div className="nature-identify-side-card"><span>VOTRE JOURNAL</span><History size={20} /><h2>Chaque sortie<br />laisse une trace.</h2><p>Retrouvez ici les identifications faites sur cet appareil.</p><strong>{history.length} rencontre{history.length > 1 ? "s" : ""} récemment</strong></div>{history.slice(0, 4).map((entry, index) => <article className="nature-history-item" key={index}>{entry.imageUrl ? <Image src={entry.imageUrl} alt="" width={40} height={40} unoptimized /> : <span><Leaf size={18} /></span>}<div><strong>{entry.name}</strong><small>{new Date(entry.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} · {Math.round(entry.probability * 100)}%</small></div></article>)}{userId ? <GamificationPanel userId={userId} /> : <div className="nature-identifier-login"><strong>Construisez votre carnet vivant</strong><p>Connectez-vous pour conserver vos sorties et faire grandir votre profil naturaliste.</p><Link href="/connexion">Rejoindre TERRA <ArrowRight size={15} /></Link></div>}</aside></div>
     <section className="nature-ai-contribution"><div><span>LA SCIENCE S’ENRICHIT ENSEMBLE</span><h2>Votre connaissance peut améliorer les prochains résultats.</h2><p>Contribuez à l’identification botanique et partagez les noms transmis dans votre région.</p></div><AIPlantRecognition /></section>
     <details className="nature-immersive-tools"><summary><span><Sparkles size={17} /> Explorer en mode terrain immersif</span><small>Réalité augmentée · assistant vocal</small></summary><div className="nature-immersive-grid"><div><h2>Une observation mains libres</h2><p>Capturez une photo avec la caméra immersive ou dictez le nom que vous connaissez.</p>{voiceNote && <p className="nature-voice-note" role="status">{voiceNote}</p>}<VoiceAssistant onResult={(text) => setVoiceNote("Note vocale : " + text)} onPlantIdentified={(name) => setVoiceNote("Espèce prononcée : " + name)} /></div><div><ARView onCapture={identifyPhoto} /></div></div></details>

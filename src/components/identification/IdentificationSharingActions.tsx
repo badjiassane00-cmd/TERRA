@@ -11,29 +11,40 @@ interface IdentificationResult {
   scientific_name: string;
   common_names: string[];
   probability: number;
+  taxonomy?: { kingdom?: string; class?: string };
 }
 
 type Mode = "identify" | "disease" | "life";
 type LifeTarget = "insects" | "animals" | "fish" | "all";
-type OrganismGroup = "PLANT" | "INSECT" | "AQUATIC" | "OTHER";
+type OrganismGroup = "PLANT" | "INSECT" | "BIRD" | "MAMMAL" | "REPTILE" | "AMPHIBIAN" | "FUNGUS" | "AQUATIC" | "OTHER";
 type Props = Readonly<{
   result: IdentificationResult;
   imageFile: File | null;
   mode: Mode;
   lifeTarget: LifeTarget;
   userId: string | null;
+  region: string;
 }>;
 const MODE_NAMES: Record<Mode, string> = {
   identify: "Identification botanique",
   disease: "Diagnostic végétal",
   life: "Identification du vivant",
 };
-const LIFE_GROUPS: Record<LifeTarget, OrganismGroup> = {
-  insects: "INSECT",
-  animals: "OTHER",
-  fish: "AQUATIC",
-  all: "OTHER",
-};
+function organismGroupForResult(result: IdentificationResult, mode: Mode, lifeTarget: LifeTarget): OrganismGroup {
+  if (mode !== "life") return "PLANT";
+  if (lifeTarget === "insects") return "INSECT";
+  if (lifeTarget === "fish") return "AQUATIC";
+
+  const kingdom = result.taxonomy?.kingdom?.toLocaleLowerCase("en") || "";
+  const taxonClass = result.taxonomy?.class?.toLocaleLowerCase("en") || "";
+  if (kingdom.includes("plant")) return "PLANT";
+  if (kingdom.includes("fung")) return "FUNGUS";
+  if (taxonClass.includes("aves") || taxonClass.includes("bird")) return "BIRD";
+  if (taxonClass.includes("mammal")) return "MAMMAL";
+  if (taxonClass.includes("reptil")) return "REPTILE";
+  if (taxonClass.includes("amphib")) return "AMPHIBIAN";
+  return "OTHER";
+}
 
 export default function IdentificationSharingActions({
   result,
@@ -41,6 +52,7 @@ export default function IdentificationSharingActions({
   mode,
   lifeTarget,
   userId,
+  region,
 }: Props) {
   const [confirmedPublic, setConfirmedPublic] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -82,7 +94,7 @@ export default function IdentificationSharingActions({
     setNotice("");
     try {
       const photos = await compressObservationPhoto(imageFile);
-      const organismGroup = mode === "life" ? LIFE_GROUPS[lifeTarget] : "PLANT";
+      const organismGroup = organismGroupForResult(result, mode, lifeTarget);
       const response = await apiFetch("/api/community", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,7 +103,7 @@ export default function IdentificationSharingActions({
           scientificName: result.scientific_name,
           imageUrl: photos.imageUrl,
           thumbnailUrl: photos.thumbnailUrl,
-          region: "Monde",
+          region: region || "Monde",
           organismGroup,
           description: "Piste d’identification visuelle proposée par TERRA, à confirmer.",
           isEphemeral: false,
@@ -100,7 +112,7 @@ export default function IdentificationSharingActions({
           observedAt: new Date().toISOString(),
           latitude: null,
           longitude: null,
-          locationVisibility: "PRIVATE",
+          locationVisibility: "PUBLIC",
           clientSubmissionId: crypto.randomUUID(),
         }),
       });
@@ -140,7 +152,7 @@ export default function IdentificationSharingActions({
 
       <div className="mt-5 border-t border-border pt-5">
         <h3 className="text-sm font-semibold text-foreground">Créer un lien public durable</h3>
-        <p className="mt-1 text-sm text-foreground/70">Une fiche publique avec la photo, le nom et le score. Votre profil et votre position ne sont pas affichés.</p>
+        <p className="mt-1 text-sm text-foreground/70">Une fiche publique avec la photo, le nom et le score. Aucune coordonnée précise ni profil ne sera affiché.{region ? ` La région « ${region} » figurera sur l’observation.` : ""}</p>
         {!userId && (
           <Link href="/connexion?next=%2Fidentifier" className="herbarium-button mt-3 inline-flex">
             Se connecter pour publier
@@ -158,7 +170,7 @@ export default function IdentificationSharingActions({
                 onChange={(event) => setConfirmedPublic(event.target.checked)}
                 className="mt-1 accent-primary"
               />
-              <span>Je confirme que cette photo et ce résultat seront accessibles publiquement et pourront apparaître dans le flux des observations.</span>
+              <span>Je confirme que cette photo et ce résultat seront accessibles publiquement et pourront apparaître dans le flux des observations{region ? ` avec la région « ${region} »` : ""}.</span>
             </label>
             <button
               type="button"

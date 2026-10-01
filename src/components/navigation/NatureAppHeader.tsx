@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Camera, Compass, Leaf, LogIn, MapPinned, Shield } from "lucide-react";
+import { BookOpen, Camera, Compass, Leaf, LogIn, MapPinned, Shield, Target } from "lucide-react";
 import { usePathname } from "next/navigation";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import CommunitySearch from "@/components/search/CommunitySearch";
@@ -14,7 +14,7 @@ type HeaderUser = {
   role: string;
 };
 
-export default function NatureAppHeader({ user }: { user: HeaderUser | null }) {
+export default function NatureAppHeader({ user }: Readonly<{ user: HeaderUser | null }>) {
   const pathname = usePathname();
   const activeClass = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "nature-nav-link active" : "nature-nav-link";
   return (
@@ -25,6 +25,7 @@ export default function NatureAppHeader({ user }: { user: HeaderUser | null }) {
       <nav aria-label="Navigation principale">
         <Link href="/" className={activeClass("/")} aria-current={pathname === "/" ? "page" : undefined}><Camera size={16} /> Reconnaître</Link>
         <Link href="/explorer" className={activeClass("/explorer")} aria-current={pathname.startsWith("/explorer") ? "page" : undefined}><Compass size={16} /> Explorer</Link>
+        <Link href="/missions" className={activeClass("/missions")}><Target size={16} /> Missions</Link>
         <CommunitySearch />
         <Link href="/observations" className={activeClass("/observations")} aria-current={pathname.startsWith("/observations") ? "page" : undefined}><MapPinned size={16} /> Observations</Link>
         {user && <Link href="/catalogues" className={activeClass("/catalogues")} aria-current={pathname.startsWith("/catalogues") ? "page" : undefined}><BookOpen size={16} /> Catalogues</Link>}
