@@ -1,7 +1,7 @@
 import { getSessionUserId } from "@/lib/session";
 import { identificationRepository } from "@/server/identification/identification.repository";
-import { bioClipIdentificationAdapter } from "@/server/identification/bioclip.adapter";
-import { geminiIdentificationAdapter, type GeminiLifeGroup } from "@/server/identification/gemini.adapter";
+import { identifyLifeSpecies } from "@/server/identification/life-identification.service";
+import type { GeminiLifeGroup } from "@/server/identification/gemini.adapter";
 import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 
@@ -20,10 +20,8 @@ async function POSTImpl(request: Request) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) throw new ApiError("Utilisez une image JPEG, PNG ou WebP.", 415);
   if (image.size > 10 * 1024 * 1024) throw new ApiError("L’image ne doit pas dépasser 10 Mo.", 413);
 
-  const provider = process.env.GEMINI_API_KEY ? "Gemini" : "BioCLIP";
-  const identified = process.env.GEMINI_API_KEY
-    ? await geminiIdentificationAdapter.identify(image, group)
-    : await bioClipIdentificationAdapter.identify(image, group === "insects" ? "insects" : group === "all" ? "all" : "animals");
+  const { provider, candidates: identified } = await identifyLifeSpecies(image, group);
+
   if (!identified.length) throw new ApiError(`${provider} n’a pas trouvé de piste dans ce groupe. Essayez une photo plus nette ou un autre type de vivant.`, 422);
 
   const candidates = identified.map((candidate) => ({

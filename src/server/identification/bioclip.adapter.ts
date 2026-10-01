@@ -1,6 +1,6 @@
 import { ApiError } from "@/server/http/api-handler";
 
-export type BioClipGroup = "insects" | "animals" | "all";
+export type BioClipGroup = "plants" | "insects" | "animals" | "fish" | "all";
 export interface BioClipCandidate {
   scientific_name: string;
   common_name: string;

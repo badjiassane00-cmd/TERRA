@@ -23,9 +23,15 @@ def load_classifier():
     torch.set_num_threads(max(1, min(4, os.cpu_count() or 1)))
     classifier = TreeOfLifeClassifier(model_str=MODEL_NAME, device="cpu")
     labels = classifier.get_label_data()
+    kingdom = labels["kingdom"].fillna("").str.casefold()
+    phylum = labels["phylum"].fillna("").str.casefold()
+    taxon_class = labels["class"].fillna("").str.casefold()
+    terrestrial_classes = {"amphibia", "aves", "mammalia", "reptilia"}
     taxa_masks = {
-        "insects": torch.as_tensor(labels["class"].fillna("").str.casefold().eq("insecta").to_numpy(), dtype=torch.bool),
-        "animals": torch.as_tensor((labels["kingdom"].fillna("").str.casefold().eq("animalia") & ~labels["class"].fillna("").str.casefold().eq("insecta")).to_numpy(), dtype=torch.bool),
+        "plants": torch.as_tensor(kingdom.eq("plantae").to_numpy(), dtype=torch.bool),
+        "insects": torch.as_tensor((kingdom.eq("animalia") & (taxon_class.eq("insecta") | phylum.ne("chordata"))).to_numpy(), dtype=torch.bool),
+        "animals": torch.as_tensor((kingdom.eq("animalia") & taxon_class.isin(terrestrial_classes)).to_numpy(), dtype=torch.bool),
+        "fish": torch.as_tensor((kingdom.eq("animalia") & phylum.eq("chordata") & ~taxon_class.isin(terrestrial_classes)).to_numpy(), dtype=torch.bool),
     }
 
 
@@ -37,7 +43,7 @@ def health():
 @app.post("/identify")
 async def identify(
     image: UploadFile = File(...),
-    group: str = Query("animals", pattern="^(insects|animals|all)$"),
+    group: str = Query("animals", pattern="^(plants|insects|animals|fish|all)$"),
 ):
     if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
         raise HTTPException(status_code=415, detail="Utilisez une image JPEG, PNG ou WebP.")
