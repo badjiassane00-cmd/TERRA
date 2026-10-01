@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { identificationRepository } from "@/server/identification/identification.repository";
 import { enrichWithGbif, normalizeDiseases, normalizePlantNet, type Identification } from "@/lib/botany";
 import { getSessionUserId } from "../../../lib/session";
+import { geminiIdentificationAdapter } from "@/server/identification/gemini.adapter";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png"]);
@@ -24,6 +25,25 @@ async function POSTImpl(request: Request) {
     if (!(image instanceof File)) return NextResponse.json({ error: "Ajoutez une photo de plante." }, { status: 400 });
     if (!ACCEPTED_TYPES.has(image.type)) return NextResponse.json({ error: "Utilisez une image JPEG ou PNG." }, { status: 415 });
     if (image.size > MAX_IMAGE_BYTES) return NextResponse.json({ error: "L'image ne doit pas dépasser 10 Mo." }, { status: 413 });
+
+    // Gemini can identify plants even when a Pl@ntNet API key is not configured.
+    if (mode === "identify" && process.env.GEMINI_API_KEY) {
+      const candidates = await geminiIdentificationAdapter.identify(image, "plants");
+      if (!candidates.length) return NextResponse.json({ error: "Gemini n’a pas reconnu de plante sur cette image. Essayez une photo nette de la feuille, de la fleur ou du fruit." }, { status: 422 });
+      const first = candidates[0];
+      const result = {
+        id: first.scientific_name,
+        scientific_name: first.scientific_name,
+        common_names: [first.common_name],
+        probability: first.probability,
+        description: "Suggestion visuelle Gemini à confirmer sur le terrain et auprès de la communauté.",
+        taxonomy: first.taxonomy,
+        sources: { provider: "Gemini · Google" },
+        alternatives: candidates.slice(1).map((candidate) => ({ scientific_name: candidate.scientific_name, common_names: [candidate.common_name], probability: candidate.probability })),
+      };
+      if (userId) await identificationRepository.saveCandidates(userId, first.scientific_name, first.common_name, result.description, JSON.stringify({ provider: "Gemini", group: "plants", candidates }));
+      return NextResponse.json({ result, mode, provider: "Gemini" });
+    }
 
     const apiKey = process.env.PLANTNET_API_KEY;
     if (!apiKey) return NextResponse.json({ error: "Configuration requise : ajoutez PLANTNET_API_KEY dans .env.local. La clé reste côté serveur." }, { status: 503 });

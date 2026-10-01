@@ -1,6 +1,7 @@
 import { getSessionUserId } from "@/lib/session";
 import { identificationRepository } from "@/server/identification/identification.repository";
 import { bioClipIdentificationAdapter } from "@/server/identification/bioclip.adapter";
+import { geminiIdentificationAdapter } from "@/server/identification/gemini.adapter";
 import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 
@@ -15,14 +16,17 @@ async function POSTImpl(request: Request) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) throw new ApiError("Utilisez une image JPEG, PNG ou WebP.", 415);
   if (image.size > 10 * 1024 * 1024) throw new ApiError("L’image ne doit pas dépasser 10 Mo.", 413);
 
-  const identified = await bioClipIdentificationAdapter.identify(image, "insects");
-  if (!identified.length) throw new ApiError("BioCLIP n’a pas trouvé d’insecte dans cette image. Essayez un cadrage plus rapproché.", 422);
+  const provider = process.env.GEMINI_API_KEY ? "Gemini" : "BioCLIP";
+  const identified = process.env.GEMINI_API_KEY
+    ? await geminiIdentificationAdapter.identify(image, "insects")
+    : await bioClipIdentificationAdapter.identify(image, "insects");
+  if (!identified.length) throw new ApiError(`${provider} n’a pas trouvé d’insecte dans cette image. Essayez un cadrage plus rapproché.`, 422);
   const candidates = identified.map((candidate) => ({
     scientific_name: candidate.scientific_name,
     common_names: candidate.common_name ? [candidate.common_name] : [candidate.scientific_name],
     probability: candidate.probability,
     taxonomy: candidate.taxonomy,
-    description: "Suggestion visuelle BioCLIP à confirmer par la communauté naturaliste.",
+    description: `Suggestion visuelle ${provider} à confirmer par la communauté naturaliste.`,
   }));
   const result = candidates[0];
   await identificationRepository.saveCandidates(
@@ -30,14 +34,14 @@ async function POSTImpl(request: Request) {
     result.scientific_name,
     result.common_names[0],
     result.description,
-    JSON.stringify({ provider: "BioCLIP", group: "insects", candidates }),
+    JSON.stringify({ provider, group: "insects", candidates }),
   );
 
   return NextResponse.json({
-    provider: "BioCLIP",
-    result: { ...result, id: result.scientific_name, sources: { provider: "BioCLIP · Imageomics" } },
+    provider,
+    result: { ...result, id: result.scientific_name, sources: { provider: provider === "Gemini" ? "Gemini · Google" : "BioCLIP · Imageomics" } },
     candidates,
-    note: "Identification assistée à vérifier sur le terrain; la photo est analysée par le service BioCLIP hébergé par TERRA.",
+    note: `Identification assistée à vérifier sur le terrain; modèle utilisé : ${provider}.`,
   });
 }
 

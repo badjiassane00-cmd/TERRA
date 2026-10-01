@@ -11,7 +11,7 @@ Réseau social naturaliste international pour observer, identifier et partager l
 
 ### Core
 - ✅ Identification de plantes par photo via Pl@ntNet, enrichie par GBIF
-- ✅ Reconnaissance BioCLIP des insectes et animaux, avec candidats taxonomiques et une validation communautaire à confirmer
+- ✅ Reconnaissance multimodale Gemini des plantes, insectes, animaux, poissons et autres êtres vivants; BioCLIP reste disponible en secours pour les insectes et animaux
 - ✅ Détection visuelle de maladies (à confirmer avant traitement)
 - ✅ Assistant vocal botanique ( reconnaissance vocale + synthèse vocale)
 - ✅ Capture caméra pour identification via le moteur photo
@@ -61,7 +61,9 @@ cp .env.example .env
 | Variable | Description | Obtention |
 |----------|-------------|-----------|
 | `PLANTNET_API_KEY` | Identification des plantes | https://my.plantnet.org/ |
-| `BIOCLIP_API_URL` | API privée du modèle BioCLIP | `http://127.0.0.1:8020` (Compose) |
+| `GEMINI_API_KEY` | Clé serveur Gemini pour la reconnaissance multimodale et l’assistant vocal | À définir dans `.env.local` et Render |
+| `GEMINI_MODEL` | Modèle Gemini configurable | `gemini-2.5-flash` |
+| `BIOCLIP_API_URL` | API privée du modèle BioCLIP, solution de secours | `http://127.0.0.1:8020` (Compose) |
 | `DISEASE_MODEL_URL` | URL du service local de diagnostic PlantVillage | `http://127.0.0.1:8010` (Compose) |
 | `OPENWEATHER_API_KEY` | Météo pour rappels intelligents | https://openweathermap.org/api |
 | `GOOGLE_MAPS_API_KEY` | Cartographie avancée | https://console.cloud.google.com/apis/credentials |
@@ -71,11 +73,11 @@ cp .env.example .env
 
 Les plantes sont identifiées par Pl@ntNet avec `PLANTNET_API_KEY`. Le mode « Santé végétale » utilise le modèle ouvert PlantVillage EfficientNet-B4 (licence MIT) servi par le conteneur `plant-disease`; lancez `docker compose up -d plant-disease` et configurez `DISEASE_MODEL_URL`. Il distingue 38 classes pour 14 cultures. Le jeu de données provient surtout d’images contrôlées : il ne couvre pas toutes les cultures ni les conditions réelles des champs, et ses scores ne constituent pas un diagnostic agronomique.
 
-Les insectes et animaux sont identifiés par BioCLIP, modèle ouvert d’Imageomics servi dans un conteneur privé. Pour le développement local, démarrez le service avec `docker compose up -d --build bioclip` et gardez `BIOCLIP_API_URL=http://127.0.0.1:8020` dans `.env.local`. Le premier démarrage télécharge le modèle et ses références taxonomiques; prévoyez plusieurs gigaoctets de RAM, de stockage et un téléchargement initial conséquent. La photo est transmise au service BioCLIP de TERRA. Les résultats sont des suggestions visuelles à confirmer, pas des diagnostics taxonomiques certains.
+Gemini fournit la reconnaissance visuelle polyvalente des plantes, insectes, animaux terrestres, poissons et autres formes de vie. Pour le développement local, copiez `.env.example` vers `.env.local`, définissez `GEMINI_API_KEY` avec une clé créée dans Google AI Studio, puis lancez l’application. La clé est consommée uniquement par les routes serveur; elle ne doit jamais être préfixée par `NEXT_PUBLIC_` ni commitée. BioCLIP reste disponible en secours pour les insectes et animaux avec `BIOCLIP_API_URL=http://127.0.0.1:8020`; son conteneur et les téléchargements de modèle ne sont pas nécessaires si Gemini est configuré. Les images sont transmises à Google Gemini pour analyse. Tous les résultats sont des hypothèses visuelles à confirmer, pas des diagnostics taxonomiques certains.
 
 Le calendrier vivant est calculé par pays à partir des observations publiques de la communauté sur 24 mois. Il mesure l’activité de partage et ne constitue pas une prévision de présence des espèces. Le réseau plantes–insectes repère des co-présences publiques dans le temps et l’espace; il ne démontre pas une pollinisation. Les alertes de proximité ne s’appuient que sur les observations publiques géolocalisées des 30 derniers jours et ne signalent pas l’absence d’espèces.
 
-`PLANTNET_API_KEY` reste réservée à l’identification botanique via `/api/identify`. BioCLIP est auto-hébergé et ne nécessite pas de clé fournisseur. Les résultats taxonomiques peuvent être enrichis par [GBIF](https://www.gbif.org/). Une suggestion de maladie doit être confirmée sur le terrain par un professionnel avant toute intervention.
+`PLANTNET_API_KEY` reste disponible comme fournisseur botanique existant lorsque Gemini n’est pas configuré. BioCLIP est auto-hébergé et ne nécessite pas de clé fournisseur. Les résultats taxonomiques peuvent être enrichis par [GBIF](https://www.gbif.org/). Une suggestion de maladie doit être confirmée sur le terrain par un professionnel avant toute intervention.
 
 ### Sons de la nature
 
