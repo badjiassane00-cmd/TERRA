@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, Sparkles, ArrowRight, Camera, Upload } from "lucide-react";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismFilter, type OrganismGroup } from "@/types/nature";
 import { compressObservationPhoto, createVideoPoster, photoLicenseUrl, type ObservationPhotos } from "@/lib/observation-media";
+import ReportAction from "@/components/community/ReportAction";
 
 interface CommunityPost {
   id: string;
@@ -63,7 +64,7 @@ interface PendingObservation {
 
 interface CommunityFeedProps {
   currentUserId?: string;
-  currentUserRole?: "user" | "admin" | "institution";
+  currentUserRole?: "user" | "admin" | "super_admin" | "institution";
   groupFilter?: OrganismFilter;
   onGroupFilterChange?: (group: OrganismFilter) => void;
   initialComposerOpen?: boolean;
@@ -512,6 +513,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
                 <button aria-label={post.liked ? "Retirer belle rencontre" : "Belle rencontre"} aria-pressed={post.liked} onClick={() => void toggleLike(post.id)} className={`nature-action-like ${post.liked ? "liked" : ""}`}><Heart className={post.liked ? "fill-current" : ""}/><span>{post.liked ? "Rencontre aimée" : "Belle rencontre"}</span></button>
                 <Link href={`/observations/${post.id}#discussion`} className="nature-action-comment" aria-label={`Échanger sur ${post.plantName}`}><MessageCircle/><span>Échanger{post.comments ? ` · ${post.comments}` : ""}</span></Link>
                 <button type="button" className="nature-action-share" aria-label={`Partager la fiche de ${post.plantName}`} onClick={() => void shareObservation(post)}><Share2/><span>Partager la fiche</span></button>
+                {currentUserId && currentUserId !== post.userId && <ReportAction targetType="POST" targetId={post.id} label="Signaler" />}
               </div>
               {shareNotice?.postId === post.id && <p className="nature-share-notice" role="status">{shareNotice.message}</p>}
               <div className="nature-like-count">{post.likes.toLocaleString("fr-FR")} appréciation{post.likes === 1 ? "" : "s"} de naturalistes</div>

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default async function ExplorerPage() {
   const user = await getSessionUser();
-  const role = user?.role.toLowerCase() as "user" | "admin" | "institution" | undefined;
+  const role = user?.role.toLowerCase() as "user" | "admin" | "super_admin" | "institution" | undefined;
 
   return (
     <main className="nature-explorer-page">

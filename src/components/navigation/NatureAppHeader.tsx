@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Camera, Compass, Leaf, LogIn, MapPinned } from "lucide-react";
+import { BookOpen, Camera, Compass, Leaf, LogIn, MapPinned, Shield } from "lucide-react";
 import { usePathname } from "next/navigation";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import CommunitySearch from "@/components/search/CommunitySearch";
@@ -11,6 +11,7 @@ type HeaderUser = {
   id: string;
   name: string;
   avatarUrl: string | null;
+  role: string;
 };
 
 export default function NatureAppHeader({ user }: { user: HeaderUser | null }) {
@@ -27,6 +28,7 @@ export default function NatureAppHeader({ user }: { user: HeaderUser | null }) {
         <CommunitySearch />
         <Link href="/observations" className={activeClass("/observations")} aria-current={pathname.startsWith("/observations") ? "page" : undefined}><MapPinned size={16} /> Observations</Link>
         {user && <Link href="/catalogues" className={activeClass("/catalogues")} aria-current={pathname.startsWith("/catalogues") ? "page" : undefined}><BookOpen size={16} /> Catalogues</Link>}
+        {user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && <Link href="/admin" className={activeClass("/admin")}><Shield size={16} /> Administration</Link>}
         {user ? (
           <>
             <NotificationBell />

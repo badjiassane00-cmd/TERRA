@@ -47,7 +47,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background">
-        <NatureAppHeader user={user ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl } : null} />
+        <NatureAppHeader user={user ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl, role: user.role } : null} />
         {children}
       </body>
     </html>

@@ -57,6 +57,29 @@ async function runPrismaMigrations() {
   }
 }
 
+function runSuperAdminBootstrap() {
+  const hasEmail = Boolean(process.env.SUPER_ADMIN_EMAIL);
+  const hasPassword = Boolean(process.env.SUPER_ADMIN_PASSWORD);
+  if (!hasEmail && !hasPassword) {
+    console.log("Bootstrap super-admin ignoré : configurez SUPER_ADMIN_EMAIL et SUPER_ADMIN_PASSWORD dans Render.");
+    return;
+  }
+  if (hasEmail !== hasPassword) {
+    console.warn("Bootstrap super-admin ignoré : SUPER_ADMIN_EMAIL et SUPER_ADMIN_PASSWORD doivent être définis ensemble.");
+    return;
+  }
+
+  const cliPath = path.join(projectRoot, "node_modules", "prisma", "build", "index.js");
+  const result = spawnSync(process.execPath, [cliPath, "db", "seed"], {
+    cwd: projectRoot,
+    env: process.env,
+    encoding: "utf8",
+  });
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  if (result.status !== 0) throw new Error("Le bootstrap super-admin a échoué.");
+}
+
 export async function migrateRenderDatabase() {
   configureRenderEnvironment();
   await runPrismaMigrations();
@@ -65,6 +88,7 @@ export async function migrateRenderDatabase() {
 export function startRenderApplication() {
   configureRenderEnvironment();
   if (!process.env.APP_URL) throw new Error("Render n’a pas fourni l’URL publique HTTPS du service.");
+  runSuperAdminBootstrap();
   const nextCli = path.join(projectRoot, "node_modules", "next", "dist", "bin", "next");
   const port = process.env.PORT || "10000";
   const server = spawn(process.execPath, [nextCli, "start", "--hostname", "0.0.0.0", "--port", port], {

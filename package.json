@@ -10,6 +10,7 @@
     "postinstall": "prisma skills sync || exit 0",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:bootstrap-admin": "prisma db seed",
     "prisma:seed": "npx tsx prisma/seed.ts",
     "prisma:seed-social": "npx tsx prisma/seed-demo-social.ts",
     "prisma:train": "npx tsx prisma/train-ai.ts",
@@ -19,6 +20,9 @@
     "media:externalize": "tsx scripts/externalize-media-to-minio.ts",
     "check:production-env": "node scripts/check-production-env.mjs",
     "smoke:local": "node scripts/smoke-local.mjs"
+  },
+  "prisma": {
+    "seed": "tsx prisma/bootstrap-super-admin.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1144.0",

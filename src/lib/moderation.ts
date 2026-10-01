@@ -8,8 +8,18 @@ export async function requireModerator(userId: string | undefined | null) {
     where: { id: userId },
     select: { id: true, name: true, role: true },
   });
-  if (!user || (user.role !== "INSTITUTION" && user.role !== "ADMIN")) {
+  if (!user || (user.role !== "INSTITUTION" && user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
     return null;
   }
+  return user;
+}
+
+export async function requireAdmin(userId: string | undefined | null) {
+  if (!userId) return null;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, role: true },
+  });
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) return null;
   return user;
 }

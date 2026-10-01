@@ -31,6 +31,7 @@ model User {
   communityPosts CommunityPost[]
   communityComments CommunityComment[]
   communityIdentifications CommunityIdentification[]
+  reports       CommunityReport[] @relation("ReportReporter")
   notifications Notification[]
   exhibitions   Exhibition[]
   catalogs      NatureCatalog[]
@@ -342,6 +343,18 @@ enum Role {
   USER
   INSTITUTION
   ADMIN
+  SUPER_ADMIN
+}
+
+enum ReportTargetType {
+  POST
+  USER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
 }
 
 enum LocationType {
@@ -529,6 +542,24 @@ model UserFollow {
   @@unique([followerId, followedId])
   @@index([followedId, createdAt])
   @@map("user_follows")
+}
+
+model CommunityReport {
+  id         String           @id @default(cuid())
+  reporterId String
+  reporter   User             @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType ReportTargetType
+  targetId   String
+  reason     String           @db.VarChar(80)
+  details    String?          @db.Text
+  status     ReportStatus     @default(OPEN)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@map("community_reports")
 }
 
 model Notification {

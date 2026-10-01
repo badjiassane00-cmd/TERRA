@@ -3,6 +3,7 @@
 import { apiFetch } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import ReportAction from "@/components/community/ReportAction";
 
 export default function ProfileFollowButton({ userId, initialFollowing, signedIn }: { userId: string; initialFollowing: boolean; signedIn: boolean }) {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function ProfileFollowButton({ userId, initialFollowing, signedIn
       <button type="button" className={`nature-profile-follow ${following ? "following" : ""}`} onClick={() => void toggle()} disabled={busy}>
         {busy ? "Mise à jour…" : following ? "Abonné·e" : "Suivre"}
       </button>
+      {signedIn && <ReportAction targetType="USER" targetId={userId} label="Signaler le compte" />}
       {error && <p className="nature-profile-follow-error" role="alert">{error}</p>}
     </>
   );
