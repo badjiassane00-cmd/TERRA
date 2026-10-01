@@ -49,10 +49,11 @@ npm install
 
 ## Configuration des APIs
 
-Copiez `.env.example` vers `.env.local` et remplissez les clés :
+Copiez `.env.example` vers `.env.local` pour Next.js et vers `.env` pour Docker Compose, puis remplissez chaque fichier avec des valeurs adaptées à son environnement. Ne commitez jamais ces fichiers :
 
 ```bash
 cp .env.example .env.local
+cp .env.example .env
 ```
 
 ### Variables de configuration :
@@ -80,7 +81,7 @@ Les brouillons de publication photo hors connexion sont conservés sur l’appar
 
 ## Base MySQL et médias MinIO
 
-Le dépôt utilise MySQL 8.4 et MinIO AIStor pour les images. Pour démarrer les services locaux, placez votre licence AIStor dans `minio.license` à la racine du dépôt (ce fichier est ignoré par Git), configurez les secrets dans `.env`, puis lancez :
+Le dépôt utilise MySQL 8.4 et MinIO AIStor pour les images. Pour démarrer les services locaux, placez votre licence AIStor dans `minio.license` à la racine du dépôt (ce fichier est ignoré par Git), définissez des mots de passe MySQL et MinIO uniques dans `.env`, configurez les identifiants média côté TERRA dans `.env.local`, puis lancez :
 
 ```bash
 docker compose up -d mysql minio

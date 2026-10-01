@@ -19,10 +19,10 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-terra-local-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Définir MYSQL_ROOT_PASSWORD dans .env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-terra}
-      MYSQL_USER: ${MYSQL_USER:-terra}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-terra-local-password}
+      MYSQL_USER: ${MYSQL_USER:?Définir MYSQL_USER dans .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Définir MYSQL_PASSWORD dans .env}
     ports:
       - "127.0.0.1:${MYSQL_PORT:-3309}:3306"
     volumes:

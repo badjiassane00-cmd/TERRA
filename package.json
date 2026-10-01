@@ -1,6 +1,6 @@
 {
   "name": "terra",
-  "version": "0.5.0",
+  "version": "0.16.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -16,7 +16,9 @@
     "prisma:studio": "prisma studio",
     "db:deploy": "prisma migrate deploy",
     "db:transfer:mysql": "tsx scripts/migrate-postgres-to-mysql.ts",
-    "media:externalize": "tsx scripts/externalize-media-to-minio.ts"
+    "media:externalize": "tsx scripts/externalize-media-to-minio.ts",
+    "check:production-env": "node scripts/check-production-env.mjs",
+    "smoke:local": "node scripts/smoke-local.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1144.0",
@@ -59,5 +61,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }
