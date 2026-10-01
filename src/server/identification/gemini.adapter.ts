@@ -30,16 +30,14 @@ export const geminiIdentificationAdapter = {
       throw new ApiError("Gemini n’est pas configuré. Ajoutez GEMINI_API_KEY aux variables d’environnement du serveur.", 503);
     }
 
-    const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+    const models = [...new Set([
+      process.env.GEMINI_MODEL || "gemini-3.8-flash",
+      process.env.GEMINI_FALLBACK_MODEL || "gemini-3.7-flash",
+    ])];
     const imageData = Buffer.from(await image.arrayBuffer()).toString("base64");
     const prompt = `Tu es un assistant d'identification naturaliste prudent. Analyse cette photo pour trouver uniquement des espèces qui pourraient réellement être visibles. Groupe demandé : ${GROUP_LABELS[group]}. Si le groupe ne correspond pas clairement à l'image, retourne is_living=false. N'invente jamais une espèce, un nom local ou un détail absent de l'image. Fournis au maximum 5 hypothèses, de la plus plausible à la moins plausible. Les scores sont des estimations visuelles de 0 à 1, pas des probabilités scientifiques. Utilise le nom scientifique binomial quand il est défendable; sinon laisse scientific_name vide et donne le rang taxonomique fiable. Réponds dans la langue française pour les noms usuels et en JSON conforme au schéma.`;
 
-    let response: Response;
-    try {
-      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify({
+    const requestBody = JSON.stringify({
           contents: [{ role: "user", parts: [
             { text: prompt },
             { inline_data: { mime_type: image.type, data: imageData } },
@@ -64,22 +62,32 @@ export const geminiIdentificationAdapter = {
             },
             maxOutputTokens: 1200,
           },
-        }),
-        signal: AbortSignal.timeout(45_000),
-      });
-    } catch {
-      throw new ApiError("Gemini est temporairement injoignable. Réessayez dans un instant.", 503);
-    }
+        });
+    let payload: GeminiResponse | null = null;
+    let response: Response | null = null;
+    for (const [index, model] of models.entries()) {
+      try {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: requestBody,
+          signal: AbortSignal.timeout(45_000),
+        });
+      } catch {
+        throw new ApiError("Gemini est temporairement injoignable. Réessayez dans un instant.", 503);
+      }
+      payload = await response.json().catch(() => null) as GeminiResponse | null;
+      if (response.ok) break;
+      if ((response.status === 429 || response.status === 503) && index < models.length - 1) continue;
 
-    const payload = await response.json().catch(() => null) as GeminiResponse | null;
-    if (!response.ok) {
       const message = response.status === 401 || response.status === 403
         ? "La clé Gemini est invalide ou n’a pas accès à ce modèle. Vérifiez GEMINI_API_KEY dans la configuration serveur."
-        : response.status === 429
-          ? "Le quota Gemini est atteint. Réessayez plus tard ou vérifiez les limites de votre clé Google AI Studio."
+        : response.status === 429 || response.status === 503
+          ? "Les modèles Gemini sont temporairement très sollicités ou leur quota est atteint. Réessayez dans un instant."
           : payload?.error?.message || "Gemini n’a pas pu analyser cette image.";
       throw new ApiError(message, response.status === 429 ? 429 : response.status >= 500 ? 503 : 502);
     }
+    if (!response?.ok) throw new ApiError("Gemini est temporairement très sollicité. Réessayez dans un instant.", 503);
 
     const text = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
     if (!text) throw new ApiError("Gemini n’a pas retourné de résultat lisible. Essayez une autre photo.", 422);
