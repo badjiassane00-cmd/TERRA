@@ -13,8 +13,12 @@ async function POSTImpl(request: Request, { params }: { params: Promise<{ id: st
     if (!text || text.length > 2000) return NextResponse.json({ error: "Votre réponse doit contenir de 1 à 2 000 caractères." }, { status: 400 });
     const post = await communityInteractionRepository.findCommentTarget(id);
     if (!post) return NextResponse.json({ error: "Observation introuvable." }, { status: 404 });
-    const comment = await communityInteractionRepository.addComment({ postId: id, userId, body: text });
-    if (post.userId !== userId) await createCommunityNotification({ userId: post.userId, actorName: comment.user.name, title: "Nouvelle réponse à votre observation", body: `a commenté « ${post.plantName} » : « ${text.slice(0, 120)}${text.length > 120 ? "…" : ""} »`, href: `/observations/${id}#discussion`, kind: "comment" }).catch((notificationError) => console.error("Notification commentaire:", notificationError));
+    const replyToId = typeof body.replyToId === "string" ? body.replyToId : null;
+    const replyTarget = replyToId ? await communityInteractionRepository.findReplyTarget(id, replyToId) : null;
+    if (replyToId && !replyTarget) return NextResponse.json({ error: "Le commentaire auquel vous répondez est introuvable." }, { status: 404 });
+    const comment = await communityInteractionRepository.addComment({ postId: id, userId, body: text, replyToId });
+    const recipients = new Set([replyTarget?.userId, post.userId].filter((recipient): recipient is string => Boolean(recipient && recipient !== userId)));
+    await Promise.all([...recipients].map((recipientId) => createCommunityNotification({ userId: recipientId, actorName: comment.user.name, title: replyTarget ? "Quelqu’un a répondu à votre commentaire" : "Nouvelle réponse à votre observation", body: replyTarget ? `vous a répondu sur « ${post.plantName} » : « ${text.slice(0, 120)}${text.length > 120 ? "…" : ""} »` : `a commenté « ${post.plantName} » : « ${text.slice(0, 120)}${text.length > 120 ? "…" : ""} »`, href: `/observations/${id}#discussion`, kind: "comment" })).catch((notificationError) => console.error("Notification commentaire:", notificationError)));
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {
     console.error("Erreur ajout réponse:", error);

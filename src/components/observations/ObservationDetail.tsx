@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import BackLink from "@/components/navigation/BackLink";
-import { ArrowLeft, BadgeCheck, CalendarDays, Check, Share2, Eye, Heart, LockKeyhole, MapPin, MessageCircle, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CalendarDays, Check, CornerUpLeft, Share2, Eye, Heart, LockKeyhole, MapPin, MessageCircle, Send, Sparkles, Trash2 } from "lucide-react";
 import { ORGANISM_LABELS, type OrganismGroup } from "@/types/nature";
 
 interface ObservationComment {
@@ -13,6 +13,7 @@ interface ObservationComment {
   body: string;
   createdAt: string;
   user: { id: string; name: string };
+  replyTo?: { id: string; user: { id: string; name: string } } | null;
   isDemo?: boolean;
 }
 interface ObservationIdentification {
@@ -28,6 +29,7 @@ export interface ObservationDetailRecord {
   scientificName: string;
   organismGroup: OrganismGroup;
   imageUrl: string;
+  videoUrl?: string | null;
   region: string;
   description: string | null;
   observedAt: string | null;
@@ -60,6 +62,7 @@ function photoLicenseUrl(code: string) {
 export default function ObservationDetail({ observation: initialObservation, currentUserId }: { observation: ObservationDetailRecord; currentUserId: string | null }) {
   const [observation, setObservation] = useState(initialObservation);
   const [comment, setComment] = useState("");
+  const [replyToId, setReplyToId] = useState<string | null>(null);
   const [identification, setIdentification] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -77,13 +80,29 @@ export default function ObservationDetail({ observation: initialObservation, cur
     if (!comment.trim()) return;
     setBusy(true); setError(""); setNotice("");
     try {
-      const response = await apiFetch(`/api/observations/${observation.id}/comments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body: comment }) });
+      const response = await apiFetch(`/api/observations/${observation.id}/comments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body: comment, replyToId }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Réponse non envoyée.");
       setObservation((current) => ({ ...current, comments: current.comments + 1, commentsList: [...current.commentsList, { ...result.comment, isDemo: false, createdAt: new Date(result.comment.createdAt).toISOString() }] }));
-      setComment(""); setNotice("Votre réponse a été ajoutée.");
+      setComment(""); setReplyToId(null); setNotice("Votre réponse a été ajoutée et la personne concernée a été notifiée.");
     } catch (submitError) { setError(submitError instanceof Error ? submitError.message : "Impossible d’ajouter la réponse."); }
     finally { setBusy(false); }
+  }
+
+  async function deleteComment(commentId: string) {
+    setError(""); setNotice("");
+    try {
+      const response = await apiFetch(`/api/observations/${observation.id}/comments/${commentId}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Suppression impossible.");
+      setObservation((current) => ({ ...current, comments: Math.max(0, current.comments - 1), commentsList: current.commentsList.filter((item) => item.id !== commentId) }));
+      setNotice("Commentaire supprimé.");
+    } catch (deleteError) { setError(deleteError instanceof Error ? deleteError.message : "Suppression impossible."); }
+  }
+
+  function beginReply(item: ObservationComment) {
+    setReplyToId(item.id);
+    setComment(`@${item.user.name} `);
   }
 
   async function submitIdentification(event: FormEvent<HTMLFormElement>) {
@@ -95,7 +114,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Identification non enregistrée.");
       setObservation((current) => ({ ...current, identifications: [result.identification, ...current.identifications.filter((item) => item.user.id !== result.identification.user.id)] }));
-      setIdentification(""); setNotice("Votre proposition d’identification a été partagée.");
+      setIdentification(""); setNotice("Votre proposition d’identification a été partagée et le propriétaire a été notifié.");
     } catch (submitError) { setError(submitError instanceof Error ? submitError.message : "Impossible d’enregistrer l’identification."); }
     finally { setBusy(false); }
   }
@@ -130,7 +149,7 @@ export default function ObservationDetail({ observation: initialObservation, cur
 
       <section className="observation-detail-hero">
         <div className="observation-detail-image-wrap">
-          {observation.imageUrl ? <Image fill sizes="(max-width: 800px) 100vw, 65vw" unoptimized className="observation-detail-image" src={observation.imageUrl} alt={observation.plantName} /> : <div className="observation-image-placeholder">Une rencontre avec le vivant</div>}
+          {observation.videoUrl ? <video src={observation.videoUrl} poster={observation.imageUrl} controls playsInline className="observation-detail-video" aria-label={`Vidéo de ${observation.plantName}`} /> : observation.imageUrl ? <Image fill sizes="(max-width: 800px) 100vw, 65vw" unoptimized className="observation-detail-image" src={observation.imageUrl} alt={observation.plantName} /> : <div className="observation-image-placeholder">Une rencontre avec le vivant</div>}
           <span className="observation-detail-image-tag"><Eye size={14} /> OBSERVATION DE TERRAIN</span>
           <button className="observation-share-button" onClick={shareObservation}>{copied ? <Check size={16} /> : <Share2 size={16} />}{copied ? "Fiche partagée" : "Partager cette rencontre"}</button>
         </div>
@@ -167,8 +186,9 @@ export default function ObservationDetail({ observation: initialObservation, cur
         <aside className="observation-detail-sidebar">
           <section className="observation-contribute-card"><span className="observation-side-decoration">✳</span><small>LE SAVOIR EST COLLECTIF</small><h2>Vous connaissez cette espèce ?</h2><p>Partagez un nom local, une identification ou un savoir lié à cette observation.</p><a href="#discussion">Participer à l’échange <ArrowLeft className="rotate-180" size={15} /></a></section>
           <section id="discussion" className="observation-discussion-card"><div className="observation-card-title"><span className="observation-icon-tile"><MessageCircle size={17} /></span><div><small>COMMUNAUTÉ</small><h2>Discussion <span>{observation.comments}</span></h2></div></div>
-            {observation.commentsList.length === 0 ? <p className="observation-section-hint">Soyez la première personne à échanger sur cette rencontre.</p> : <div className="observation-comments-list">{observation.commentsList.map((item) => <article className="observation-comment" key={item.id}><span className="observation-comment-avatar">{item.user.name.slice(0, 1).toLocaleUpperCase("fr")}</span><div><div><strong>{item.user.name}</strong><small>{new Date(item.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</small></div><p>{item.body}</p>{item.isDemo && <small className="observation-demo-comment-label">Commentaire de démonstration</small>}</div></article>)}</div>}
-            {currentUserId ? <form className="observation-comment-form" onSubmit={submitComment}><textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Ajouter une réponse…" maxLength={2000} required /><button disabled={busy || !comment.trim()} type="submit"><Send size={15} /> Répondre</button></form> : <p className="observation-login-prompt"><Link href="/connexion">Connectez-vous</Link> pour rejoindre la discussion.</p>}
+            {observation.commentsList.length === 0 ? <p className="observation-section-hint">Soyez la première personne à échanger sur cette rencontre.</p> : <div className="observation-comments-list">{observation.commentsList.map((item) => <article className="observation-comment" key={item.id}><span className="observation-comment-avatar">{item.user.name.slice(0, 1).toLocaleUpperCase("fr")}</span><div><div><strong>{item.user.name}</strong><small>{new Date(item.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</small></div>{item.replyTo && <small className="observation-reply-reference">↳ En réponse à @{item.replyTo.user.name}</small>}<p>{item.body}</p>{item.isDemo && <small className="observation-demo-comment-label">Commentaire de démonstration</small>}<div className="observation-comment-actions">{currentUserId && <button type="button" onClick={() => beginReply(item)}><CornerUpLeft size={12} /> Répondre à @{item.user.name}</button>}{currentUserId === item.user.id && <button type="button" onClick={() => void deleteComment(item.id)}><Trash2 size={12} /> Supprimer</button>}</div></div></article>)}</div>}
+            {replyToId && <button className="observation-cancel-reply" type="button" onClick={() => { setReplyToId(null); setComment(""); }}>Annuler la réponse</button>}
+            {currentUserId ? <form className="observation-comment-form" onSubmit={submitComment}><textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Ajouter une réponse…" maxLength={2000} required /><button disabled={busy || !comment.trim()} type="submit"><Send size={15} /> {replyToId ? "Envoyer la réponse" : "Commenter"}</button></form> : <p className="observation-login-prompt"><Link href="/connexion">Connectez-vous</Link> pour rejoindre la discussion.</p>}
           </section>
         </aside>
       </div>

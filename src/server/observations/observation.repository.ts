@@ -16,7 +16,7 @@ export const observationRepository = {
         commentsList: {
           orderBy: { createdAt: "asc" },
           take: 100,
-          include: { user: { select: { id: true, name: true } } },
+          include: { user: { select: { id: true, name: true } }, replyTo: { select: { id: true, user: { select: { id: true, name: true } } } } },
         },
         identifications: {
           orderBy: { createdAt: "desc" },
