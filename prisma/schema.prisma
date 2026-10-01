@@ -199,6 +199,8 @@ model CommunityPost {
   region        String
   description   String? @db.Text
   organismGroup OrganismGroup @default(PLANT)
+  publicShareEnabled Boolean @default(false)
+  identificationProbability Float?
   observedAt DateTime?
   latitude Float?
   longitude Float?

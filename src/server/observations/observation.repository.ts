@@ -26,4 +26,10 @@ export const observationRepository = {
       },
     });
   },
+  findPublicIdentification(id: string) {
+    return prisma.communityPost.findFirst({
+      where: { id, removed: false, isEphemeral: false, publicShareEnabled: true },
+      select: { id: true, plantName: true, scientificName: true, imageUrl: true, identificationProbability: true, createdAt: true },
+    });
+  },
 };

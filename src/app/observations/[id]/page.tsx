@@ -13,6 +13,7 @@ export default async function ObservationPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const viewerId = await getSessionUserId();
   const observation = await observationRepository.findById(id, viewerId);
+  if (observation?.publicShareEnabled && !viewerId) redirect(`/identifications/${id}`);
   if (observation && !viewerId) redirect(`/connexion?next=${encodeURIComponent(`/observations/${id}`)}`);
   let externalObservation = null;
   if (!observation && /^\d+$/.test(id)) {
