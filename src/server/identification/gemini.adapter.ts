@@ -89,14 +89,14 @@ export const geminiIdentificationAdapter = {
     if (!parsed.is_living || !Array.isArray(parsed.candidates)) return [];
 
     return parsed.candidates.slice(0, 5).flatMap((candidate) => {
-      const scientificName = candidate.scientific_name?.trim();
       const commonName = candidate.common_name?.trim();
-      if (!scientificName && !commonName) return [];
+      const scientificName = candidate.scientific_name?.trim() || commonName;
+      if (!scientificName) return [];
       const score = Number(candidate.confidence);
       const taxonomy = Object.fromEntries(Object.entries(candidate.taxonomy || {})
         .filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].trim().length > 0));
       return [{
-        scientific_name: scientificName || commonName,
+        scientific_name: scientificName,
         common_name: commonName || scientificName || "Espèce à préciser",
         probability: Number.isFinite(score) ? Math.max(0, Math.min(1, score)) : 0.25,
         taxonomy,
