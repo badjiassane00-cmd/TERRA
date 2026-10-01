@@ -382,6 +382,7 @@ model NatureCatalog {
   description String? @db.Text
   isPublic    Boolean        @default(false)
   entries     CatalogEntry[]
+  media       CatalogMedia[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
@@ -414,9 +415,25 @@ model CatalogEntry {
   note           String? @db.Text
   position       Int           @default(0)
   createdAt      DateTime      @default(now())
+  media          CatalogMedia[]
 
   @@index([catalogId, position])
   @@map("catalog_entries")
+}
+
+model CatalogMedia {
+  id            String       @id @default(cuid())
+  catalogId     String
+  catalog       NatureCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+  entryId       String?
+  entry         CatalogEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+  mediaUrl      String       @db.VarChar(2048)
+  mediaType     String       @db.VarChar(12)
+  createdAt     DateTime     @default(now())
+
+  @@index([catalogId, createdAt])
+  @@index([entryId, createdAt])
+  @@map("catalog_media")
 }
 
 model ExhibitionItem {
