@@ -108,7 +108,6 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [newPost, setNewPost] = useState("");
   const [newSpeciesName, setNewSpeciesName] = useState("");
   const [newScientificName, setNewScientificName] = useState("");
-  const [newObservedAt, setNewObservedAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [newPhoto, setNewPhoto] = useState<ObservationPhotos | null>(null);
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [publishAsStory, setPublishAsStory] = useState(false);
@@ -316,7 +315,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       scientificName: newScientificName.trim(), imageUrl: newPhoto.imageUrl,
       thumbnailUrl: newPhoto.thumbnailUrl, videoUrl: newVideoUrl || null, region: newRegion, description: newPost,
       isEphemeral: publishAsStory,
-      observedAt: newObservedAt, latitude: newLocation?.latitude ?? null,
+      observedAt: new Date().toISOString(), latitude: newLocation?.latitude ?? null,
       longitude: newLocation?.longitude ?? null, locationVisibility, clientSubmissionId,
     };
     const queueOffline = (): boolean => {
@@ -326,7 +325,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       catch { return false; }
       setPendingObservations(queue);
       setNewPost(""); setNewSpeciesName(""); setNewScientificName(""); setNewPhoto(null); setNewVideoUrl(""); setNewLocation(null); setLocationMessage(""); setPublishAsStory(false);
-      setNewObservedAt(new Date().toISOString().slice(0, 10)); setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
+      setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
       setShowForm(false);
       return true;
     };
@@ -337,7 +336,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Publication impossible pour le moment.");
       setNewPost(""); setNewSpeciesName(""); setNewScientificName("");
-      setNewObservedAt(new Date().toISOString().slice(0, 10)); setNewPhoto(null); setNewVideoUrl(""); setNewLocation(null); setLocationMessage(""); setPublishAsStory(false);
+      setNewPhoto(null); setNewVideoUrl(""); setNewLocation(null); setLocationMessage(""); setPublishAsStory(false);
       setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
       setShowForm(false);
       window.dispatchEvent(new CustomEvent("sununature:observation-published", { detail: { organismGroup: newOrganismGroup } }));
@@ -431,7 +430,6 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             </select>
           </label>
           <label className="observation-field-label">Date de l’observation
-            <input type="date" value={newObservedAt} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setNewObservedAt(event.target.value)} className="herbarium-input mb-3" />
           </label>
           <input value={newRegion} onChange={(event) => setNewRegion(event.target.value)} placeholder="Pays, région ou lieu (facultatif)" className="herbarium-input mb-3" aria-label="Pays, région ou lieu" maxLength={120} />
           <input

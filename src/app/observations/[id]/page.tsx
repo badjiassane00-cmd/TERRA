@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import ObservationDetail, { type ObservationDetailRecord } from "@/components/observations/ObservationDetail";
 import ExternalObservationDetail from "@/components/observations/ExternalObservationDetail";
 import { inaturalistService } from "@/server/inaturalist/inaturalist.service";
@@ -13,6 +13,7 @@ export default async function ObservationPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const viewerId = await getSessionUserId();
   const observation = await observationRepository.findById(id, viewerId);
+  if (observation && !viewerId) redirect(`/connexion?next=${encodeURIComponent(`/observations/${id}`)}`);
   let externalObservation = null;
   if (!observation && /^\d+$/.test(id)) {
     try {

@@ -18,6 +18,7 @@ async function GETImpl(_request: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "Observation introuvable." }, { status: 404 });
     }
     const viewerId = await getSessionUserId();
+    if (!viewerId) return NextResponse.json({ error: "Connectez-vous pour voir cette publication." }, { status: 401 });
     return NextResponse.json({ observation: { ...observation, ...publicCoordinates(observation, viewerId) } });
   } catch (error) {
     console.error("Erreur détail observation:", error);

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Camera, Users } from "lucide-react";
 import BackLink from "@/components/navigation/BackLink";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +13,7 @@ import ProfileAvatarEditor from "@/components/profile/ProfileAvatarEditor";
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const viewerId = await getSessionUserId();
+  if (!viewerId) redirect(`/connexion?next=${encodeURIComponent(`/profile/${id}`)}`);
   const profile = await prisma.user.findUnique({
     where: { id },
     select: {

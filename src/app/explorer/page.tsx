@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ArrowRight, Compass } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import CommunityFeed from "@/components/community/CommunityFeed";
 import { getSessionUser } from "@/lib/session";
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 
 export default async function ExplorerPage() {
   const user = await getSessionUser();
+  if (!user) redirect("/connexion?next=%2Fexplorer");
   const role = user?.role.toLowerCase() as "user" | "admin" | "super_admin" | "institution" | undefined;
 
   return (

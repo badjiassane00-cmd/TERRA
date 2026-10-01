@@ -31,12 +31,12 @@ type Observation = {
   photoLicense?: string | null;
 };
 
-export default function ObservationExplorer() {
+export default function ObservationExplorer({ isAuthenticated, initialQuery }: Readonly<{ isAuthenticated: boolean; initialQuery: string }>) {
   const [observations, setObservations] = useState<Observation[]>([]);
   const [group, setGroup] = useState("ALL");
-  const [source, setSource] = useState<"iNaturalist" | "TERRA">("iNaturalist");
+  const [source, setSource] = useState<"iNaturalist" | "TERRA">(initialQuery && isAuthenticated ? "TERRA" : "iNaturalist");
   const [region, setRegion] = useState("ALL");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialQuery);
   const [view, setView] = useState<"grid" | "list" | "map">("grid");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -60,12 +60,6 @@ export default function ObservationExplorer() {
       setLoading(false);
     }
   }, [group, search, source]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const initialQuery = params.get("q") || params.get("species");
-    if (initialQuery) { setSearch(initialQuery); setSource("TERRA"); }
-  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void loadObservations(); }, 0);
@@ -102,7 +96,7 @@ export default function ObservationExplorer() {
 
       <div className="observation-source-switch" role="tablist" aria-label="Source des observations">
         <button role="tab" aria-selected={source === "iNaturalist"} className={source === "iNaturalist" ? "selected" : ""} onClick={() => setSource("iNaturalist")}>iNaturalist · Monde <ExternalLink size={14} /></button>
-        <button role="tab" aria-selected={source === "TERRA"} className={source === "TERRA" ? "selected" : ""} onClick={() => setSource("TERRA")}>Communauté TERRA</button>
+        {isAuthenticated && <button role="tab" aria-selected={source === "TERRA"} className={source === "TERRA" ? "selected" : ""} onClick={() => setSource("TERRA")}>Communauté TERRA</button>}
       </div>
       <section className="observation-explorer-toolbar" aria-label="Filtres des observations">
         <label className="observation-search"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Espèce, lieu, naturaliste…" /></label>

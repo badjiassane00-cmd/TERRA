@@ -28,6 +28,8 @@ function safeVideoUrl(value: unknown): string | null {
 }
 async function GETImpl(request: Request) {
   try {
+    const viewerId = await getSessionUserId();
+    if (!viewerId) return NextResponse.json({ error: "Connectez-vous pour voir les publications." }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const region = searchParams.get("region");
     const group = searchParams.get("group");
@@ -36,7 +38,6 @@ async function GETImpl(request: Request) {
     const validGroup = group && ORGANISM_GROUPS.includes(group as (typeof ORGANISM_GROUPS)[number])
       ? (group as (typeof ORGANISM_GROUPS)[number])
       : undefined;
-    const viewerId = await getSessionUserId();
     const posts = await communityRepository.listPosts({ removed: false, isEphemeral: false, ...(region ? { region } : {}), ...(validGroup ? { organismGroup: validGroup } : {}), ...(q ? { OR: [{ plantName: { contains: q } }, { scientificName: { contains: q } }, { region: { contains: q } }, { description: { contains: q } }] } : {}) }, viewerId, limit);
     return NextResponse.json({
       count: posts.length,
@@ -85,12 +86,7 @@ async function POSTImpl(request: Request) {
       : "OTHER";
     const scientificName = typeof body.scientificName === "string" ? body.scientificName.trim().slice(0, 180) : "";
     const region = typeof body.region === "string" ? body.region.trim().slice(0, 120) || "Monde" : "Monde";
-    const observedAt = typeof body.observedAt === "string" && body.observedAt
-      ? new Date(body.observedAt)
-      : new Date();
-    if (Number.isNaN(observedAt.getTime()) || observedAt.getTime() > Date.now() + 86_400_000) {
-      return NextResponse.json({ error: "La date d’observation n’est pas valide." }, { status: 400 });
-    }
+    const observedAt = new Date();
     const latitude = typeof body.latitude === "number" && Math.abs(body.latitude) <= 90 ? body.latitude : null;
     const longitude = typeof body.longitude === "number" && Math.abs(body.longitude) <= 180 ? body.longitude : null;
     const requestedVisibility = body.locationVisibility;
