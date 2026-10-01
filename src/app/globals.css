@@ -752,3 +752,50 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .observation-publish-first .nature-social-feed>div.mb-6{margin:0!important;border:1px solid #e4ebdf!important;border-top:0!important;border-radius:0 0 17px 17px;background:#fff!important;padding:14px 18px 20px!important}
 .observations-page>.observations-explorer{margin-top:34px;border-top:1px solid #e5eae1}
 @media(max-width:680px){.nature-app-header nav>a.nature-nav-link{min-height:36px;padding:0 7px}.nature-app-header nav>a.nature-nav-link.active:after{right:8px;left:8px}.observation-publish-first{padding:20px 12px 0}.observation-publish-heading h1{font-size:32px}.observation-publish-heading p{font-size:11px}}
+
+/* Recherche intégrée au tableau de bord */
+.nature-header-search-wrap{position:relative;display:flex;align-items:center}
+.nature-header-search-wrap .nature-search-toggle{border:1px solid transparent;background:transparent;color:#526e57;cursor:pointer;font:inherit}
+.nature-header-search-wrap .nature-search-toggle.active{border-color:#c6dfc0;background:#eaf5e7;color:#276d43}
+.nature-global-search{position:absolute;z-index:150;top:calc(100% + 13px);right:-100px;width:min(440px,calc(100vw - 24px));max-height:min(72vh,620px);overflow:auto;border:1px solid #dce8d7;border-radius:16px;background:#fff;padding:15px;box-shadow:0 20px 65px #1c362438;color:#294333}
+.nature-global-search-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:14px}
+.nature-global-search-heading button{display:grid;width:30px;height:30px;place-items:center;border:0;border-radius:50%;background:#f0f5ed;color:#46694b;cursor:pointer}
+.nature-global-search>label{display:flex;align-items:center;gap:9px;border:1px solid #dce7d8;border-radius:10px;background:#f9fbf7;padding:10px;color:#609166}
+.nature-global-search>label input{width:100%;border:0;outline:0;background:transparent;color:#294333;font-size:12px}
+.nature-global-search>label kbd{flex:0 0 auto;color:#849184;font-size:9px}
+.nature-global-search-hint,.nature-global-search-error{margin:12px 2px 2px;color:#78877a;font-size:11px;line-height:1.55}
+.nature-global-search-error{color:#a94e42}
+.nature-global-search-results{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:13px}
+.nature-global-search-results>div{min-width:0}
+.nature-global-search-results h3{display:flex;align-items:center;gap:6px;margin:0 0 6px;color:#5b845e;font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.nature-global-search-results>div>p{color:#899489;font-size:10px}
+.nature-global-search-results a{display:flex;align-items:center;gap:8px;min-width:0;border-top:1px solid #eef1eb;padding:8px 2px;color:#334a37;text-decoration:none}
+.nature-global-search-results a:hover{background:#f6f9f3}
+.nature-global-search-results a>img,.nature-search-avatar{width:36px;height:36px;flex:0 0 auto;display:grid;place-items:center;object-fit:cover;border-radius:50%;background:#edf5e9;color:#5b925f}
+.nature-global-search-results>div:last-child a>img,.nature-global-search-results>div:last-child .nature-search-avatar{width:40px;height:40px;border-radius:9px}
+.nature-global-search-results a>span:last-child{display:grid;min-width:0;gap:3px}
+.nature-global-search-results a strong{overflow:hidden;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.nature-global-search-results a small{overflow:hidden;color:#78867a;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:680px){.nature-global-search{position:fixed;top:70px;right:12px;width:calc(100vw - 24px);max-height:75vh}.nature-global-search-results{grid-template-columns:1fr}}
+
+/* Stories circulaires avec anneau de progression façon réseaux sociaux */
+.nature-story-person>span{padding:3px;border:0;background:conic-gradient(from 20deg,#e3a73b,#e45d68,#a54ac3,#e3a73b)}
+.nature-story-person>span>img,.nature-story-person>span>span{width:100%;height:100%;display:grid;place-items:center;border:2px solid #fff;border-radius:50%;object-fit:cover;background:#eaf4e5}
+.nature-story-add>span{border:2px solid #dce9d8;background:#f3f8f0;color:#32804e}
+.personal-catalog-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.personal-catalog-manage{display:flex;gap:5px;padding:8px}
+.personal-catalog-manage button,.personal-catalog-edit-form button{display:inline-flex;align-items:center;gap:5px;border:1px solid #dce8d8;border-radius:8px;background:white;padding:7px;color:#547957;cursor:pointer}
+.personal-catalog-manage button:last-child{color:#b4584e}
+.personal-catalog-edit-form{display:grid;gap:8px;padding:12px}
+.personal-catalog-edit-form input,.personal-catalog-edit-form textarea{width:100%;border:1px solid #dce5d9;border-radius:8px;padding:9px;color:#334b38}
+.personal-catalog-edit-form>div{display:flex;gap:8px}
+.personal-catalog-entry-block{padding:10px 0;border-bottom:1px solid #edf0e9}
+.personal-catalog-media-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:7px;margin:8px 0 8px 64px}
+.personal-catalog-media-gallery img,.personal-catalog-media-gallery video{width:100%;height:100px;border-radius:8px;background:#edf1e8;object-fit:cover}
+.personal-catalog-add-media{display:inline-grid;gap:5px;margin-left:64px;color:#4c8156;font-size:10px;font-weight:700;cursor:pointer}
+.personal-catalog-add-media input{max-width:230px;font-size:10px}
+.personal-catalog-no-entry{margin:0;padding:12px;color:#7b887c;font-size:11px;line-height:1.5}
+.nature-header-search-wrap .nature-search-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 10px;border-radius:10px;font-size:10px;font-weight:750;white-space:nowrap}
+.personal-catalog-library-media{padding:0 12px 12px}
+.personal-catalog-library-media .personal-catalog-add-media{margin-left:0}
+.personal-catalog-library-media .personal-catalog-media-gallery{margin:10px 0 0}
