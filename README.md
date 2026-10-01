@@ -62,7 +62,7 @@ cp .env.example .env
 |----------|-------------|-----------|
 | `PLANTNET_API_KEY` | Identification des plantes | https://my.plantnet.org/ |
 | `GEMINI_API_KEY` | Clé serveur Gemini pour la reconnaissance multimodale et l’assistant vocal | À définir dans `.env.local` et Render |
-| `GEMINI_MODEL` | Modèle Gemini configurable | `gemini-2.5-flash` |
+| `GEMINI_MODEL` | Modèle Gemini configurable | `gemini-3.8-flash` |
 | `BIOCLIP_API_URL` | API privée du modèle BioCLIP, solution de secours | `http://127.0.0.1:8020` (Compose) |
 | `DISEASE_MODEL_URL` | URL du service local de diagnostic PlantVillage | `http://127.0.0.1:8010` (Compose) |
 | `OPENWEATHER_API_KEY` | Météo pour rappels intelligents | https://openweathermap.org/api |

@@ -13,7 +13,7 @@ Le Blueprint `render.yaml` décrit quatre services dans la région de Francfort 
 - Render génère les mots de passe MySQL, le mot de passe racine MinIO et `JWT_SECRET`. Le Blueprint ne contient aucun secret.
 - Dans le service MinIO, téléverser le fichier de licence AIStor comme secret file nommé `minio.license`. Il sera disponible sous `/etc/secrets/minio.license`.
 - Créer le bucket privé `terra-media` dans MinIO, puis un utilisateur applicatif limité à ce bucket. Saisir ses clés dans `MEDIA_S3_ACCESS_KEY` et `MEDIA_S3_SECRET_KEY` du service web.
-- Ajouter `GEMINI_API_KEY` dans **Environment** sur le service web Render (clé secrète depuis Google AI Studio) et, si souhaité, `GEMINI_MODEL=gemini-2.5-flash`. La clé ne doit pas être placée dans Git ni dans une variable `NEXT_PUBLIC_*`. Les appels aux API passent par le serveur.
+- Ajouter `GEMINI_API_KEY` dans **Environment** sur le service web Render (clé secrète depuis Google AI Studio) et, si souhaité, `GEMINI_MODEL=gemini-3.8-flash`. La clé ne doit pas être placée dans Git ni dans une variable `NEXT_PUBLIC_*`. Les appels aux API passent par le serveur.
 - `PLANTNET_API_KEY` reste un fournisseur botanique de secours. BioCLIP auto-hébergé demeure le secours insectes/animaux lorsque Gemini n’est pas configuré.
 - Ne pas importer `.env` ou `.env.local` en bloc : ils contiennent des adresses locales `127.0.0.1` et des secrets de développement.
 

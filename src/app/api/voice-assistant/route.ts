@@ -47,7 +47,7 @@ function extractPlantLine(rawText: string) {
 // bancaire — voir https://aistudio.google.com/apikey). Modèle
 // surchargeable via GEMINI_MODEL si besoin.
 async function askGemini(query: string, apiKey: string) {
-  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {

@@ -30,7 +30,7 @@ export const geminiIdentificationAdapter = {
       throw new ApiError("Gemini n’est pas configuré. Ajoutez GEMINI_API_KEY aux variables d’environnement du serveur.", 503);
     }
 
-    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
     const imageData = Buffer.from(await image.arrayBuffer()).toString("base64");
     const prompt = `Tu es un assistant d'identification naturaliste prudent. Analyse cette photo pour trouver uniquement des espèces qui pourraient réellement être visibles. Groupe demandé : ${GROUP_LABELS[group]}. Si le groupe ne correspond pas clairement à l'image, retourne is_living=false. N'invente jamais une espèce, un nom local ou un détail absent de l'image. Fournis au maximum 5 hypothèses, de la plus plausible à la moins plausible. Les scores sont des estimations visuelles de 0 à 1, pas des probabilités scientifiques. Utilise le nom scientifique binomial quand il est défendable; sinon laisse scientific_name vide et donne le rang taxonomique fiable. Réponds dans la langue française pour les noms usuels et en JSON conforme au schéma.`;
 
