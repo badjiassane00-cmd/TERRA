@@ -24,7 +24,8 @@ export class KindwiseInsectIdentificationAdapter implements IdentificationStrate
     });
 
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) throw new ApiError("La clé Insect.id est invalide ou son compte n’a plus de crédits.", 502);
+      if (response.status === 401) throw new ApiError("Kindwise a refusé la clé. Vérifiez qu’elle vient bien du produit Insect.id (et non Plant.id), puis remplacez INSECT_API_KEY et redémarrez le serveur TERRA.", 502);
+      if (response.status === 402 || response.status === 403) throw new ApiError("L’accès Insect.id est refusé. Vérifiez dans le panneau Kindwise que des crédits sont affectés à cette clé et que le service Insect.id est activé.", 502);
       if (response.status === 429) throw new ApiError("Le quota de reconnaissance des insectes est temporairement dépassé.", 429);
       throw new ApiError("Le service de reconnaissance des insectes est momentanément indisponible.", 502);
     }
