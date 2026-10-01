@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Camera, Compass, Leaf, LogIn, MapPinned } from "lucide-react";
+import { BookOpen, Camera, Compass, Leaf, LogIn, MapPinned, Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 
 type HeaderUser = {
@@ -18,6 +18,7 @@ export default function NatureAppHeader({ user }: { user: HeaderUser | null }) {
       <nav aria-label="Navigation principale">
         <Link href="/"><Camera size={16} /> Reconnaître</Link>
         <Link href="/explorer"><Compass size={16} /> Explorer</Link>
+        <Link href="/recherche"><Search size={16} /> Rechercher</Link>
         <Link href="/observations"><MapPinned size={16} /> Observations</Link>
         {user && <Link href="/catalogues"><BookOpen size={16} /> Catalogues</Link>}
         {user ? (
