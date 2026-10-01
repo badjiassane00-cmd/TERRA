@@ -53,7 +53,7 @@ interface PlantResultProps {
   mode?: "identify" | "disease" | "life";
 }
 
-function ConfidenceGauge({ value }: { value: number }) {
+function ConfidenceGauge({ value, mode }: { value: number; mode: "identify" | "disease" | "life" }) {
   const percent = Math.round(value * 100);
   const color =
     value > 0.8
@@ -65,7 +65,7 @@ function ConfidenceGauge({ value }: { value: number }) {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-foreground/70">Fiabilité</span>
+        <span className="text-xs font-medium text-foreground/70">{mode === "disease" ? "Score du modèle" : "Fiabilité"}</span>
         <span className="text-xs font-semibold text-foreground">{percent}%</span>
       </div>
       <div className="confidence-gauge">
@@ -75,7 +75,7 @@ function ConfidenceGauge({ value }: { value: number }) {
         />
       </div>
       <p className="text-xs text-foreground/60 mt-1">
-        {value > 0.8
+        {mode === "disease" ? "Piste visuelle, à confirmer sur le terrain" : value > 0.8
           ? "Identification fiable"
           : value > 0.5
             ? "Résultat probable, vérifiez les détails"
@@ -112,7 +112,7 @@ export default function PlantResult({ result, isLoading, previewUrl, userId, use
               Analyse de l&apos;image en cours...
             </p>
             <p className="text-sm text-foreground/60 mt-2">
-              {mode === "life" ? "Analyse multi-espèces sur votre appareil" : mode === "disease" ? "Analyse des signes visibles sur la plante" : "Identification botanique via IA"}
+              {mode === "life" ? "Analyse naturaliste en cours" : mode === "disease" ? "Analyse par le modèle PlantVillage" : "Identification botanique via IA"}
             </p>
           </div>
         </div>
@@ -125,7 +125,7 @@ export default function PlantResult({ result, isLoading, previewUrl, userId, use
   }
 
   const imageToShow = result.imageUrl || previewUrl;
-  const isBotanical = !result.sources?.provider?.includes("MobileNet");
+  const isBotanical = !result.sources?.provider?.includes("MobileNet") && !result.sources?.provider?.includes("Insect.id");
   const TaxonIcon = isBotanical ? Leaf : result.taxonomy?.class === "Insecta" ? Bug : result.taxonomy?.class === "Aves" ? Bird : PawPrint;
 
   return (
@@ -175,7 +175,7 @@ export default function PlantResult({ result, isLoading, previewUrl, userId, use
             )}
           </div>
           <div className="w-40">
-            <ConfidenceGauge value={result.probability} />
+            <ConfidenceGauge value={result.probability} mode={mode} />
           </div>
         </div>
 
@@ -329,14 +329,12 @@ export default function PlantResult({ result, isLoading, previewUrl, userId, use
                     </span>
                   </div>
                   <p className="text-sm text-foreground/70 mb-3">{disease.description}</p>
-                  <div>
+                  {disease.treatment.length > 0 && <div>
                     <p className="text-sm font-medium text-foreground mb-2">Traitements recommandés:</p>
                     <ul className="list-disc list-inside text-sm text-foreground/70 space-y-1">
-                      {disease.treatment.map((treatment, i) => (
-                        <li key={i}>{treatment}</li>
-                      ))}
+                      {disease.treatment.map((treatment, i) => <li key={i}>{treatment}</li>)}
                     </ul>
-                  </div>
+                  </div>}
                 </div>
               ))}
             </div>

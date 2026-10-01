@@ -60,18 +60,22 @@ cp .env.example .env
 
 | Variable | Description | Obtention |
 |----------|-------------|-----------|
-| `PLANTNET_API_KEY` | Identification par photo et diagnostic visuel | https://my.plantnet.org/ |
+| `PLANTNET_API_KEY` | Identification des plantes | https://my.plantnet.org/ |
+| `INSECT_API_KEY` | Identification spécialisée des insectes avec Kindwise Insect.id | https://www.kindwise.com/insect-id |
+| `DISEASE_MODEL_URL` | URL du service local de diagnostic PlantVillage | `http://127.0.0.1:8010` (Compose) |
 | `OPENWEATHER_API_KEY` | Météo pour rappels intelligents | https://openweathermap.org/api |
 | `GOOGLE_MAPS_API_KEY` | Cartographie avancée | https://console.cloud.google.com/apis/credentials |
 | `GOOGLE_TRANSLATE_API_KEY` | Traduction vocale | https://cloud.google.com/translate |
 | `MEDIA_S3_*` | Stockage des photos dans MinIO/S3 | Voir la configuration ci-dessous |
 | `JWT_SECRET` | Authentification sécurisée TERRA | `openssl rand -base64 32` |
 
-Les plantes sont identifiées par Pl@ntNet avec `PLANTNET_API_KEY`. Le mode « Insectes & animaux » classe l’image sur l’appareil avec MobileNet puis rapproche les étiquettes de GBIF via `/api/identify-life`; la photo ne quitte pas le navigateur. MobileNet reconnaît des catégories ImageNet et peut manquer certaines espèces rares ou proches.
+Les plantes sont identifiées par Pl@ntNet avec `PLANTNET_API_KEY`. Le mode « Santé végétale » utilise le modèle ouvert PlantVillage EfficientNet-B4 (licence MIT) servi par le conteneur `plant-disease`; lancez `docker compose up -d plant-disease` et configurez `DISEASE_MODEL_URL`. Il distingue 38 classes pour 14 cultures. Le jeu de données provient surtout d’images contrôlées : il ne couvre pas toutes les cultures ni les conditions réelles des champs, et ses scores ne constituent pas un diagnostic agronomique.
+
+Le mode « Insectes & invertébrés » envoie la photo à l’API Kindwise Insect.id avec `INSECT_API_KEY`, uniquement depuis le serveur TERRA et après un avertissement dans l’interface; la reconnaissance spécialisée nécessite une session connectée et peut consommer les crédits du compte fournisseur. Les autres animaux restent classés localement avec MobileNet puis rapprochés de GBIF via `/api/identify-life`; leur photo ne quitte pas le navigateur. MobileNet reconnaît des catégories ImageNet et peut manquer certaines espèces rares ou proches.
 
 Le calendrier vivant est calculé par pays à partir des observations publiques de la communauté sur 24 mois. Il mesure l’activité de partage et ne constitue pas une prévision de présence des espèces. Le réseau plantes–insectes repère des co-présences publiques dans le temps et l’espace; il ne démontre pas une pollinisation. Les alertes de proximité ne s’appuient que sur les observations publiques géolocalisées des 30 derniers jours et ne signalent pas l’absence d’espèces.
 
-`PLANTNET_API_KEY` est la seule clé indispensable à l’identification botanique spécialisée. Elle est utilisée uniquement par la route serveur `/api/identify` et n'est jamais envoyée au navigateur. Les résultats sont enrichis automatiquement par le référentiel taxonomique ouvert [GBIF](https://www.gbif.org/) (aucune clé nécessaire). Le diagnostic est une aide au triage : confirmez tout traitement, surtout sur une plante alimentaire, auprès d'un professionnel.
+`PLANTNET_API_KEY` reste réservée à l’identification botanique via `/api/identify`. `INSECT_API_KEY` est lue uniquement par le serveur; ne la préfixez pas avec `NEXT_PUBLIC_`. Les résultats taxonomiques peuvent être enrichis par [GBIF](https://www.gbif.org/). Une suggestion de maladie doit être confirmée sur le terrain par un professionnel avant toute intervention.
 
 ### Sons de la nature
 
