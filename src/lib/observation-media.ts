@@ -49,3 +49,34 @@ export async function compressObservationPhoto(file: File): Promise<ObservationP
   return { imageUrl: fullPhoto, thumbnailUrl: await canvasDataUrl(thumbnail, 0.58) };
 }
 
+export async function createVideoPoster(file: File): Promise<ObservationPhotos> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.src = objectUrl;
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
+      video.onerror = () => reject(new Error("Impossible de lire cette vidéo."));
+    });
+    video.currentTime = Math.min(1, Math.max(0, video.duration / 2));
+    await new Promise<void>((resolve, reject) => {
+      video.onseeked = () => resolve();
+      video.onerror = () => reject(new Error("Impossible de créer l’aperçu vidéo."));
+    });
+    const scale = Math.min(1, 1280 / Math.max(video.videoWidth, video.videoHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Impossible de créer l’aperçu vidéo.");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.78));
+    if (!blob) throw new Error("Impossible de préparer l’aperçu vidéo.");
+    return compressObservationPhoto(new File([blob], "terra-video-poster.jpg", { type: "image/jpeg" }));
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}

@@ -4,7 +4,7 @@ import { readStoredImage } from "@/server/media/object-storage";
 async function GETImpl(_request: Request, { params }: { params: Promise<{ key: string[] }> }) {
   const { key: parts } = await params;
   const key = parts.join("/");
-  if (!/^(?:avatars|observations)\/[0-9a-f-]{36}\.(?:jpg|png|webp)$/.test(key)) return NextResponse.json({ error: "Média introuvable." }, { status: 404 });
+  if (!/^(?:avatars|observations)\/[0-9a-f-]{36}\.(?:jpg|png|webp|mp4|webm|mov)$/.test(key)) return NextResponse.json({ error: "Média introuvable." }, { status: 404 });
   try {
     const image = await readStoredImage(key);
     if (!image) return NextResponse.json({ error: "Média introuvable." }, { status: 404 });

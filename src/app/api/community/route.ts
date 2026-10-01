@@ -20,17 +20,24 @@ function safeImageUrl(value: unknown): string | null {
     return value === "" ? "" : null;
   }
 }
+function safeVideoUrl(value: unknown): string | null {
+  if (typeof value !== "string" || value.length > 2048) return null;
+  if (/^\/api\/media\/observations\/[0-9a-f-]{36}\.(?:mp4|webm|mov)$/i.test(value)) return value;
+  try { const url = new URL(value); return url.protocol === "https:" ? url.toString() : null; }
+  catch { return value === "" ? "" : null; }
+}
 async function GETImpl(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const region = searchParams.get("region");
     const group = searchParams.get("group");
+    const q = searchParams.get("q")?.trim().slice(0, 80);
     const limit = Math.min(Math.max(Number(searchParams.get("limit") || 20), 1), 50);
     const validGroup = group && ORGANISM_GROUPS.includes(group as (typeof ORGANISM_GROUPS)[number])
       ? (group as (typeof ORGANISM_GROUPS)[number])
       : undefined;
     const viewerId = await getSessionUserId();
-    const posts = await communityRepository.listPosts({ removed: false, ...(region ? { region } : {}), ...(validGroup ? { organismGroup: validGroup } : {}) }, viewerId, limit);
+    const posts = await communityRepository.listPosts({ removed: false, isEphemeral: false, ...(region ? { region } : {}), ...(validGroup ? { organismGroup: validGroup } : {}), ...(q ? { OR: [{ plantName: { contains: q } }, { scientificName: { contains: q } }, { region: { contains: q } }, { description: { contains: q } }] } : {}) }, viewerId, limit);
     return NextResponse.json({
       count: posts.length,
       data: posts.map((post) => {
@@ -63,14 +70,12 @@ async function POSTImpl(request: Request) {
     const body = JSON.parse(rawBody) as Record<string, unknown>;
     const plantName = typeof body.plantName === "string" ? body.plantName.trim() : "";
     const description = typeof body.description === "string" ? body.description.trim() : "";
-    if (!plantName || !description) {
-      return NextResponse.json({ error: "Ajoutez le nom de l’espèce et une description de l’observation." }, { status: 400 });
-    }
     if (plantName.length > 120 || description.length > 2000) {
       return NextResponse.json({ error: "Le nom ou la description est trop long." }, { status: 400 });
     }
     const imageUrl = safeImageUrl(body.imageUrl);
     const thumbnailUrl = safeImageUrl(body.thumbnailUrl);
+    const videoUrl = safeVideoUrl(body.videoUrl);
     if (!imageUrl || !thumbnailUrl) {
       return NextResponse.json({ error: "Une photo et sa miniature sont nécessaires à cette observation." }, { status: 400 });
     }
@@ -113,7 +118,8 @@ async function POSTImpl(request: Request) {
         return NextResponse.json({ error: error instanceof Error ? error.message : "Envoi photo impossible." }, { status: 400 });
       }
     }
-    const post = await communityRepository.createPost({ userId: authorId, plantName, scientificName, imageUrl: storedImageUrl, thumbnailUrl: storedThumbnailUrl, region, description, organismGroup, observedAt, latitude, longitude, locationVisibility, clientSubmissionId });
+    const isEphemeral = body.isEphemeral === true;
+    const post = await communityRepository.createPost({ userId: authorId, plantName: plantName || "Espèce non identifiée", scientificName, imageUrl: storedImageUrl, thumbnailUrl: storedThumbnailUrl, videoUrl: videoUrl || null, isEphemeral, expiresAt: isEphemeral ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null, region, description: description || null, organismGroup, observedAt, latitude, longitude, locationVisibility, clientSubmissionId });
     return NextResponse.json({ observation: { ...post, ...publicCoordinates(post, authorId) } }, { status: 201 });
   } catch (error) {
     console.error("Erreur création observation:", error);

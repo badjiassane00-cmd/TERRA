@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { S3MediaStorageAdapter } from "./s3-storage.adapter";
 
 const MAX_MEDIA_BYTES = 8 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 35 * 1024 * 1024;
 const MIME_EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
+const VIDEO_EXTENSIONS = { "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" } as const;
 type ImageMime = keyof typeof MIME_EXTENSIONS;
 const storage = new S3MediaStorageAdapter();
 
@@ -30,6 +32,20 @@ async function storeImage(value: string, category: "avatars" | "observations" | 
 export async function storePublicImage(value: string, category: "avatars" | "observations"): Promise<string> {
   if (/^https:\/\//i.test(value)) return value;
   const { key } = await storeImage(value, category);
+  return `/api/media/${key}`;
+}
+
+export async function storePublicVideo(file: File, category: "observations" = "observations"): Promise<string> {
+  if (!(file.type in VIDEO_EXTENSIONS)) throw new Error("Utilisez une vidéo MP4, WebM ou MOV.");
+  if (file.size < 1 || file.size > MAX_VIDEO_BYTES) throw new Error("La vidéo doit faire moins de 35 Mo.");
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const isMp4 = file.type === "video/mp4" && bytes.toString("ascii", 4, 8) === "ftyp";
+  const isQuickTime = file.type === "video/quicktime" && bytes.toString("ascii", 4, 8) === "ftyp";
+  const isWebm = file.type === "video/webm" && bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
+  if (!isMp4 && !isQuickTime && !isWebm) throw new Error("Le contenu du fichier vidéo est invalide.");
+  const extension = VIDEO_EXTENSIONS[file.type as keyof typeof VIDEO_EXTENSIONS];
+  const key = `${category}/${randomUUID()}.${extension}`;
+  await storage.put(key, bytes, file.type);
   return `/api/media/${key}`;
 }
 

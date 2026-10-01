@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, Sparkles, ArrowRight, Camera, Upload } from "lucide-react";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismFilter, type OrganismGroup } from "@/types/nature";
-import { compressObservationPhoto, photoLicenseUrl, type ObservationPhotos } from "@/lib/observation-media";
+import { compressObservationPhoto, createVideoPoster, photoLicenseUrl, type ObservationPhotos } from "@/lib/observation-media";
 
 interface CommunityPost {
   id: string;
@@ -23,6 +23,7 @@ interface CommunityPost {
   organismGroup: OrganismGroup;
   scientificName: string;
   imageUrl: string;
+  videoUrl?: string | null;
   region: string;
   likes: number;
   comments: number;
@@ -75,6 +76,7 @@ interface ApiPost {
   organismGroup?: OrganismGroup;
   scientificName: string;
   imageUrl: string;
+  videoUrl?: string | null;
   region: string;
   likes: number;
   comments: number;
@@ -99,11 +101,15 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const router = useRouter();
   const isModerator = currentUserRole === "institution" || currentUserRole === "admin";
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [stories, setStories] = useState<Array<{ id: string; userId: string; user: { name: string; avatarUrl: string | null }; imageUrl: string; videoUrl: string | null; caption: string | null; createdAt: string; expiresAt: string }>>([]);
+  const [activeStory, setActiveStory] = useState<string | null>(null);
   const [newPost, setNewPost] = useState("");
   const [newSpeciesName, setNewSpeciesName] = useState("");
   const [newScientificName, setNewScientificName] = useState("");
   const [newObservedAt, setNewObservedAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [newPhoto, setNewPhoto] = useState<ObservationPhotos | null>(null);
+  const [newVideoUrl, setNewVideoUrl] = useState("");
+  const [publishAsStory, setPublishAsStory] = useState(false);
   const [newLocation, setNewLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationMessage, setLocationMessage] = useState("");
   const [locationVisibility, setLocationVisibility] = useState<"PUBLIC" | "APPROXIMATE" | "PRIVATE">("APPROXIMATE");
@@ -133,6 +139,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             organismGroup: post.organismGroup || "PLANT",
             scientificName: post.scientificName,
             imageUrl: post.imageUrl,
+            videoUrl: post.videoUrl,
             region: post.region,
             likes: post.likes,
             comments: post.comments,
@@ -160,6 +167,15 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     }
   }, []);
 
+  const loadStories = useCallback(async () => {
+    try {
+      const response = await apiFetch("/api/stories", { cache: "no-store" });
+      if (!response.ok) return;
+      const payload = await response.json();
+      setStories(payload.stories || []);
+    } catch { /* Le fil principal reste utilisable si les stories sont indisponibles. */ }
+  }, []);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
@@ -167,6 +183,8 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
         if (saved) setPendingObservations(JSON.parse(saved) as PendingObservation[]);
       } catch { localStorage.removeItem("sununature:pending-observations"); }
       void loadPosts();
+      void loadStories();
+      if (new URLSearchParams(window.location.search).get("compose") === "1") setShowForm(true);
     }, 0);
     const openComposer = (event: Event) => {
       setShowForm(true);
@@ -175,7 +193,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     };
     window.addEventListener("sununature:compose", openComposer);
     return () => { window.clearTimeout(timer); window.removeEventListener("sununature:compose", openComposer); };
-  }, [loadPosts]);
+  }, [loadPosts, loadStories]);
 
   useEffect(() => {
     const synchronize = async () => {
@@ -245,24 +263,23 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     } catch { /* Le compte reste affiché si l’abonnement échoue. */ }
   };
 
+  const requestMediaLocation = (kind: "photo" | "vidéo") => {
+    if (!navigator.geolocation) { setLocationMessage("La géolocalisation n’est pas disponible sur cet appareil."); return; }
+    setLocationMessage("Demande d’autorisation de position…");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => { setNewLocation({ latitude: coords.latitude, longitude: coords.longitude }); setLocationMessage(`Position de la ${kind} ajoutée. Sa visibilité reste approximative par défaut.`); },
+      () => setLocationMessage("Position non ajoutée. Vous pouvez publier sans coordonnées."),
+      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+    );
+  };
+
   const addObservationPhoto = async (file: File) => {
     setPostError(null);
     setPhotoProcessing(true);
     try {
       setNewPhoto(await compressObservationPhoto(file));
-      if (!navigator.geolocation) {
-        setLocationMessage("La géolocalisation n’est pas disponible sur cet appareil.");
-      } else {
-        setLocationMessage("Demande d’autorisation de position…");
-        navigator.geolocation.getCurrentPosition(
-          ({ coords }) => {
-            setNewLocation({ latitude: coords.latitude, longitude: coords.longitude });
-            setLocationMessage("Position de la photo ajoutée. Sa visibilité reste approximative par défaut.");
-          },
-          () => setLocationMessage("Position non ajoutée. Vous pouvez autoriser la géolocalisation ou publier sans coordonnées."),
-          { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
-        );
-      }
+      setNewVideoUrl("");
+      requestMediaLocation("photo");
     } catch (error) {
       setPostError(error instanceof Error ? error.message : "Impossible de charger la photo.");
     } finally {
@@ -270,15 +287,33 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
     }
   };
 
+  const addObservationVideo = async (file: File) => {
+    setPostError(null);
+    if (file.size > 35 * 1024 * 1024) { setPostError("La vidéo doit faire moins de 35 Mo."); return; }
+    setPhotoProcessing(true);
+    try {
+      const poster = await createVideoPoster(file);
+      const form = new FormData(); form.set("file", file);
+      const response = await apiFetch("/api/media/upload", { method: "POST", body: form });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Téléversement de la vidéo impossible.");
+      setNewPhoto(poster); setNewVideoUrl(result.videoUrl); requestMediaLocation("vidéo");
+    } catch (error) { setPostError(error instanceof Error ? error.message : "Impossible de charger la vidéo."); }
+    finally { setPhotoProcessing(false); }
+  };
+
+  const processObservationMedia = (file: File) => file.type.startsWith("video/") ? void addObservationVideo(file) : void addObservationPhoto(file);
+
   const publishPost = async () => {
-    if (!newSpeciesName.trim() || !newPost.trim() || !newPhoto) return;
+    if (!newPhoto) return;
     setPosting(true);
     setPostError(null);
     const clientSubmissionId = crypto.randomUUID();
     const body = {
-      plantName: newSpeciesName.trim(), organismGroup: newOrganismGroup,
+      plantName: newSpeciesName.trim() || "Espèce non identifiée", organismGroup: newOrganismGroup,
       scientificName: newScientificName.trim(), imageUrl: newPhoto.imageUrl,
-      thumbnailUrl: newPhoto.thumbnailUrl, region: newRegion, description: newPost,
+      thumbnailUrl: newPhoto.thumbnailUrl, videoUrl: newVideoUrl || null, region: newRegion, description: newPost,
+      isEphemeral: publishAsStory,
       observedAt: newObservedAt, latitude: newLocation?.latitude ?? null,
       longitude: newLocation?.longitude ?? null, locationVisibility, clientSubmissionId,
     };
@@ -288,7 +323,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       try { localStorage.setItem("sununature:pending-observations", JSON.stringify(queue)); }
       catch { return false; }
       setPendingObservations(queue);
-      setNewPost(""); setNewSpeciesName(""); setNewScientificName(""); setNewPhoto(null); setNewLocation(null); setLocationMessage("");
+      setNewPost(""); setNewSpeciesName(""); setNewScientificName(""); setNewPhoto(null); setNewVideoUrl(""); setNewLocation(null); setLocationMessage(""); setPublishAsStory(false);
       setNewObservedAt(new Date().toISOString().slice(0, 10)); setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
       setShowForm(false);
       return true;
@@ -300,11 +335,11 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Publication impossible pour le moment.");
       setNewPost(""); setNewSpeciesName(""); setNewScientificName("");
-      setNewObservedAt(new Date().toISOString().slice(0, 10)); setNewPhoto(null); setNewLocation(null); setLocationMessage("");
+      setNewObservedAt(new Date().toISOString().slice(0, 10)); setNewPhoto(null); setNewVideoUrl(""); setNewLocation(null); setLocationMessage(""); setPublishAsStory(false);
       setLocationVisibility("APPROXIMATE"); setNewOrganismGroup("PLANT"); setNewRegion("");
       setShowForm(false);
       window.dispatchEvent(new CustomEvent("sununature:observation-published", { detail: { organismGroup: newOrganismGroup } }));
-      await loadPosts();
+      await Promise.all([loadPosts(), loadStories()]);
     } catch (error) {
       if (!navigator.onLine || error instanceof TypeError) {
         const saved = queueOffline();
@@ -369,17 +404,25 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
         </button>
       </div>
 
+      <section className="nature-stories-strip" aria-label="Publications éphémères de 24 heures">
+        <button type="button" className="nature-story-add" onClick={() => { setPublishAsStory(true); setShowForm(true); }}><span>＋</span><small>Ma story · 24 h</small></button>
+        {stories.map((story) => <button type="button" className="nature-story-person" key={story.id} onClick={() => setActiveStory(story.id)}><span>{story.imageUrl ? <Image src={story.imageUrl} alt="" width={58} height={58} unoptimized /> : <span>✳</span>}</span><small>{story.user.name}</small></button>)}
+      </section>
+
+      {activeStory && (() => { const story = stories.find((item) => item.id === activeStory); return story ? <div className="nature-story-viewer" role="dialog" aria-modal="true" aria-label={`Story de ${story.user.name}`} onClick={() => setActiveStory(null)}><button type="button" aria-label="Fermer la story" onClick={() => setActiveStory(null)}><X size={20} /></button><div onClick={(event) => event.stopPropagation()}>{story.videoUrl ? <video src={story.videoUrl} poster={story.imageUrl} controls autoPlay playsInline /> : <Image src={story.imageUrl} alt={`Story de ${story.user.name}`} width={900} height={1200} unoptimized />}<strong>{story.user.name}</strong>{story.caption && <p>{story.caption}</p>}<small>Expire dans 24 h</small></div></div> : null; })()}
+
       {showForm && (
         <div className="mb-6 p-4 bg-paper border border-border rounded-lg">
           <div className="mb-3">
-            <p className="observation-field-label">Commencez par votre photo</p>
+            <p className="observation-field-label">Ajoutez une photo ou une vidéo (35 Mo max)</p>
             <div className="flex flex-wrap gap-2">
-              <label className="herbarium-button herbarium-button-primary cursor-pointer"><Camera size={16} /> Prendre une photo<input type="file" accept="image/*" capture="environment" className="sr-only" disabled={photoProcessing} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void addObservationPhoto(file); }} /></label>
-              <label className="herbarium-button cursor-pointer"><Upload size={16} /> Télécharger une photo<input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={photoProcessing} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void addObservationPhoto(file); }} /></label>
+              <label className="herbarium-button herbarium-button-primary cursor-pointer"><Camera size={16} /> Prendre une photo ou vidéo<input type="file" accept="image/*,video/*" capture="environment" className="sr-only" disabled={photoProcessing} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) processObservationMedia(file); }} /></label>
+              <label className="herbarium-button cursor-pointer"><Upload size={16} /> Choisir une photo<input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={photoProcessing} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void addObservationPhoto(file); }} /></label>
+              <label className="herbarium-button cursor-pointer"><Upload size={16} /> Choisir une vidéo<input type="file" accept="video/mp4,video/webm,video/quicktime" className="sr-only" disabled={photoProcessing} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void addObservationVideo(file); }} /></label>
             </div>
-            {photoProcessing && <p className="mt-2 text-xs text-foreground/60" role="status">Préparation de la photo…</p>}
+            {photoProcessing && <p className="mt-2 text-xs text-foreground/60" role="status">Préparation du média…</p>}
           </div>
-          {newPhoto && <div className="observation-photo-preview"><Image src={newPhoto.thumbnailUrl} alt="Aperçu de l’observation" width={480} height={320} unoptimized /><button type="button" aria-label="Retirer la photo" onClick={() => { setNewPhoto(null); setNewLocation(null); setLocationMessage(""); }}><X size={16} /></button></div>}
+          {newPhoto && <div className="observation-photo-preview">{newVideoUrl ? <video src={newVideoUrl} poster={newPhoto.thumbnailUrl} controls playsInline /> : <Image src={newPhoto.imageUrl} alt="Aperçu complet de l’observation" width={1280} height={900} unoptimized />}<button type="button" aria-label="Retirer le média" onClick={() => { setNewPhoto(null); setNewVideoUrl(""); setNewLocation(null); setLocationMessage(""); }}><X size={16} /></button></div>}
           <label className="observation-field-label">Type d’être vivant
             <select value={newOrganismGroup} onChange={(event) => setNewOrganismGroup(event.target.value as OrganismGroup)} className="herbarium-input mb-3" aria-label="Type d’être vivant">
               {ORGANISM_GROUPS.map((group) => <option key={group} value={group}>{ORGANISM_LABELS[group]}</option>)}
@@ -388,15 +431,15 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
           <label className="observation-field-label">Date de l’observation
             <input type="date" value={newObservedAt} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setNewObservedAt(event.target.value)} className="herbarium-input mb-3" />
           </label>
-          <input value={newRegion} onChange={(event) => setNewRegion(event.target.value)} placeholder="Pays, région ou lieu dans le monde" className="herbarium-input mb-3" aria-label="Pays, région ou lieu" maxLength={120} required />
+          <input value={newRegion} onChange={(event) => setNewRegion(event.target.value)} placeholder="Pays, région ou lieu (facultatif)" className="herbarium-input mb-3" aria-label="Pays, région ou lieu" maxLength={120} />
           <input
             value={newSpeciesName}
             onChange={(e) => setNewSpeciesName(e.target.value)}
-            placeholder="Espèce observée (plante, insecte, oiseau…)"
+            placeholder="Espèce observée (facultatif)"
             className="herbarium-input mb-3"
             maxLength={120}
           />
-          <input value={newScientificName} onChange={(event) => setNewScientificName(event.target.value)} placeholder="Nom scientifique (si vous le connaissez)" className="herbarium-input mb-3" maxLength={180} />
+          <input value={newScientificName} onChange={(event) => setNewScientificName(event.target.value)} placeholder="Nom scientifique (facultatif)" className="herbarium-input mb-3" maxLength={180} />
           <div className="observation-location-row"><button type="button" className="herbarium-button" onClick={() => {
             if (!navigator.geolocation) { setLocationMessage("La géolocalisation n’est pas disponible sur cet appareil."); return; }
             setLocationMessage("Recherche de la position…");
@@ -406,22 +449,25 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
           <textarea
             value={newPost}
             onChange={(e) => setNewPost(e.target.value)}
-            placeholder="Racontez le lieu, le comportement ou ce qui vous a marqué…"
+            placeholder="Racontez le lieu ou le comportement (facultatif)…"
             className="herbarium-input mb-3"
             rows={3}
           />
           {postError && <p className="mb-3 text-sm text-terracotta" role="alert">{postError}</p>}
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-between gap-2">
+            <button type="button" onClick={() => setPublishAsStory((value) => !value)} className={`herbarium-button ${publishAsStory ? "herbarium-button-primary" : ""}`}>{publishAsStory ? "Story activée · 24 h" : "Partager en story · 24 h"}</button>
+            <div className="flex gap-2">
             <button onClick={() => { setShowForm(false); setPostError(null); }} className="herbarium-button">
               Annuler
             </button>
             <button
               onClick={publishPost}
-              disabled={posting || photoProcessing || !newPhoto || !newSpeciesName.trim() || !newPost.trim()}
+              disabled={posting || photoProcessing || !newPhoto}
               className="herbarium-button herbarium-button-primary disabled:opacity-50"
             >
-              {photoProcessing ? "Préparation de la photo…" : posting ? "Publication..." : "Publier l’observation"}
+              {photoProcessing ? "Préparation…" : posting ? "Publication..." : publishAsStory ? "Partager pour 24 h" : "Publier l’observation"}
             </button>
+            </div>
           </div>
         </div>
       )}
@@ -448,8 +494,10 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
           >
             <div className="nature-post-header"><Link href={`/profile/${post.userId}`} className="nature-profile-avatar">{post.user.avatarUrl ? <Image src={post.user.avatarUrl} alt={`Photo de ${post.user.name}`} width={39} height={39} unoptimized /> : post.user.name.slice(0, 1).toUpperCase()}</Link><Link href={`/profile/${post.userId}`} className="nature-post-author"><strong>{post.user.name}</strong><span>{post.user.isDemo ? "Compte fictif · démonstration" : post.user.institution || "Naturaliste"} · {formatTimeAgo(post.timestamp)}</span></Link>{currentUserId && currentUserId !== post.userId && <button className={`nature-follow-button ${post.following ? "following" : ""}`} onClick={() => void toggleFollow(post.userId)}>{post.following ? "Abonné·e" : "Suivre"}</button>}<span className="nature-post-group-label">{ORGANISM_LABELS[post.organismGroup]}</span></div>
             <div className={`${post.imageUrl ? "nature-post-photo" : "nature-post-photo empty"} bg-gradient-to-br from-primary/10 to-accent/10 relative`}>
-              {post.imageUrl ? (
-                <Link href={`/observations/${post.id}`} aria-label={`Voir ${post.plantName}`}><Image src={post.imageUrl} alt={post.plantName} width={960} height={960} unoptimized className="w-full h-full object-cover" /></Link>
+              {post.videoUrl ? (
+                <video src={post.videoUrl} poster={post.imageUrl} controls playsInline preload="metadata" aria-label={`Vidéo de ${post.plantName}`} />
+              ) : post.imageUrl ? (
+                <Link href={`/observations/${post.id}`} aria-label={`Voir ${post.plantName}`}><Image src={post.imageUrl} alt={post.plantName} width={1280} height={960} unoptimized className="w-full h-full object-contain" /></Link>
               ) : (
                 <div className="flex min-h-28 items-center justify-center gap-3 px-5 text-primary/70">
                   <Leaf className="h-7 w-7" />

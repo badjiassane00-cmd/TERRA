@@ -12,6 +12,14 @@ export const communityRepository = {
       },
     });
   },
+  listStories(viewerId: string | null, take = 40) {
+    const viewer = viewerId || "__anonymous__";
+    return prisma.communityPost.findMany({
+      where: { removed: false, isEphemeral: true, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: "asc" }, take,
+      include: { user: { select: { id: true, name: true, avatarUrl: true } }, postLikes: { where: { userId: viewer }, select: { id: true } } },
+    });
+  },
   findForEcology(since: Date, region?: string) {
     return prisma.communityPost.findMany({ where: { removed: false, locationVisibility: "PUBLIC", observedAt: { gte: since }, ...(region ? { region: { contains: region } } : {}) }, select: { plantName: true, scientificName: true, organismGroup: true, region: true, observedAt: true, latitude: true, longitude: true }, orderBy: { observedAt: "desc" }, take: 2500 });
   },

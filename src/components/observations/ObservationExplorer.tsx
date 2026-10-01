@@ -17,6 +17,7 @@ type Observation = {
   scientificName: string;
   organismGroup: OrganismGroup;
   imageUrl: string;
+  videoUrl?: string | null;
   region: string;
   description: string | null;
   observedAt: string | null;
@@ -59,6 +60,12 @@ export default function ObservationExplorer() {
       setLoading(false);
     }
   }, [group, search, source]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = params.get("q") || params.get("species");
+    if (initialQuery) { setSearch(initialQuery); setSource("TERRA"); }
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void loadObservations(); }, 0);
@@ -115,7 +122,7 @@ export default function ObservationExplorer() {
       {!loading && !error && visible.length === 0 && <div className="observation-empty"><span>🌱</span><h2>Le carnet attend votre regard.</h2><p>Aucune observation ne correspond encore à ces filtres.</p><Link href="/connexion">Partager la première <ArrowRight size={16} /></Link></div>}
       {!loading && visible.length > 0 && view !== "map" && <div className={`observation-card-grid ${view === "list" ? "list-view" : ""}`}>
         {visible.map((observation) => <Link className="explorer-observation-card" href={`/observations/${observation.id}`} key={observation.id}>
-          <div className="explorer-observation-photo"><Image fill sizes="(max-width: 650px) 100vw, 33vw" unoptimized src={observation.imageUrl} alt={observation.plantName} /><span>{ORGANISM_LABELS[observation.organismGroup]}</span></div>
+          <div className="explorer-observation-photo">{observation.videoUrl ? <video src={observation.videoUrl} poster={observation.imageUrl} controls playsInline preload="metadata" /> : <Image fill sizes="(max-width: 650px) 100vw, 33vw" unoptimized src={observation.imageUrl} alt={observation.plantName} />}<span>{ORGANISM_LABELS[observation.organismGroup]}</span></div>
           <div className="explorer-observation-copy"><div className="explorer-observation-meta"><span><MapPin size={13} />{observation.region}</span><span><CalendarDays size={13} />{observation.observedAt ? new Date(observation.observedAt).toLocaleDateString("fr-FR") : "Récemment"}</span></div><h2>{observation.plantName}</h2>{observation.scientificName && <p className="explorer-scientific-name">{observation.scientificName}</p>}<p className="explorer-observation-description">{observation.description}</p><span className="explorer-observer">Observé par <strong>{observation.user.name}</strong></span>{observation.source === "iNaturalist" && <small className="observation-photo-credit">iNaturalist · {observation.photoAttribution}{observation.photoLicense ? ` · ${observation.photoLicense}` : ""}</small>}</div>
         </Link>)}
       </div>}

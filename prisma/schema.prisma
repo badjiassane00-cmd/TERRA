@@ -192,6 +192,9 @@ model CommunityPost {
   scientificName String
   imageUrl      String @db.LongText
   thumbnailUrl  String? @db.LongText
+  videoUrl      String? @db.VarChar(2048)
+  isEphemeral   Boolean @default(false)
+  expiresAt     DateTime?
   region        String
   description   String? @db.Text
   organismGroup OrganismGroup @default(PLANT)
@@ -217,6 +220,7 @@ model CommunityPost {
   updatedAt     DateTime  @updatedAt
 
   @@map("community_posts")
+  @@index([isEphemeral, expiresAt, createdAt])
 }
 
 model GamificationProfile {
@@ -406,6 +410,7 @@ model CatalogEntry {
   scientificName String?
   group          OrganismGroup @default(PLANT)
   imageUrl       String? @db.VarChar(2048)
+  videoUrl       String? @db.VarChar(2048)
   note           String? @db.Text
   position       Int           @default(0)
   createdAt      DateTime      @default(now())
@@ -422,6 +427,7 @@ model ExhibitionItem {
   plant        Plant      @relation(fields: [plantId], references: [id], onDelete: Cascade)
   note         String?
   imageUrl     String?    @db.VarChar(2048)
+  videoUrl     String?    @db.VarChar(2048)
   position     Int        @default(0)
   addedAt      DateTime   @default(now())
 
@@ -454,12 +460,16 @@ model CommunityComment {
   postId String
   userId String
   body String @db.Text
+  replyToId String?
+  replyTo CommunityComment? @relation("CommentReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies CommunityComment[] @relation("CommentReplies")
   isDemo Boolean @default(false)
   post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@index([postId, createdAt])
+  @@index([replyToId])
   @@map("community_comments")
 }
 
