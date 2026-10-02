@@ -10,6 +10,7 @@ interface LifeCandidate {
 }
 
 type GeminiAttempt = { candidates: LifeCandidate[] } | { error: unknown };
+type BioClipAttempt = Awaited<ReturnType<typeof bioClipIdentificationAdapter.identify>> | { error: unknown };
 
 async function attemptGemini(image: File, group: GeminiLifeGroup): Promise<GeminiAttempt> {
   try {
@@ -19,8 +20,12 @@ async function attemptGemini(image: File, group: GeminiLifeGroup): Promise<Gemin
   }
 }
 
-function bioClipIsConfigured() {
-  return Boolean(process.env.BIOCLIP_API_URL || process.env.BIOCLIP_URL);
+async function attemptBioClip(image: File, group: GeminiLifeGroup): Promise<BioClipAttempt> {
+  try {
+    return await bioClipIdentificationAdapter.identify(image, group as BioClipGroup);
+  } catch (error) {
+    return { error };
+  }
 }
 
 function errorMessage(error: unknown) {
@@ -28,30 +33,29 @@ function errorMessage(error: unknown) {
 }
 
 export async function identifyLifeSpecies(image: File, group: GeminiLifeGroup) {
-  if (!process.env.GEMINI_API_KEY) {
-    const candidates = await bioClipIdentificationAdapter.identify(image, group as BioClipGroup);
-    return { provider: "BioCLIP" as const, candidates };
+  // TERRA's own open model is the primary provider; Gemini is the fallback.
+  const bioClipAttempt = await attemptBioClip(image, group);
+  if (!("error" in bioClipAttempt) && bioClipAttempt.candidates.length > 0) {
+    return bioClipAttempt;
   }
 
-  const attempt = await attemptGemini(image, group);
-  if ("candidates" in attempt && attempt.candidates.length > 0) {
-    return { provider: "Gemini" as const, candidates: attempt.candidates };
+  const geminiAttempt = await attemptGemini(image, group);
+  if ("candidates" in geminiAttempt && geminiAttempt.candidates.length > 0) {
+    return { provider: "Gemini" as const, candidates: geminiAttempt.candidates };
   }
-  if (!bioClipIsConfigured()) {
-    if ("error" in attempt) throw attempt.error;
-    return { provider: "Gemini" as const, candidates: attempt.candidates };
-  }
-
-  try {
-    const candidates = await bioClipIdentificationAdapter.identify(image, group as BioClipGroup);
-    return { provider: "BioCLIP" as const, candidates };
-  } catch (fallbackError) {
-    if ("error" in attempt) {
+  if ("error" in geminiAttempt) {
+    if ("error" in bioClipAttempt) {
       throw new ApiError(
-        `Gemini a échoué (${errorMessage(attempt.error)}) et BioCLIP est indisponible (${errorMessage(fallbackError)}).`,
+        `BioCLIP a échoué (${errorMessage(bioClipAttempt.error)}) et Gemini est indisponible (${errorMessage(geminiAttempt.error)}).`,
         503,
       );
     }
-    throw fallbackError;
+    throw geminiAttempt.error;
   }
+
+  if ("error" in bioClipAttempt) {
+    throw new ApiError(`BioCLIP est indisponible (${errorMessage(bioClipAttempt.error)}) et Gemini n’a trouvé aucune piste.`, 503);
+  }
+
+  return { provider: "Gemini" as const, candidates: geminiAttempt.candidates };
 }
