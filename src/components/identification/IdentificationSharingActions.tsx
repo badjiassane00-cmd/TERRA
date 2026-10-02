@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Copy, Globe2, Share2 } from "lucide-react";
+import { Check, Copy, Globe2, MessageCircle, Share2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { compressObservationPhoto } from "@/lib/observation-media";
 
@@ -190,6 +190,9 @@ export default function IdentificationSharingActions({
           <button type="button" onClick={() => void sharePublishedUrl()} className="herbarium-button">
             <Copy size={16} /> Partager le lien
           </button>
+          <a className="herbarium-button" target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${summary} ${publishedUrl}`)}`}>
+            <MessageCircle size={16} /> WhatsApp
+          </a>
         </output>
       )}
       {notice && <output className="mt-3 flex items-center gap-2 text-sm text-primary" aria-live="polite"><Check size={15} />{notice}</output>}

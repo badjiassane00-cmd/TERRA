@@ -10,6 +10,7 @@ import ProfileFollowButton from "@/components/profile/ProfileFollowButton";
 import ProfileShareButton from "@/components/profile/ProfileShareButton";
 import ProfileAvatarEditor from "@/components/profile/ProfileAvatarEditor";
 import ProfileLogoutButton from "@/components/profile/ProfileLogoutButton";
+import ReportAction from "@/components/community/ReportAction";
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -46,6 +47,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <ProfileShareButton displayName={profile.name} />
             {viewerId === profile.id && <ProfileLogoutButton />}
             {viewerId !== profile.id && <ProfileFollowButton userId={profile.id} initialFollowing={isFollowing} signedIn={!!viewerId} />}
+            {viewerId !== profile.id && <ReportAction targetType="USER" targetId={profile.id} label="Signaler le profil" />}
           </div>
           <p>{profile.isDemo ? "Compte fictif · galerie de démonstration" : profile.institution || "Naturaliste de la communauté"}</p>
           <div className="nature-profile-stats">

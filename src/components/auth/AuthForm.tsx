@@ -4,7 +4,7 @@ import { apiFetch } from "@/lib/api-client";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Eye, EyeOff, Leaf, LockKeyhole, Mail, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Leaf, LockKeyhole, Mail, Phone, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 
 type AuthMode = "login" | "signup";
 
@@ -12,6 +12,9 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [signupMethod, setSignupMethod] = useState<"email" | "phone">("email");
+  const [loginIdentifier, setLoginIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
@@ -28,7 +31,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
       const response = await apiFetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: mode, name, email, password, remember }),
+        body: JSON.stringify({ action: mode, name, email: isSignup && signupMethod === "email" ? email : "", phoneNumber: isSignup && signupMethod === "phone" ? phoneNumber : "", identifier: isSignup ? (signupMethod === "email" ? email : phoneNumber) : loginIdentifier, password, remember }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Connexion impossible pour le moment.");
@@ -66,7 +69,13 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
           {error && <div className="auth-error" role="alert">{error}</div>}
           <form className="auth-fields" onSubmit={handleSubmit}>
             {isSignup && <label>Votre nom<div className="auth-input-wrap"><UserRound size={17} /><input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Awa Ndiaye" required /></div></label>}
-            <label>Adresse e-mail<div className="auth-input-wrap"><Mail size={17} /><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="awa@exemple.com" required /></div></label>
+            {isSignup ? <>
+              <div className="flex gap-2" role="group" aria-label="Méthode d’inscription">
+                <button type="button" aria-pressed={signupMethod === "email"} onClick={() => setSignupMethod("email")} className={`border px-3 py-2 text-sm ${signupMethod === "email" ? "border-primary bg-primary/10 text-primary-dark" : "border-border text-foreground/65"}`}><Mail size={15} className="mr-2 inline" />E-mail</button>
+                <button type="button" aria-pressed={signupMethod === "phone"} onClick={() => setSignupMethod("phone")} className={`border px-3 py-2 text-sm ${signupMethod === "phone" ? "border-primary bg-primary/10 text-primary-dark" : "border-border text-foreground/65"}`}><Phone size={15} className="mr-2 inline" />Téléphone</button>
+              </div>
+              {signupMethod === "email" ? <label>Adresse e-mail<div className="auth-input-wrap"><Mail size={17} /><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="awa@exemple.com" required /></div></label> : <label>Numéro international<div className="auth-input-wrap"><Phone size={17} /><input type="tel" inputMode="tel" autoComplete="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder="+221 77 000 00 00" required /></div><small className="mt-1 block text-xs text-foreground/55">Format international avec indicatif pays. La connexion utilise un mot de passe.</small></label>}
+            </> : <label>E-mail ou numéro de téléphone<div className="auth-input-wrap"><UserRound size={17} /><input autoComplete="username" value={loginIdentifier} onChange={(event) => setLoginIdentifier(event.target.value)} placeholder="awa@exemple.com ou +221…" required /></div></label>}
             <label>Mot de passe<div className="auth-input-wrap"><LockKeyhole size={17} /><input type={showPassword ? "text" : "password"} autoComplete={isSignup ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={isSignup ? "8 caractères minimum" : "Votre mot de passe"} minLength={isSignup ? 8 : undefined} required /><button className="auth-password-toggle" type="button" aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>
             {!isSignup && <div className="auth-remember"><label><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} /> Se souvenir de moi</label><span><ShieldCheck size={14} /> Session sécurisée</span></div>}
             <button className="auth-submit" type="submit" disabled={pending}>{pending ? "Un instant…" : isSignup ? "Créer mon compte" : "Me connecter"}<ArrowRight size={17} /></button>

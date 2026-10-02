@@ -16,6 +16,7 @@ model User {
   bio           String?   @db.Text
   avatarUrl     String?   @db.LongText
   phoneNumber   String?
+  authPhone     String?   @unique @db.VarChar(20)
   notifyEmail   Boolean   @default(false)
   notifySms     Boolean   @default(false)
   notifyWhatsApp Boolean  @default(false)

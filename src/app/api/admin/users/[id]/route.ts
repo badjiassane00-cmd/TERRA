@@ -20,3 +20,22 @@ async function DELETEImpl(_request: Request, { params }: { params: Promise<{ id:
 }
 
 export const DELETE = withApiErrors(DELETEImpl);
+
+async function PATCHImpl(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await requireAdmin(await getSessionUserId());
+  if (!admin) return NextResponse.json({ error: "Accès réservé à l’administration." }, { status: 403 });
+  if (admin.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Seul le super-admin peut modifier les rôles." }, { status: 403 });
+  const { id } = await params;
+  if (id === admin.id) return NextResponse.json({ error: "Vous ne pouvez pas modifier votre propre rôle." }, { status: 400 });
+  const body = await request.json() as { role?: unknown };
+  if (body.role !== "USER" && body.role !== "ADMIN" && body.role !== "INSTITUTION") {
+    return NextResponse.json({ error: "Rôle invalide." }, { status: 400 });
+  }
+  const target = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } });
+  if (!target) return NextResponse.json({ error: "Compte introuvable." }, { status: 404 });
+  if (target.role === "SUPER_ADMIN") return NextResponse.json({ error: "Le rôle super-admin est réservé au compte configuré côté serveur." }, { status: 403 });
+  const user = await prisma.user.update({ where: { id }, data: { role: body.role }, select: { id: true, name: true, role: true, createdAt: true } });
+  return NextResponse.json({ user });
+}
+
+export const PATCH = withApiErrors(PATCHImpl);

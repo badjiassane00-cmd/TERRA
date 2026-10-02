@@ -19,15 +19,15 @@ async function GETImpl() {
     prisma.communityReport.groupBy({ by: ["reason"], _count: { _all: true }, orderBy: { _count: { reason: "desc" } } }),
     prisma.communityPost.findFirst({ where: { removed: false }, orderBy: [{ likes: "desc" }, { createdAt: "desc" }], select: { id: true, plantName: true, likes: true, user: { select: { id: true, name: true } } } }),
     prisma.user.findFirst({ where: { isDemo: false }, orderBy: { followers: { _count: "desc" } }, select: { id: true, name: true, role: true, _count: { select: { followers: true } } } }),
-    prisma.user.findMany({ where: { isDemo: false }, orderBy: { createdAt: "desc" }, take: 30, select: { id: true, name: true, email: true, role: true, createdAt: true } }),
-    prisma.communityReport.findMany({ orderBy: { createdAt: "desc" }, take: 40, include: { reporter: { select: { id: true, name: true, email: true } } } }),
+    prisma.user.findMany({ where: { isDemo: false }, orderBy: { createdAt: "desc" }, take: 30, select: { id: true, name: true, role: true, createdAt: true } }),
+    prisma.communityReport.findMany({ orderBy: { createdAt: "desc" }, take: 40, include: { reporter: { select: { id: true, name: true } } } }),
   ]);
 
   const postIds = reports.filter((report) => report.targetType === "POST").map((report) => report.targetId);
   const userIds = reports.filter((report) => report.targetType === "USER").map((report) => report.targetId);
   const [reportedPosts, reportedUsers] = await Promise.all([
     postIds.length ? prisma.communityPost.findMany({ where: { id: { in: postIds } }, select: { id: true, plantName: true, removed: true, user: { select: { name: true } } } }) : [],
-    userIds.length ? prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true, role: true } }) : [],
+    userIds.length ? prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, role: true } }) : [],
   ]);
   const postById = new Map(reportedPosts.map((post) => [post.id, post]));
   const userById = new Map(reportedUsers.map((user) => [user.id, user]));

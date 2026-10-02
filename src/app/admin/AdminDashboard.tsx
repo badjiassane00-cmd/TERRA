@@ -6,10 +6,10 @@ import { apiFetch } from "@/lib/api-client";
 
 type Report = {
   id: string; targetType: "POST" | "USER"; targetId: string; reason: string; details: string | null;
-  status: "OPEN" | "REVIEWED" | "DISMISSED"; createdAt: string; reporter: { name: string; email: string };
-  target: { name?: string; email?: string; plantName?: string; removed?: boolean; user?: { name: string }; role?: string } | null;
+  status: "OPEN" | "REVIEWED" | "DISMISSED"; createdAt: string; reporter: { name: string };
+  target: { name?: string; plantName?: string; removed?: boolean; user?: { name: string }; role?: string } | null;
 };
-type AdminUser = { id: string; name: string; email: string; role: "USER" | "INSTITUTION" | "ADMIN" | "SUPER_ADMIN"; createdAt: string };
+type AdminUser = { id: string; name: string; role: "USER" | "INSTITUTION" | "ADMIN" | "SUPER_ADMIN"; createdAt: string };
 type AdminData = {
   adminRole: "ADMIN" | "SUPER_ADMIN";
   adminId: string;
@@ -84,6 +84,20 @@ export default function AdminDashboard() {
     }
   }
 
+  async function updateRole(userId: string, role: "USER" | "ADMIN" | "INSTITUTION") {
+    setBusyId(userId);
+    try {
+      const response = await apiFetch(`/api/admin/users/${userId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Modification du rôle impossible.");
+      await load();
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : "Modification du rôle impossible.");
+    } finally {
+      setBusyId("");
+    }
+  }
+
   if (loading) return <main className="mx-auto w-full max-w-7xl px-5 py-12" aria-live="polite">Chargement du tableau de bord…</main>;
   if (!data) return <main className="mx-auto w-full max-w-7xl px-5 py-12"><p role="alert" className="text-terracotta">{error || "Données indisponibles."}</p></main>;
 
@@ -127,13 +141,13 @@ export default function AdminDashboard() {
     {view === "reports" && <section><div className="mb-4 flex items-baseline justify-between gap-3"><h2 className="font-serif text-2xl">File de modération</h2><span className="text-sm text-foreground/60">{data.reports.length} récents</span></div>
       {data.reports.length === 0 ? <p className="border-y border-border py-8 text-sm text-foreground/60">Aucun signalement à examiner.</p> : <div className="divide-y divide-border border-y border-border">{data.reports.map((report) => <article key={report.id} className="grid gap-4 py-5 lg:grid-cols-[1fr_auto]">
         <div><div className="flex flex-wrap items-center gap-2"><span className="text-xs font-semibold uppercase text-primary-dark">{report.targetType === "POST" ? "Publication" : "Compte"}</span><span className="text-xs text-foreground/45">·</span><span className="text-xs">{new Date(report.createdAt).toLocaleString("fr-FR")}</span><span className={`ml-1 border px-2 py-1 text-xs ${report.status === "OPEN" ? "border-terracotta/50 text-terracotta" : "border-border text-foreground/60"}`}>{STATUS_LABEL[report.status]}</span></div>
-        <p className="mt-2 font-medium">{report.target?.plantName || report.target?.name || "Cible supprimée"}</p><p className="mt-1 text-sm text-foreground/65">{REASON_LABEL[report.reason] || report.reason}{report.target?.user?.name ? ` · publié par ${report.target.user.name}` : ""}</p>{report.details && <p className="mt-2 max-w-3xl whitespace-pre-wrap text-sm">{report.details}</p>}<p className="mt-2 text-xs text-foreground/50">Signalé par {report.reporter.name} · {report.reporter.email}</p></div>
+        <p className="mt-2 font-medium">{report.target?.plantName || report.target?.name || "Cible supprimée"}</p><p className="mt-1 text-sm text-foreground/65">{REASON_LABEL[report.reason] || report.reason}{report.target?.user?.name ? ` · publié par ${report.target.user.name}` : ""}</p>{report.details && <p className="mt-2 max-w-3xl whitespace-pre-wrap text-sm">{report.details}</p>}<p className="mt-2 text-xs text-foreground/50">Signalé par {report.reporter.name}</p></div>
         <div className="flex flex-wrap items-center gap-2 lg:justify-end"><select aria-label="Statut du signalement" value={report.status} disabled={busyId === report.id} onChange={(event) => void updateReport(report.id, event.target.value as Report["status"])} className="border border-border bg-card-bg px-2 py-2 text-xs">{reportStatuses.map((status) => <option key={status} value={status}>{STATUS_LABEL[status]}</option>)}</select>{report.target && <button type="button" disabled={busyId === report.targetId || (report.targetType === "USER" && report.target.role !== "USER" && report.target.role !== "INSTITUTION" && data.adminRole !== "SUPER_ADMIN")} onClick={() => void removeTarget(report.targetType, report.targetId, report.targetType === "POST" ? "cette publication" : "ce compte")} title="Supprimer la cible" aria-label="Supprimer la cible" className="inline-flex h-9 w-9 items-center justify-center border border-terracotta/30 text-terracotta disabled:opacity-40"><Trash2 size={15} /></button>}</div>
       </article>)}</div>}
     </section>}
 
     {view === "accounts" && <section><div className="mb-4 flex items-baseline justify-between gap-3"><h2 className="font-serif text-2xl">Comptes récents</h2><span className="text-sm text-foreground/60">{stats.userCount + stats.adminCount + stats.superAdminCount + stats.institutionCount} membres</span></div>
-      <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[680px] text-left text-sm"><thead><tr className="border-b border-border text-xs uppercase text-foreground/55"><th className="py-3 pr-4 font-medium">Compte</th><th className="py-3 pr-4 font-medium">Rôle</th><th className="py-3 pr-4 font-medium">Inscription</th><th className="py-3 text-right font-medium">Action</th></tr></thead><tbody>{data.users.map((user) => <tr key={user.id} className="border-b border-border/70 last:border-0"><td className="py-3 pr-4"><strong className="block">{user.name}</strong><span className="text-xs text-foreground/55">{user.email}</span></td><td className="py-3 pr-4">{ROLE_LABEL[user.role]}</td><td className="py-3 pr-4 text-foreground/65">{new Date(user.createdAt).toLocaleDateString("fr-FR")}</td><td className="py-3 text-right"><button type="button" disabled={user.id === data.adminId || busyId === user.id || (user.role !== "USER" && user.role !== "INSTITUTION" && data.adminRole !== "SUPER_ADMIN")} onClick={() => void removeTarget("USER", user.id, `le compte ${user.name}`)} title="Supprimer le compte" aria-label={`Supprimer le compte ${user.name}`} className="inline-flex h-9 w-9 items-center justify-center border border-terracotta/30 text-terracotta disabled:opacity-35"><Trash2 size={15} /></button></td></tr>)}</tbody></table></div>
+      <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[680px] text-left text-sm"><thead><tr className="border-b border-border text-xs uppercase text-foreground/55"><th className="py-3 pr-4 font-medium">Compte</th><th className="py-3 pr-4 font-medium">Rôle</th><th className="py-3 pr-4 font-medium">Inscription</th><th className="py-3 text-right font-medium">Action</th></tr></thead><tbody>{data.users.map((user) => <tr key={user.id} className="border-b border-border/70 last:border-0"><td className="py-3 pr-4"><strong>{user.name}</strong></td><td className="py-3 pr-4">{data.adminRole === "SUPER_ADMIN" && user.role !== "SUPER_ADMIN" ? <select aria-label={`Rôle de ${user.name}`} value={user.role} disabled={busyId === user.id} onChange={(event) => void updateRole(user.id, event.target.value as "USER" | "ADMIN" | "INSTITUTION")} className="border border-border bg-card-bg px-2 py-1">{(["USER", "INSTITUTION", "ADMIN"] as const).map((role) => <option key={role} value={role}>{ROLE_LABEL[role]}</option>)}</select> : ROLE_LABEL[user.role]}</td><td className="py-3 pr-4 text-foreground/65">{new Date(user.createdAt).toLocaleDateString("fr-FR")}</td><td className="py-3 text-right"><button type="button" disabled={user.id === data.adminId || busyId === user.id || (user.role !== "USER" && user.role !== "INSTITUTION" && data.adminRole !== "SUPER_ADMIN")} onClick={() => void removeTarget("USER", user.id, `le compte ${user.name}`)} title="Supprimer le compte" aria-label={`Supprimer le compte ${user.name}`} className="inline-flex h-9 w-9 items-center justify-center border border-terracotta/30 text-terracotta disabled:opacity-35"><Trash2 size={15} /></button></td></tr>)}</tbody></table></div>
     </section>}
     <p className="mt-8 text-xs text-foreground/45">Les comptes fictifs de démonstration sont exclus des statistiques et de la liste de gestion.</p>
   </main>;

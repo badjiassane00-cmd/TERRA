@@ -28,16 +28,18 @@ async function POSTImpl(request: Request) {
   try {
     const body = await request.json();
     const email = typeof body.email === "string" ? body.email.trim() : "";
+    const phoneNumber = typeof body.phoneNumber === "string" ? body.phoneNumber.trim() : "";
+    const identifier = typeof body.identifier === "string" ? body.identifier.trim() : email || phoneNumber;
     const password = typeof body.password === "string" ? body.password : "";
     const action = body.action === "login" ? "login" : "signup";
 
-    if (!email || !/^\S+@\S+\.\S+$/.test(email) || !password) {
-      return NextResponse.json({ error: "Adresse email et mot de passe valides requis" }, { status: 400 });
+    if (!identifier || !password) {
+      return NextResponse.json({ error: "Adresse e-mail ou numéro et mot de passe requis." }, { status: 400 });
     }
 
     const user = action === "login"
-      ? await authService.authenticate(email, password)
-      : await authService.register({ email, password, name: typeof body.name === "string" ? body.name : "" });
+      ? await authService.authenticate(identifier, password)
+      : await authService.register({ email, phoneNumber, password, name: typeof body.name === "string" ? body.name : "" });
 
     return authenticatedResponse(user, action === "signup" || body.remember !== false);
   } catch (error) {
