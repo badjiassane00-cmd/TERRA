@@ -32,6 +32,9 @@ async function POSTImpl(request: Request) {
     description: `Suggestion visuelle ${provider} à confirmer par la communauté naturaliste.`,
   }));
   const result = candidates[0];
+  let sourceProvider = "BioCLIP · Imageomics";
+  if (provider === "Gemini") sourceProvider = "Gemini · Google";
+  else if (provider === "BioCLIP + TERRA") sourceProvider = "BioCLIP · modèle TERRA";
   const userId = await getSessionUserId();
   if (userId && result) {
     await identificationRepository.saveCandidates(
@@ -52,7 +55,7 @@ async function POSTImpl(request: Request) {
       probability: result.probability,
       description: result.description,
       taxonomy: result.taxonomy,
-      sources: { provider: provider === "Gemini" ? "Gemini · Google" : "BioCLIP · Imageomics" },
+      sources: { provider: sourceProvider },
     } : null,
     candidates,
     note: `Identification assistée à vérifier sur le terrain; modèle utilisé : ${provider}.`,

@@ -16,10 +16,15 @@ async function POSTImpl(request: Request) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) throw new ApiError("Utilisez une image JPEG, PNG ou WebP.", 415);
   if (image.size > 10 * 1024 * 1024) throw new ApiError("L’image ne doit pas dépasser 10 Mo.", 413);
 
-  const provider = process.env.GEMINI_API_KEY ? "Gemini" : "BioCLIP";
-  const identified = process.env.GEMINI_API_KEY
-    ? await geminiIdentificationAdapter.identify(image, "insects")
-    : await bioClipIdentificationAdapter.identify(image, "insects");
+  let provider = "Gemini";
+  let identified;
+  if (process.env.GEMINI_API_KEY) {
+    identified = await geminiIdentificationAdapter.identify(image, "insects");
+  } else {
+    const result = await bioClipIdentificationAdapter.identify(image, "insects");
+    provider = result.provider;
+    identified = result.candidates;
+  }
   if (!identified.length) throw new ApiError(`${provider} n’a pas trouvé d’insecte dans cette image. Essayez un cadrage plus rapproché.`, 422);
   const candidates = identified.map((candidate) => ({
     scientific_name: candidate.scientific_name,
@@ -29,6 +34,9 @@ async function POSTImpl(request: Request) {
     description: `Suggestion visuelle ${provider} à confirmer par la communauté naturaliste.`,
   }));
   const result = candidates[0];
+  let sourceProvider = "BioCLIP · Imageomics";
+  if (provider === "Gemini") sourceProvider = "Gemini · Google";
+  else if (provider === "BioCLIP + TERRA") sourceProvider = "BioCLIP · modèle TERRA";
   await identificationRepository.saveCandidates(
     userId,
     result.scientific_name,
@@ -39,7 +47,7 @@ async function POSTImpl(request: Request) {
 
   return NextResponse.json({
     provider,
-    result: { ...result, id: result.scientific_name, sources: { provider: provider === "Gemini" ? "Gemini · Google" : "BioCLIP · Imageomics" } },
+    result: { ...result, id: result.scientific_name, sources: { provider: sourceProvider } },
     candidates,
     note: `Identification assistée à vérifier sur le terrain; modèle utilisé : ${provider}.`,
   });

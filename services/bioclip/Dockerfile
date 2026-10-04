@@ -8,8 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
-      torch==2.13.0 torchvision==0.28.0 \
+    torch==2.13.0 torchvision==0.28.0 \
     && pip install --no-cache-dir -r requirements.txt
 COPY app.py ./app.py
+COPY models ./models
 EXPOSE 8000
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

@@ -8,13 +8,16 @@ export interface BioClipCandidate {
   taxonomy: Record<string, string>;
 }
 
+export type BioClipProvider = "BioCLIP" | "BioCLIP + TERRA";
+
 interface BioClipResponse {
+  provider?: string;
   candidates?: BioClipCandidate[];
 }
 
 /** Server-side adapter to the self-hosted BioCLIP inference service. */
 export const bioClipIdentificationAdapter = {
-  async identify(image: File, group: BioClipGroup): Promise<BioClipCandidate[]> {
+  async identify(image: File, group: BioClipGroup): Promise<{ provider: BioClipProvider; candidates: BioClipCandidate[] }> {
     const baseUrl = process.env.BIOCLIP_API_URL || process.env.BIOCLIP_URL;
     if (!baseUrl) {
       throw new ApiError("BioCLIP n’est pas configuré. Démarrez le service BioCLIP et renseignez BIOCLIP_API_URL.", 503);
@@ -37,6 +40,9 @@ export const bioClipIdentificationAdapter = {
     if (!response.ok) {
       throw new ApiError(payload?.detail || "Le service BioCLIP n’a pas pu analyser cette image.", response.status >= 500 ? 503 : response.status);
     }
-    return Array.isArray(payload?.candidates) ? payload.candidates.slice(0, 5) : [];
+    return {
+      provider: payload?.provider === "BioCLIP + TERRA" ? "BioCLIP + TERRA" : "BioCLIP",
+      candidates: Array.isArray(payload?.candidates) ? payload.candidates.slice(0, 5) : [],
+    };
   },
 };
