@@ -12,4 +12,8 @@ jobs:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
           test -n "$RENDER_DEPLOY_HOOK" || { echo "Secret RENDER_DEPLOY_HOOK manquant"; exit 1; }
-          curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
+          case "$RENDER_DEPLOY_HOOK" in
+            https://api.render.com/deploy/*) ;;
+            *) echo "URL invalide : ce n'est pas un Deploy Hook Render"; exit 1 ;;
+          esac
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK" | head -c 300
