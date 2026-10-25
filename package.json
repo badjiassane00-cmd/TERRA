@@ -21,9 +21,6 @@
     "check:production-env": "node scripts/check-production-env.mjs",
     "smoke:local": "node scripts/smoke-local.mjs"
   },
-  "prisma": {
-    "seed": "tsx prisma/bootstrap-super-admin.ts"
-  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1144.0",
     "@prisma/client": "^6.19.3",
@@ -57,6 +54,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^18.0.9",
     "eslint": "^9",
     "eslint-config-next": "^16.3.8",
     "mysql2": "^3.24.5",
