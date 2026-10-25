@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Copy, Globe2, MessageCircle, Share2 } from "lucide-react";
+import { BookmarkPlus, Check, Copy, Globe2, MessageCircle, Share2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { compressObservationPhoto } from "@/lib/observation-media";
+import { useAppPreferences } from "@/components/preferences/AppPreferences";
 
 interface IdentificationResult {
   id: string;
@@ -59,9 +60,57 @@ export default function IdentificationSharingActions({
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [catalogs, setCatalogs] = useState<Array<{ id: string; title: string }>>([]);
+  const [catalogId, setCatalogId] = useState("");
+  const [savingToCatalog, setSavingToCatalog] = useState(false);
+  const { t } = useAppPreferences();
   const name = result.common_names?.[0] || result.scientific_name;
   const modeName = MODE_NAMES[mode];
   const summary = `${modeName} TERRA : ${name} (${result.scientific_name}), score estimé ${Math.round(result.probability * 100)} %. Piste visuelle à confirmer.`;
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void apiFetch("/api/catalogues", { cache: "no-store" }).then(async (response) => {
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Chargement impossible.");
+      if (!cancelled) {
+        const items = Array.isArray(payload.catalogs) ? payload.catalogs : [];
+        setCatalogs(items.map((item: { id: string; title: string }) => ({ id: item.id, title: item.title })));
+        setCatalogId(items[0]?.id || "");
+      }
+    }).catch(() => { if (!cancelled) setCatalogs([]); });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  async function addIdentificationToCatalog() {
+    if (!catalogId || !userId) return;
+    setSavingToCatalog(true); setError(""); setNotice("");
+    try {
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        const compressed = await compressObservationPhoto(imageFile);
+        const blob = await fetch(compressed.imageUrl).then((response) => response.blob());
+        const photo = new File([blob], "identification.jpg", { type: blob.type || "image/jpeg" });
+        const form = new FormData(); form.set("file", photo);
+        const upload = await apiFetch("/api/media/upload", { method: "POST", body: form });
+        const uploaded = await upload.json();
+        if (!upload.ok) throw new Error(uploaded.error || "Téléversement de la photo impossible.");
+        imageUrl = uploaded.imageUrl || null;
+      }
+      const group = organismGroupForResult(result, mode, lifeTarget);
+      const response = await apiFetch(`/api/catalogues/${catalogId}/entries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, scientificName: result.scientific_name, group, imageUrl, note: `${modeName} TERRA · ${Math.round(result.probability * 100)} % · piste à confirmer` }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Ajout au catalogue impossible.");
+      setNotice(t("Résultat ajouté à votre catalogue.", "Identification added to your catalog."));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Ajout au catalogue impossible.");
+    } finally { setSavingToCatalog(false); }
+  }
 
   async function shareContent(title: string, text: string, url?: string) {
     const nativeShare = Reflect.get(navigator, "share");
@@ -142,24 +191,36 @@ export default function IdentificationSharingActions({
   }
 
   return (
-    <section className="mt-6 border-t border-border pt-5" aria-label="Partager le résultat">
+    <section className="mt-6 border-t border-border pt-5" aria-label={t("Partager le résultat", "Share the result")}>
+      {userId && <div className="mb-5 rounded-xl border border-border p-4">
+        <h3 className="text-sm font-semibold text-foreground">{t("Garder dans un catalogue", "Save to a catalog")}</h3>
+        <p className="mt-1 text-sm text-foreground/70">{t("Ajoutez cette espèce et sa photo à votre collection personnelle.", "Add this species and its photo to your personal collection.")}</p>
+        {catalogs.length ? <div className="mt-3 flex flex-wrap items-center gap-2">
+          <select aria-label={t("Choisir un catalogue", "Choose a catalog")} className="min-h-10 rounded-lg border border-border bg-card-bg px-3 text-sm text-foreground" value={catalogId} onChange={(event) => setCatalogId(event.target.value)}>
+            {catalogs.map((catalog) => <option key={catalog.id} value={catalog.id}>{catalog.title}</option>)}
+          </select>
+          <button type="button" onClick={() => void addIdentificationToCatalog()} disabled={!catalogId || savingToCatalog} className="herbarium-button disabled:opacity-50">
+            <BookmarkPlus size={16} /> {savingToCatalog ? t("Ajout…", "Saving…") : t("Ajouter au catalogue", "Add to catalog")}
+          </button>
+        </div> : <Link href="/catalogues" className="herbarium-button mt-3 inline-flex">{t("Créer un catalogue", "Create a catalog")}</Link>}
+      </div>}
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" onClick={() => void shareSummary()} className="herbarium-button">
-          <Share2 size={16} /> Partager le résumé
+          <Share2 size={16} /> {t("Partager le résumé", "Share summary")}
         </button>
         <p className="text-xs text-foreground/60">Sans publication ni partage de votre position.</p>
       </div>
 
       <div className="mt-5 border-t border-border pt-5">
-        <h3 className="text-sm font-semibold text-foreground">Créer un lien public durable</h3>
-        <p className="mt-1 text-sm text-foreground/70">Une fiche publique avec la photo, le nom et le score. Aucune coordonnée précise ni profil ne sera affiché.{region ? ` La région « ${region} » figurera sur l’observation.` : ""}</p>
+        <h3 className="text-sm font-semibold text-foreground">{t("Publier une fiche publique", "Publish a public record")}</h3>
+        <p className="mt-1 text-sm text-foreground/70">{t("Une fiche publique avec la photo, le nom et le score. Aucune coordonnée précise ni profil ne sera affiché.", "A public record with the photo, name, and score. Your precise coordinates and profile will not be shown.")}{region ? ` ${t("La région", "Region")} « ${region} » ${t("figurera sur l’observation.", "will appear on the observation.")}` : ""}</p>
         {!userId && (
           <Link href="/connexion?next=%2Fidentifier" className="herbarium-button mt-3 inline-flex">
-            Se connecter pour publier
+            {t("Se connecter pour publier", "Sign in to publish")}
           </Link>
         )}
         {userId && !imageFile && (
-          <p className="mt-3 text-sm text-foreground/60">Une photo est nécessaire pour créer une fiche partageable.</p>
+          <p className="mt-3 text-sm text-foreground/60">{t("Une photo est nécessaire pour créer une fiche partageable.", "A photo is required to publish a shareable record.")}</p>
         )}
         {userId && imageFile && (
           <>
@@ -170,7 +231,7 @@ export default function IdentificationSharingActions({
                 onChange={(event) => setConfirmedPublic(event.target.checked)}
                 className="mt-1 accent-primary"
               />
-              <span>Je confirme que cette photo et ce résultat seront accessibles publiquement et pourront apparaître dans le flux des observations{region ? ` avec la région « ${region} »` : ""}.</span>
+              <span>{t("Je confirme que cette photo et ce résultat seront accessibles publiquement et pourront apparaître dans le flux des observations", "I confirm that this photo and result will be public and may appear in the observations feed")}{region ? ` ${t("avec la région", "with region")} « ${region} »` : ""}.</span>
             </label>
             <button
               type="button"
@@ -178,7 +239,7 @@ export default function IdentificationSharingActions({
               disabled={!confirmedPublic || publishing}
               className="herbarium-button herbarium-button-primary mt-3 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Globe2 size={16} /> {publishing ? "Publication…" : "Créer la fiche publique"}
+              <Globe2 size={16} /> {publishing ? t("Publication…", "Publishing…") : t("Créer la fiche publique", "Publish record")}
             </button>
           </>
         )}

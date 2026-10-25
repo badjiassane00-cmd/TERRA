@@ -37,4 +37,7 @@ services:
       - key: GEMINI_FALLBACK_MODEL
         value: gemini-3.7-flash
       - key: BIOCLIP_API_URL
-        sync: false
+        fromService:
+          type: pserv
+          name: terra-bioclip
+          property: hostport

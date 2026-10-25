@@ -21,10 +21,10 @@ inference_lock = Lock()
 
 
 @app.on_event("startup")
-def load_classifier():
+def load_classifier(device: str = "cpu"):
     global classifier, taxa_masks, trained_head
     torch.set_num_threads(max(1, min(4, os.cpu_count() or 1)))
-    classifier = TreeOfLifeClassifier(model_str=MODEL_NAME, device="cpu")
+    classifier = TreeOfLifeClassifier(model_str=MODEL_NAME, device=device)
     labels = classifier.get_label_data()
     kingdom = labels["kingdom"].fillna("").str.casefold()
     phylum = labels["phylum"].fillna("").str.casefold()
@@ -38,7 +38,7 @@ def load_classifier():
     }
     if HEAD_PATH.is_file():
         try:
-            checkpoint = torch.load(HEAD_PATH, map_location="cpu", weights_only=True)
+            checkpoint = torch.load(HEAD_PATH, map_location=device, weights_only=True)
             if checkpoint.get("model_name") != MODEL_NAME:
                 raise ValueError("L’artefact a été entraîné avec une autre version de BioCLIP.")
             class_names = checkpoint["class_names"]
@@ -58,7 +58,7 @@ def load_classifier():
             trained_head = {
                 "class_names": class_names,
                 "class_groups": class_groups,
-                "label_indices": torch.as_tensor(mapped_indices, dtype=torch.long),
+                "label_indices": torch.as_tensor(mapped_indices, dtype=torch.long, device=device),
                 "weights": weights,
                 "bias": bias,
                 "min_confidence": float(checkpoint.get("min_confidence", 1.1)),
@@ -81,22 +81,7 @@ def health():
     }
 
 
-@app.post("/identify")
-async def identify(
-    image: UploadFile = File(...),
-    group: str = Query("animals", pattern="^(plants|insects|animals|fish|all)$"),
-):
-    if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
-        raise HTTPException(status_code=415, detail="Utilisez une image JPEG, PNG ou WebP.")
-    data = await image.read(MAX_IMAGE_BYTES + 1)
-    if len(data) > MAX_IMAGE_BYTES:
-        raise HTTPException(status_code=413, detail="L’image dépasse 10 Mo.")
-    try:
-        with Image.open(io.BytesIO(data)) as opened:
-            source = ImageOps.exif_transpose(opened).convert("RGB")
-    except (UnidentifiedImageError, OSError):
-        raise HTTPException(status_code=400, detail="Image illisible.") from None
-
+def identify_image(source: Image.Image, group: str):
     if classifier is None:
         raise HTTPException(status_code=503, detail="BioCLIP est en cours de chargement.")
 
@@ -115,7 +100,7 @@ async def identify(
                 }[group]
                 allowed_positions = [index for index, class_group in enumerate(trained_head["class_groups"]) if class_group in allowed_groups]
                 if allowed_positions and image_features.numel() == trained_head["weights"].shape[1]:
-                    head_positions = torch.as_tensor(allowed_positions, dtype=torch.long)
+                    head_positions = torch.as_tensor(allowed_positions, dtype=torch.long, device=image_features.device)
                     logits = torch.nn.functional.linear(
                         image_features.flatten().unsqueeze(0),
                         trained_head["weights"][head_positions],
@@ -161,3 +146,22 @@ async def identify(
             break
     provider = "BioCLIP + TERRA" if used_trained_head else "BioCLIP"
     return {"provider": provider, "model": MODEL_NAME, "candidates": candidates}
+
+
+@app.post("/identify")
+async def identify(
+    image: UploadFile = File(...),
+    group: str = Query("animals", pattern="^(plants|insects|animals|fish|all)$"),
+):
+    if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+        raise HTTPException(status_code=415, detail="Utilisez une image JPEG, PNG ou WebP.")
+    data = await image.read(MAX_IMAGE_BYTES + 1)
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="L’image dépasse 10 Mo.")
+    try:
+        with Image.open(io.BytesIO(data)) as opened:
+            source = ImageOps.exif_transpose(opened).convert("RGB")
+    except (UnidentifiedImageError, OSError):
+        raise HTTPException(status_code=400, detail="Image illisible.") from None
+
+    return identify_image(source, group)

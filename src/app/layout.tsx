@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import NatureAppHeader from "@/components/navigation/NatureAppHeader";
 import { getSessionUser } from "@/lib/session";
+import { AppPreferences } from "@/components/preferences/AppPreferences";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,8 +48,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background">
-        <NatureAppHeader user={user ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl, role: user.role } : null} />
-        {children}
+        <AppPreferences>
+          <NatureAppHeader user={user ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl, role: user.role } : null} />
+          {children}
+        </AppPreferences>
       </body>
     </html>
   );

@@ -680,6 +680,31 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 @media(max-width:680px){.nature-app-header nav>a.nature-notification-bell{flex-basis:40px;width:40px;height:40px}.nature-app-header nav{align-items:center}}
 @media(prefers-reduced-motion:reduce){.nature-app-header nav>a.nature-notification-bell{transition:none}}
 
+.app-preferences-content{display:flex;min-height:100vh;flex:1;flex-direction:column}
+.app-preference-controls{position:fixed;top:7px;right:10px;z-index:200;display:flex;gap:5px}
+.app-preference-controls button{display:flex;min-height:27px;align-items:center;justify-content:center;gap:4px;border:1px solid #dce8dc;border-radius:999px;background:#fff;color:#34523b;padding:3px 8px;font:700 10px var(--font-geist-sans),Arial,sans-serif;cursor:pointer;box-shadow:0 2px 8px #18271e12}
+.app-preference-controls button:hover{background:#eef6ec}
+.app-preference-controls button:focus-visible{outline:3px solid #71b879;outline-offset:2px}
+@media(max-width:680px){.app-preference-controls{top:auto;right:8px;bottom:10px}.app-preference-controls button{min-height:35px;padding:5px 9px;box-shadow:0 2px 12px #0002}}
+
+:root[data-theme="dark"]{color-scheme:dark;--background:#101813;--foreground:#e2eae2;--card-bg:#1b261f;--border:#35463a;--paper:#17221b;--paper-dark:#202d23;--primary:#80c58a;--primary-dark:#83c891}
+:root[data-theme="dark"] body{background:#101813;color:#e2eae2}
+:root[data-theme="dark"] .nature-identifier-page,:root[data-theme="dark"] .observations-explorer,:root[data-theme="dark"] .personal-catalog-page,:root[data-theme="dark"] .nature-profile-page{background:#101813;color:#e2eae2}
+:root[data-theme="dark"] .nature-app-header{border-color:#35463a;background:#151f19f2;color:#e2eae2}
+:root[data-theme="dark"] .nature-app-header .nature-identifier-brand,:root[data-theme="dark"] .nature-app-header nav>a{color:#c5d9c8}
+:root[data-theme="dark"] .nature-app-header nav>a.active,:root[data-theme="dark"] .nature-app-header nav>a:hover{border-color:#3f6247;background:#233629;color:#b4e4b9}
+:root[data-theme="dark"] .app-preference-controls button{border-color:#405346;background:#1d2a21;color:#e1ede1}
+:root[data-theme="dark"] .nature-mode-selector>button,:root[data-theme="dark"] .nature-identification-result,:root[data-theme="dark"] .nature-identifier-side>*,:root[data-theme="dark"] .nature-identify-side-card,:root[data-theme="dark"] .nature-history-item,:root[data-theme="dark"] .nature-identifier-login,:root[data-theme="dark"] .nature-field-session,:root[data-theme="dark"] .nature-immersive-tools,:root[data-theme="dark"] .nature-ai-contribution,
+:root[data-theme="dark"] .observation-explorer-toolbar,:root[data-theme="dark"] .explorer-observation-card,:root[data-theme="dark"] .observation-empty,:root[data-theme="dark"] .observation-explorer-error,
+:root[data-theme="dark"] .personal-catalog-panel,:root[data-theme="dark"] .personal-catalog-card,:root[data-theme="dark"] .personal-catalog-empty{border-color:#35463a;background:#1b261f;color:#e2eae2}
+:root[data-theme="dark"] .nature-identifier-side .nature-daily-quest,:root[data-theme="dark"] .personal-catalog-card-select,:root[data-theme="dark"] .personal-catalog-entry,:root[data-theme="dark"] .personal-catalog-library-media{background:#202d23;color:#dce8dc}
+:root[data-theme="dark"] .nature-identifier-page h1,:root[data-theme="dark"] .nature-identifier-page h2,:root[data-theme="dark"] .nature-identifier-page h3,:root[data-theme="dark"] .nature-identifier-page p,
+:root[data-theme="dark"] .personal-catalog-page h1,:root[data-theme="dark"] .personal-catalog-page h2,:root[data-theme="dark"] .personal-catalog-page h3,:root[data-theme="dark"] .personal-catalog-page p,
+:root[data-theme="dark"] .observations-explorer h1,:root[data-theme="dark"] .observations-explorer h2,:root[data-theme="dark"] .observations-explorer h3,:root[data-theme="dark"] .observations-explorer p{color:inherit}
+:root[data-theme="dark"] .personal-catalog-page input,:root[data-theme="dark"] .personal-catalog-page textarea,:root[data-theme="dark"] .personal-catalog-page select,:root[data-theme="dark"] .observation-search input,:root[data-theme="dark"] .observation-select-wrap select{border-color:#405346;background:#142019;color:#e2eae2}
+:root[data-theme="dark"] .herbarium-card,:root[data-theme="dark"] .herbarium-label{background:#1b261f;color:#dce8dc}
+:root[data-theme="dark"] .nature-identifier-error,:root[data-theme="dark"] .personal-catalog-error{background:#38231f;color:#ffc7b5}
+
 .nature-profile-follow-error{margin:7px 0;color:#a34739;font-size:11px}
 
 /* TERRA media and social search improvements */

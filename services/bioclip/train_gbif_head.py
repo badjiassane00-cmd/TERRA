@@ -139,45 +139,48 @@ def collect(args: argparse.Namespace) -> None:
         temporary_path.write_text(json.dumps(checkpoint), encoding="utf-8")
         os.replace(temporary_path, checkpoint_path)
 
-    for kingdom in KINGDOMS:
-        start_page = int(checkpoint["next_page"].get(kingdom, 0))
-        if start_page >= args.pages_per_kingdom:
-            print(f"GBIF kingdom already scanned: {kingdom} ({start_page} pages)", flush=True)
-            continue
-        print(f"Scanning GBIF kingdom: {kingdom} from page {start_page + 1}", flush=True)
-        for page in range(start_page, args.pages_per_kingdom):
-            offset = page * args.page_size
-            query = urllib.parse.urlencode({
+    if args.skip_scan:
+        print("Skipping GBIF scan; using the existing media cache.", flush=True)
+    else:
+        for kingdom in KINGDOMS:
+            start_page = int(checkpoint["next_page"].get(kingdom, 0))
+            if start_page >= args.pages_per_kingdom:
+                print(f"GBIF kingdom already scanned: {kingdom} ({start_page} pages)", flush=True)
+                continue
+            print(f"Scanning GBIF kingdom: {kingdom} from page {start_page + 1}", flush=True)
+            for page in range(start_page, args.pages_per_kingdom):
+                offset = page * args.page_size
+                query = urllib.parse.urlencode({
                 "kingdom": kingdom,
                 "mediaType": "StillImage",
                 "occurrenceStatus": "PRESENT",
                 "limit": args.page_size,
                 "offset": offset,
             })
-            payload = request_json(f"{GBIF_OCCURRENCE_URL}?{query}")
-            occurrences = payload.get("results") or []
-            if not occurrences:
-                checkpoint["next_page"][kingdom] = args.pages_per_kingdom
-                save_checkpoint()
-                break
-            page_media: list[dict[str, str]] = []
-            for occurrence in occurrences:
-                if str(occurrence.get("taxonRank") or "").upper() != "SPECIES":
-                    continue
-                if str(occurrence.get("taxonomicStatus") or "ACCEPTED").upper() != "ACCEPTED":
-                    continue
-                scientific_name = str(occurrence.get("species") or "").strip()
-                species_key = occurrence.get("speciesKey")
-                group = group_for_record(occurrence)
-                if not scientific_name or not species_key or not group:
-                    continue
-                key = (group, str(species_key), scientific_name)
-                for media in open_media(occurrence):
-                    url = media["identifier"]
-                    if url in seen_urls:
+                payload = request_json(f"{GBIF_OCCURRENCE_URL}?{query}")
+                occurrences = payload.get("results") or []
+                if not occurrences:
+                    checkpoint["next_page"][kingdom] = args.pages_per_kingdom
+                    save_checkpoint()
+                    break
+                page_media: list[dict[str, str]] = []
+                for occurrence in occurrences:
+                    if str(occurrence.get("taxonRank") or "").upper() != "SPECIES":
                         continue
-                    seen_urls.add(url)
-                    media_item = {
+                    if str(occurrence.get("taxonomicStatus") or "ACCEPTED").upper() != "ACCEPTED":
+                        continue
+                    scientific_name = str(occurrence.get("species") or "").strip()
+                    species_key = occurrence.get("speciesKey")
+                    group = group_for_record(occurrence)
+                    if not scientific_name or not species_key or not group:
+                        continue
+                    key = (group, str(species_key), scientific_name)
+                    for media in open_media(occurrence):
+                        url = media["identifier"]
+                        if url in seen_urls:
+                            continue
+                        seen_urls.add(url)
+                        media_item = {
                         "group": group,
                         "species_key": str(species_key),
                         "scientific_name": scientific_name,
@@ -188,22 +191,22 @@ def collect(args: argparse.Namespace) -> None:
                         "occurrence_id": str(occurrence.get("key") or ""),
                         "publisher": str(occurrence.get("publishingOrgKey") or ""),
                     }
-                    page_media.append(media_item)
-                    records[key].append({field: media_item[field] for field in (
+                        page_media.append(media_item)
+                        records[key].append({field: media_item[field] for field in (
                         "url", "license", "creator", "rights_holder", "occurrence_id", "publisher",
                     )})
-                    counts[key] += 1
-            if page_media:
-                with media_cache_path.open("a", encoding="utf-8") as media_cache:
-                    for media_item in page_media:
-                        media_cache.write(json.dumps(media_item, ensure_ascii=True) + "\n")
-                    media_cache.flush()
-                    os.fsync(media_cache.fileno())
-            checkpoint["next_page"][kingdom] = page + 1
-            save_checkpoint()
-            time.sleep(args.delay)
-            if (page + 1) % 10 == 0:
-                print(f"  {page + 1}/{args.pages_per_kingdom} pages", flush=True)
+                        counts[key] += 1
+                if page_media:
+                    with media_cache_path.open("a", encoding="utf-8") as media_cache:
+                        for media_item in page_media:
+                            media_cache.write(json.dumps(media_item, ensure_ascii=True) + "\n")
+                        media_cache.flush()
+                        os.fsync(media_cache.fileno())
+                checkpoint["next_page"][kingdom] = page + 1
+                save_checkpoint()
+                time.sleep(args.delay)
+                if (page + 1) % 10 == 0:
+                    print(f"  {page + 1}/{args.pages_per_kingdom} pages", flush=True)
 
     eligible_by_group: dict[str, list[tuple[tuple[str, str, str], int]]] = defaultdict(list)
     for key, count in counts.items():
@@ -448,6 +451,7 @@ def parse_args() -> argparse.Namespace:
     collect_parser = commands.add_parser("collect", help="Collect open-licensed GBIF species images")
     collect_parser.add_argument("--workdir", type=Path, default=Path("/content/terra-gbif"))
     collect_parser.add_argument("--pages-per-kingdom", type=int, default=200)
+    collect_parser.add_argument("--skip-scan", action="store_true", help="Build the image manifest from the existing GBIF media cache without scanning GBIF again")
     collect_parser.add_argument("--page-size", type=int, default=300)
     collect_parser.add_argument("--min-images", type=int, default=20)
     collect_parser.add_argument("--max-images", type=int, default=30)
