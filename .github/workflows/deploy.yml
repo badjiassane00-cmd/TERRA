@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy Render
 
 on:
   workflow_dispatch:
@@ -7,15 +7,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: supabase/setup-cli@v1
+      - name: Trigger Render deploy
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          version: latest
-
-      - name: Deploy
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy --project-ref zhojtrbxwqntadymazfk
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          test -n "$RENDER_DEPLOY_HOOK" || { echo "Secret RENDER_DEPLOY_HOOK manquant"; exit 1; }
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
