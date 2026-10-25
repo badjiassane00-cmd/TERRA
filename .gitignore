@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Local MinIO AIStor license
 /minio.license
+TERRA/
