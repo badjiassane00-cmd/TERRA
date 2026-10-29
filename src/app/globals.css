@@ -1132,3 +1132,20 @@ small{font-size:max(12px,.9em)!important;line-height:1.45}
 .explorer-observation-photo img,.explorer-observation-photo video,.observation-detail-image,.observation-photo-preview img,.observation-map-popup img,.species-featured-photo img,.species-detail-visual>img,.species-image-gallery figure>a img,.personal-catalog-media-gallery img,.personal-catalog-media-gallery video,.nature-profile-tile img{object-fit:contain!important}
 .species-featured-photo,.species-detail-visual,.species-image-gallery figure>a,.personal-catalog-media-gallery,.nature-profile-tile{background:#edf2e9}
 :root[data-theme="dark"] .species-featured-photo,:root[data-theme="dark"] .species-detail-visual,:root[data-theme="dark"] .species-image-gallery figure>a,:root[data-theme="dark"] .personal-catalog-media-gallery,:root[data-theme="dark"] .nature-profile-tile{background:#17231b}
+
+/* Same image frame size, with each original photo fitted inside it. */
+.nature-post-photo{position:relative;aspect-ratio:4/3!important;height:auto!important;max-height:none!important;overflow:hidden}
+.nature-post-photo>a{position:absolute;inset:0;display:flex;width:100%;height:100%!important;align-items:center;justify-content:center}
+.nature-post-photo img,.nature-post-photo video{display:block;width:100%!important;height:100%!important;max-height:100%!important;object-fit:contain!important;transform:none!important}
+.species-featured-photo{height:auto!important;aspect-ratio:4/3;overflow:hidden}
+.species-featured-photo img{width:100%;height:100%;object-fit:contain!important;object-position:center}
+.nature-post-detail-toggles{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.nature-post-detail-toggles>button{display:inline-flex;min-height:44px;align-items:center;gap:8px;border:1px solid #dce8d8;border-radius:10px;background:#f7faf5;padding:8px 12px;color:#3e6847;font-size:13px;font-weight:750;text-align:left;cursor:pointer}
+.nature-post-detail-toggles>button:hover,.nature-post-detail-toggles>button[aria-expanded="true"]{border-color:#a9cba2;background:#edf5e9}
+.nature-detail-status{border-radius:999px;padding:4px 7px;font-size:11px;font-weight:700}
+.nature-detail-status.confirmed{background:#e4f1e4;color:#33764b}.nature-detail-status.pending{background:#f8f0df;color:#987138}
+.nature-observation-record-heading>button,.nature-field-insight-heading>button{display:grid;width:36px;height:36px;flex:0 0 auto;place-items:center;border:1px solid #dce8d8;border-radius:8px;background:#fff;color:#526c55;cursor:pointer}
+.nature-field-insight-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+:root[data-theme="dark"] .nature-post-detail-toggles>button{border-color:#405346;background:#1d2a21;color:#d0e3d0}
+:root[data-theme="dark"] .nature-post-detail-toggles>button:hover,:root[data-theme="dark"] .nature-post-detail-toggles>button[aria-expanded="true"]{border-color:#648e69;background:#263b2b}
+:root[data-theme="dark"] .nature-observation-record-heading>button,:root[data-theme="dark"] .nature-field-insight-heading>button{border-color:#405346;background:#1d2a21;color:#d0e3d0}

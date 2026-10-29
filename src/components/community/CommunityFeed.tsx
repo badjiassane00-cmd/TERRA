@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, Sparkles, ArrowRight, Camera, Upload } from "lucide-react";
+import { Heart, MessageCircle, Share2, MapPin, Leaf, BadgeCheck, ShieldAlert, Trash2, X, LocateFixed, Sparkles, ArrowRight, Camera, Upload, ChevronDown, ChevronUp } from "lucide-react";
 import { ORGANISM_GROUPS, ORGANISM_LABELS, type OrganismFilter, type OrganismGroup } from "@/types/nature";
 import { compressObservationPhoto, createVideoPoster, photoLicenseUrl, type ObservationPhotos } from "@/lib/observation-media";
 import ReportAction from "@/components/community/ReportAction";
@@ -121,7 +121,15 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [posting, setPosting] = useState(false);
   const [pendingObservations, setPendingObservations] = useState<PendingObservation[]>([]);
   const [shareNotice, setShareNotice] = useState<{ postId: string; message: string } | null>(null);
+  const [expandedPostDetails, setExpandedPostDetails] = useState<Record<string, { record: boolean; guidance: boolean }>>({});
   const [now] = useState(() => Date.now());
+
+  const togglePostDetail = (postId: string, section: "record" | "guidance") => {
+    setExpandedPostDetails((current) => {
+      const currentPost = current[postId] || { record: false, guidance: false };
+      return { ...current, [postId]: { ...currentPost, [section]: !currentPost[section] } };
+    });
+  };
 
   const loadPosts = useCallback(async () => {
     try {
@@ -505,8 +513,16 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
               {post.verified && <div className="flex items-center gap-1.5 mb-2 text-xs text-primary"><BadgeCheck className="w-3.5 h-3.5" />Identification certifiée{post.verifiedBy ? ` par ${post.verifiedBy}` : ""}</div>}
               <div className="nature-observation-caption"><Link href={`/profile/${post.userId}`}><strong>{post.user.name}</strong></Link> <Link href={`/observations/${post.id}`}><strong>{post.plantName}</strong></Link> <span className="nature-caption-group">{ORGANISM_LABELS[post.organismGroup]}</span>{post.description && <span> — {post.description}</span>}</div>
               {post.scientificName && <p className="text-sm text-foreground/60 italic mb-2">{post.scientificName}</p>}
-              <aside className="nature-observation-record">
-                <div className="nature-observation-record-heading"><span><Leaf size={14}/> CARNET DE TERRAIN</span><span className={post.verified ? "confirmed" : "pending"}>{post.verified ? "Identifiée" : "À confirmer"}</span></div>
+              <div className="nature-post-detail-toggles">
+                <button type="button" aria-expanded={expandedPostDetails[post.id]?.record || false} aria-controls={`nature-field-record-${post.id}`} onClick={() => togglePostDetail(post.id, "record")}>
+                  <Leaf size={15} /><span>Carnet de terrain</span><span className={`nature-detail-status ${post.verified ? "confirmed" : "pending"}`}>{post.verified ? "Identifiée" : "À confirmer"}</span>{expandedPostDetails[post.id]?.record ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                <button type="button" aria-expanded={expandedPostDetails[post.id]?.guidance || false} aria-controls={`nature-field-guidance-${post.id}`} onClick={() => togglePostDetail(post.id, "guidance")}>
+                  <Sparkles size={15} /><span>Conseil de terrain</span>{expandedPostDetails[post.id]?.guidance ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+              </div>
+              {expandedPostDetails[post.id]?.record && <aside id={`nature-field-record-${post.id}`} className="nature-observation-record">
+                <div className="nature-observation-record-heading"><span><Leaf size={14}/> CARNET DE TERRAIN</span><button type="button" aria-label="Fermer le carnet de terrain" onClick={() => togglePostDetail(post.id, "record")}><X size={16} /></button></div>
                 <div className="nature-observation-record-grid">
                   <div><small>GROUPE DU VIVANT</small><strong>{ORGANISM_LABELS[post.organismGroup]}</strong></div>
                   <div><small>TERRITOIRE</small><strong>{post.region}</strong></div>
@@ -514,8 +530,11 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
                   <div><small>IDENTIFICATION</small><strong>{post.verified ? "Confirmée par la communauté" : "Proposez un nom local ou scientifique"}</strong></div>
                 </div>
                 <Link href={`/observations/${post.id}#identification`}>Compléter cette fiche naturaliste <ArrowRight size={13}/></Link>
-              </aside>
-              <aside className="nature-field-insight"><span><Sparkles size={13} /> CONSEIL DE TERRAIN · {ORGANISM_LABELS[post.organismGroup].toLocaleUpperCase("fr")}</span><strong>{FIELD_GUIDANCE[post.organismGroup].title}</strong><p>{FIELD_GUIDANCE[post.organismGroup].text}</p><Link href={`/observations/${post.id}`} aria-label={`En savoir plus sur ${post.plantName}`}>Ouvrir la fiche terrain <ArrowRight size={13} /></Link></aside>
+              </aside>}
+              {expandedPostDetails[post.id]?.guidance && <aside id={`nature-field-guidance-${post.id}`} className="nature-field-insight">
+                <div className="nature-field-insight-heading"><span><Sparkles size={13} /> CONSEIL DE TERRAIN · {ORGANISM_LABELS[post.organismGroup].toLocaleUpperCase("fr")}</span><button type="button" aria-label="Fermer le conseil de terrain" onClick={() => togglePostDetail(post.id, "guidance")}><X size={16} /></button></div>
+                <strong>{FIELD_GUIDANCE[post.organismGroup].title}</strong><p>{FIELD_GUIDANCE[post.organismGroup].text}</p><Link href={`/observations/${post.id}`} aria-label={`En savoir plus sur ${post.plantName}`}>Ouvrir la fiche terrain <ArrowRight size={13} /></Link>
+              </aside>}
               <Link href={`/observations/${post.id}`} className="nature-detail-link">Explorer la fiche naturaliste <Share2 size={13} /></Link>
 
               {(isModerator || currentUserId === post.userId) && (
