@@ -31,10 +31,10 @@ type Observation = {
   photoLicense?: string | null;
 };
 
-export default function ObservationExplorer({ isAuthenticated, initialQuery }: Readonly<{ isAuthenticated: boolean; initialQuery: string }>) {
+export default function ObservationExplorer({ isAuthenticated, initialQuery, initialSource }: Readonly<{ isAuthenticated: boolean; initialQuery: string; initialSource?: "iNaturalist" | "TERRA" }>) {
   const [observations, setObservations] = useState<Observation[]>([]);
   const [group, setGroup] = useState("ALL");
-  const [source, setSource] = useState<"iNaturalist" | "TERRA">(initialQuery && isAuthenticated ? "TERRA" : "iNaturalist");
+  const [source, setSource] = useState<"iNaturalist" | "TERRA">(initialSource === "TERRA" && isAuthenticated ? "TERRA" : initialSource === "iNaturalist" ? "iNaturalist" : initialQuery && isAuthenticated ? "TERRA" : "iNaturalist");
   const [region, setRegion] = useState("ALL");
   const [search, setSearch] = useState(initialQuery);
   const [view, setView] = useState<"grid" | "list" | "map">("grid");

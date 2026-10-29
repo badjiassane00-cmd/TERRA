@@ -23,11 +23,12 @@ const SECTIONS = [
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
 
-export default async function ExplorerPage({ searchParams }: { searchParams: Promise<{ section?: string | string[]; q?: string | string[]; publier?: string | string[] }> }) {
+export default async function ExplorerPage({ searchParams }: { searchParams: Promise<{ section?: string | string[]; q?: string | string[]; publier?: string | string[]; source?: string | string[] }> }) {
   const params = await searchParams;
   const requestedSection = Array.isArray(params.section) ? params.section[0] : params.section;
   const section: SectionId = SECTIONS.some((item) => item.id === requestedSection) ? requestedSection as SectionId : "fil";
   const requestedQuery = Array.isArray(params.q) ? params.q[0] : params.q;
+  const requestedSource = Array.isArray(params.source) ? params.source[0] : params.source;
   const openComposer = Array.isArray(params.publier) ? params.publier[0] === "1" : params.publier === "1";
   const initialQuery = requestedQuery || "";
   const user = await getSessionUser();
@@ -54,7 +55,7 @@ export default async function ExplorerPage({ searchParams }: { searchParams: Pro
       <div className="nature-explorer-feed-wrap"><CommunityFeed currentUserId={user?.id} currentUserRole={role} initialComposerOpen={openComposer} /></div>
     </>}
 
-    {section === "observations" && <ObservationExplorer isAuthenticated={Boolean(user)} initialQuery={initialQuery} />}
+    {section === "observations" && <ObservationExplorer isAuthenticated={Boolean(user)} initialQuery={initialQuery} initialSource={requestedSource === "iNaturalist" || requestedSource === "TERRA" ? requestedSource : undefined} />}
 
     {section === "galerie" && user && <section className="community-hub-gallery">
       <header><div><span>VOS RENCONTRES DOCUMENTÉES</span><h2>Ma galerie naturaliste</h2><p>Les observations que vous avez publiées dans la communauté TERRA.</p></div><Link href={`/profile/${user.id}`}>Gérer mon profil</Link></header>

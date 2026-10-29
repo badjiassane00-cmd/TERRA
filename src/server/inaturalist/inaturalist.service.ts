@@ -47,8 +47,13 @@ function locationOf(observation: INaturalistRawObservation) {
   return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : { latitude: null, longitude: null };
 }
 
-function photosOf(observation: INaturalistRawObservation) {
-  const photo = observation.photos?.[0] ?? observation.observation_photos?.[0]?.photo;
+const REUSABLE_PHOTO_LICENSES = new Set(["cc0", "cc-by", "cc-by-sa"]);
+
+function photosOf(observation: INaturalistRawObservation, reusableOnly = false) {
+  const photos = [...(observation.photos || []), ...(observation.observation_photos || []).map((item) => item.photo).filter((photo): photo is INaturalistPhoto => Boolean(photo))];
+  const photo = reusableOnly
+    ? photos.find((item) => REUSABLE_PHOTO_LICENSES.has(item.license_code?.toLowerCase() || ""))
+    : photos[0];
   const url = photo?.url?.replace(/square\.(jpg|jpeg|png|webp)/i, "medium.$1") ?? "";
   return {
     imageUrl: url,
@@ -71,8 +76,8 @@ function groupOf(name?: string): OrganismGroup {
   }
 }
 
-function toPublicObservation(observation: INaturalistRawObservation) {
-  const photo = photosOf(observation);
+function toPublicObservation(observation: INaturalistRawObservation, reusablePhotoOnly = false) {
+  const photo = photosOf(observation, reusablePhotoOnly);
   const location = locationOf(observation);
   return {
     id: String(observation.id),
@@ -114,18 +119,21 @@ async function apiGet<T>(path: string): Promise<T> {
 }
 
 export const inaturalistService = {
-  async list(options: { page: number; perPage: number; group?: OrganismGroup; query?: string }) {
+  async list(options: { page: number; perPage: number; group?: OrganismGroup; query?: string; taxonName?: string }) {
     const params = new URLSearchParams({
       photos: "true", order_by: "observed_on", order: "desc",
-      quality_grade: "research,needs_id", page: String(options.page), per_page: String(options.perPage),
+      quality_grade: options.taxonName ? "research" : "research,needs_id", page: String(options.page), per_page: String(options.perPage),
     });
     const taxon = options.group ? TAXON_BY_GROUP[options.group] : undefined;
     if (taxon) params.set("taxon_name", taxon);
-    if (options.query) params.set("q", options.query.slice(0, 100));
+    if (options.taxonName) {
+      params.set("taxon_name", options.taxonName.slice(0, 120));
+      params.set("photo_license", "cc0,cc-by,cc-by-sa");
+    } else if (options.query) params.set("q", options.query.slice(0, 100));
     const data = await apiGet<{ total_results?: number; results?: INaturalistRawObservation[] }>(`/observations?${params}`);
     return {
       total: data.total_results || 0,
-      observations: (data.results || []).map(toPublicObservation),
+      observations: (data.results || []).map((item) => toPublicObservation(item, Boolean(options.taxonName))),
     };
   },
 
