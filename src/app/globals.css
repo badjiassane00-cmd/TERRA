@@ -1379,3 +1379,7 @@ small{font-size:max(12px,.9em)!important;line-height:1.45}
 :root:not([data-theme="dark"]) .terra-ecosystems-page :is(.text-primary,.text-foreground\/60,.text-foreground\/50){color:#536357}
 :root[data-theme="dark"] .terra-ecosystems-page :is(.text-primary,.text-foreground\/60,.text-foreground\/50,.text-foreground\/70){color:#c1d0c1}
 :root[data-theme="dark"] .terra-ecosystems-page .herbarium-button:not(.herbarium-button-primary){border-color:#405346;background:#202d23;color:#dce8dc}
+:root[data-theme="dark"] .species-featured-card .species-featured-credit a,:root[data-theme="dark"] .species-featured-card .species-featured-open{color:#b3d6b2}
+:root[data-theme="dark"] .observation-detail-page .observation-contribute-card{border-color:#35463a;background:#1b261f;color:#e2eae2}
+:root[data-theme="dark"] .observation-detail-page .observation-contribute-card h2{color:#e1ece1}
+:root[data-theme="dark"] .observation-detail-page .observation-contribute-card a{color:#b3d6b2}
