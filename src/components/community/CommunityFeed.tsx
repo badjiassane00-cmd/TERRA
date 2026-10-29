@@ -1,7 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api-client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -106,6 +106,8 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [stories, setStories] = useState<Array<{ id: string; userId: string; user: { name: string; avatarUrl: string | null }; imageUrl: string; videoUrl: string | null; caption: string | null; createdAt: string; expiresAt: string }>>([]);
   const [activeStory, setActiveStory] = useState<string | null>(null);
+  const storyViewerRef = useRef<HTMLDivElement>(null);
+  const storyCloseButtonRef = useRef<HTMLButtonElement>(null);
   const [newPost, setNewPost] = useState("");
   const [newPhoto, setNewPhoto] = useState<ObservationPhotos | null>(null);
   const [newVideoUrl, setNewVideoUrl] = useState("");
@@ -127,6 +129,41 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [shareNotice, setShareNotice] = useState<{ postId: string; message: string } | null>(null);
   const [expandedPostDetails, setExpandedPostDetails] = useState<Record<string, { record: boolean; guidance: boolean }>>({});
   const [now] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!activeStory) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const viewer = storyViewerRef.current;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setActiveStory(null);
+        return;
+      }
+      if (event.key !== "Tab" || !viewer) return;
+      const focusable = Array.from(viewer.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),video[controls],[tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) {
+        event.preventDefault();
+        viewer.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    storyCloseButtonRef.current?.focus();
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [activeStory]);
 
   const togglePostDetail = (postId: string, section: "record" | "guidance") => {
     setExpandedPostDetails((current) => {
@@ -420,7 +457,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
         {stories.map((story) => <button type="button" className="nature-story-person" key={story.id} onClick={() => setActiveStory(story.id)}><span>{story.imageUrl ? <Image src={story.imageUrl} alt="" width={58} height={58} unoptimized /> : <span>✳</span>}</span><small>{story.user.name}</small></button>)}
       </section>
 
-      {activeStory && (() => { const story = stories.find((item) => item.id === activeStory); return story ? <div className="nature-story-viewer" role="dialog" aria-modal="true" aria-label={`Story de ${story.user.name}`} onClick={() => setActiveStory(null)}><button type="button" aria-label="Fermer la story" onClick={() => setActiveStory(null)}><X size={20} /></button><div onClick={(event) => event.stopPropagation()}>{story.videoUrl ? <video src={story.videoUrl} poster={story.imageUrl} controls autoPlay playsInline /> : <Image src={story.imageUrl} alt={`Story de ${story.user.name}`} width={900} height={1200} unoptimized />}<strong>{story.user.name}</strong>{story.caption && <p>{story.caption}</p>}<small>Expire dans 24 h</small></div></div> : null; })()}
+      {activeStory && (() => { const story = stories.find((item) => item.id === activeStory); return story ? <div ref={storyViewerRef} tabIndex={-1} className="nature-story-viewer" role="dialog" aria-modal="true" aria-label={`Story de ${story.user.name}`} onClick={() => setActiveStory(null)}><button ref={storyCloseButtonRef} type="button" aria-label="Fermer la story" onClick={() => setActiveStory(null)}><X size={20} /></button><div onClick={(event) => event.stopPropagation()}>{story.videoUrl ? <video src={story.videoUrl} poster={story.imageUrl} controls playsInline /> : <Image src={story.imageUrl} alt={`Story de ${story.user.name}`} width={900} height={1200} unoptimized />}<strong>{story.user.name}</strong>{story.caption && <p>{story.caption}</p>}<small>Expire dans 24 h</small></div></div> : null; })()}
 
       {showForm && (
         <div className="mb-6 p-4 bg-paper border border-border rounded-lg">
