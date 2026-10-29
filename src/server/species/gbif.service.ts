@@ -13,6 +13,7 @@ const KINGDOMS: Record<string, string> = {
 };
 
 const ACCEPTED_IMAGE_LICENSES = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0"] as const;
+const FEATURED_TAXON_KEYS = [5406695, 5360150, 3874097, 5219404, 2435350, 2953137];
 const LICENSE_URLS: Record<(typeof ACCEPTED_IMAGE_LICENSES)[number], string> = {
   "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
   "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/",
@@ -46,6 +47,7 @@ type GbifUsage = {
 
 type GbifPage<T> = { results?: T[]; count?: number; endOfRecords?: boolean; offset?: number; limit?: number };
 type GbifMedia = { type?: string; identifier?: string; license?: string; creator?: string; publisher?: string; rightsHolder?: string; title?: string; description?: string; references?: string; source?: string };
+type GbifOccurrence = { media?: GbifMedia[] };
 
 export class GbifApiError extends Error {
   constructor(public readonly status: number) {
@@ -104,6 +106,31 @@ function normalizeImage(media: GbifMedia) {
   };
 }
 
+async function occurrenceImages(taxonKey: number, limit = 8) {
+  const params = new URLSearchParams({ taxonKey: String(taxonKey), mediaType: "StillImage", limit: "100" });
+  params.append("license", "CC0_1_0");
+  params.append("license", "CC_BY_4_0");
+  const page = await gbifJson<GbifPage<GbifOccurrence>>(`/occurrence/search?${params.toString()}`);
+  const unique = new Map<string, NonNullable<ReturnType<typeof normalizeImage>>>();
+  for (const record of unwrapList(page)) {
+    for (const media of record.media || []) {
+      const image = normalizeImage(media);
+      if (image && !unique.has(image.url)) unique.set(image.url, image);
+    }
+    if (unique.size >= limit) break;
+  }
+  return [...unique.values()].slice(0, limit);
+}
+
+const FEATURED_IMAGE_FALLBACKS: Record<number, NonNullable<ReturnType<typeof normalizeImage>>> = {
+  5406695: { url: "https://inaturalist-open-data.s3.amazonaws.com/photos/605619791/original.jpg", title: null, creator: "biogeek", publisher: "iNaturalist", license: "CC-BY-4.0", licenseUrl: LICENSE_URLS["CC-BY-4.0"], sourceUrl: "https://www.inaturalist.org/photos/605619791" },
+  5360150: { url: "https://inaturalist-open-data.s3.amazonaws.com/photos/651283033/original.jpg", title: null, creator: "dune_ninja", publisher: "iNaturalist", license: "CC0-1.0", licenseUrl: LICENSE_URLS["CC0-1.0"], sourceUrl: "https://www.inaturalist.org/photos/651283033" },
+  3874097: { url: "https://inaturalist-open-data.s3.amazonaws.com/photos/472816345/original.jpeg", title: null, creator: "Raúl A. Ruiz M.", publisher: "iNaturalist", license: "CC-BY-4.0", licenseUrl: LICENSE_URLS["CC-BY-4.0"], sourceUrl: "https://www.inaturalist.org/photos/472816345" },
+  5219404: { url: "https://inaturalist-open-data.s3.amazonaws.com/photos/610686710/original.jpg", title: null, creator: "Eric Watts", publisher: "iNaturalist", license: "CC-BY-4.0", licenseUrl: LICENSE_URLS["CC-BY-4.0"], sourceUrl: "https://www.inaturalist.org/photos/610686710" },
+  2435350: { url: "https://inaturalist-open-data.s3.amazonaws.com/photos/608231276/original.jpg", title: null, creator: "Diego Rubolini", publisher: "iNaturalist", license: "CC-BY-4.0", licenseUrl: LICENSE_URLS["CC-BY-4.0"], sourceUrl: "https://www.inaturalist.org/photos/608231276" },
+  2953137: { url: "https://inaturalist-open-data.s3.amazonaws.com/photos/613028613/original.jpg", title: null, creator: "Attila Oláh", publisher: "iNaturalist", license: "CC-BY-4.0", licenseUrl: LICENSE_URLS["CC-BY-4.0"], sourceUrl: "https://www.inaturalist.org/photos/613028613" },
+};
+
 export type SpeciesSearchFilters = {
   query: string;
   kingdom?: string;
@@ -115,6 +142,41 @@ export type SpeciesSearchFilters = {
 };
 
 export const gbifSpeciesService = {
+  async featured() {
+    const entries = await Promise.all(FEATURED_TAXON_KEYS.map(async (key) => {
+      try {
+        const taxon = await gbifJson<GbifUsage>(`/species/${key}`);
+        const images = await occurrenceImages(taxon.nubKey || taxon.key, 1).catch(() => []);
+        const image = images[0] || FEATURED_IMAGE_FALLBACKS[key];
+        if (!image) return null;
+        return {
+          key: taxon.nubKey || taxon.key,
+          scientificName: taxon.scientificName || taxon.canonicalName || "Nom non renseigné",
+          canonicalName: taxon.canonicalName || taxon.scientificName || "Nom non renseigné",
+          authorship: taxon.authorship || null,
+          rank: taxon.rank || null,
+          kingdom: taxon.kingdom || null,
+          phylum: taxon.phylum || null,
+          class: taxon.class || null,
+          order: taxon.order || null,
+          family: taxon.family || null,
+          genus: taxon.genus || null,
+          taxonomicStatus: taxon.taxonomicStatus || taxon.status || null,
+          sourceUrl: `https://www.gbif.org/species/${taxon.nubKey || taxon.key}`,
+          image,
+        };
+      } catch {
+        const image = FEATURED_IMAGE_FALLBACKS[key];
+        const fallbackNames: Record<number, string> = {
+          5406695: "Adansonia digitata", 5360150: "Faidherbia albida", 3874097: "Rhizophora racemosa",
+          5219404: "Panthera leo", 2435350: "Loxodonta africana", 2953137: "Piliostigma reticulatum",
+        };
+        return image ? { key, scientificName: fallbackNames[key], canonicalName: fallbackNames[key], authorship: null, rank: "SPECIES", kingdom: null, phylum: null, class: null, order: null, family: null, genus: null, taxonomicStatus: "ACCEPTED", sourceUrl: `https://www.gbif.org/species/${key}`, image } : null;
+      }
+    }));
+    return entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+  },
+
   async search(filters: SpeciesSearchFilters) {
     const selectedKingdom = filters.kingdom ? KINGDOMS[filters.kingdom.toLowerCase()] : undefined;
     const higherKey = selectedKingdom ? await kingdomKey(selectedKingdom) : undefined;
@@ -168,7 +230,8 @@ export const gbifSpeciesService = {
     const synonyms = unwrapList(synonymsRaw as GbifPage<GbifUsage> | GbifUsage[])
       .filter((entry) => entry.scientificName)
       .map((entry) => ({ key: entry.key, scientificName: entry.scientificName!, authorship: entry.authorship || null, rank: entry.rank || null, sourceUrl: `https://www.gbif.org/species/${entry.key}` }));
-    const images = unwrapList(mediaRaw as GbifPage<GbifMedia> | GbifMedia[]).map(normalizeImage).filter((entry): entry is NonNullable<ReturnType<typeof normalizeImage>> => Boolean(entry));
+    let images = unwrapList(mediaRaw as GbifPage<GbifMedia> | GbifMedia[]).map(normalizeImage).filter((entry): entry is NonNullable<ReturnType<typeof normalizeImage>> => Boolean(entry));
+    if (!images.length) images = await occurrenceImages(canonicalKey, 8).catch(() => []);
     const distributions = unwrapList(distributionsRaw as GbifPage<{ locationId?: string; locality?: string; country?: string; establishmentMeans?: string; threatStatus?: string; source?: string }> | Array<{ locationId?: string; locality?: string; country?: string; establishmentMeans?: string; threatStatus?: string; source?: string }>)
       .map((entry) => ({ country: entry.country || null, locality: entry.locality || entry.locationId || null, establishmentMeans: entry.establishmentMeans || null, threatStatus: entry.threatStatus || null, source: entry.source || null }))
       .filter((entry) => entry.country || entry.locality);

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpen, Filter, Leaf, Search, ShieldCheck } from "lucide-react";
@@ -19,6 +20,7 @@ type SpeciesResult = {
   genus: string | null;
   taxonomicStatus: string | null;
   sourceUrl: string;
+  image?: { url: string; title: string | null; creator: string | null; publisher: string | null; license: string; licenseUrl: string; sourceUrl: string | null };
 };
 
 type SearchState = { results: SpeciesResult[]; count: number; endOfRecords: boolean };
@@ -31,7 +33,7 @@ const KINGDOMS = [
 ];
 const RANKS = [["", "Tous les rangs"], ["SPECIES", "Espèces"], ["GENUS", "Genres"], ["FAMILY", "Familles"], ["ORDER", "Ordres"], ["CLASS", "Classes"], ["PHYLUM", "Embranchements"]];
 
-export default function SpeciesExplorer({ initialQuery = "" }: { initialQuery?: string }) {
+export default function SpeciesExplorer({ initialQuery = "", featuredSpecies = [] }: { initialQuery?: string; featuredSpecies?: SpeciesResult[] }) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [kingdom, setKingdom] = useState("");
@@ -117,7 +119,19 @@ export default function SpeciesExplorer({ initialQuery = "" }: { initialQuery?: 
 
     <section className="species-search-results" aria-live="polite">
       <div className="species-results-heading"><div><span>RÉSULTATS TAXONOMIQUES</span><h2>{query.trim().length >= 2 ? `Espèces correspondant à « ${query.trim()} »` : "Votre prochaine découverte commence ici"}</h2></div>{data.count > 0 && <span className="species-result-count">{data.count.toLocaleString("fr-FR")} résultats GBIF</span>}</div>
-      {query.trim().length < 2 ? <div className="species-empty"><BookOpen size={28} /><h3>Une encyclopédie mondiale, des sources à portée de clic.</h3><p>Recherchez un organisme par son nom scientifique ou commun, puis explorez sa classification, ses synonymes, ses noms vernaculaires, ses références et ses photos dont la licence est vérifiée.</p><div><span>Plantes</span><span>Animaux</span><span>Champignons</span><span>Bactéries</span><span>Milieux aquatiques</span></div></div> : error ? <div className="species-message species-error" role="alert">{error}</div> : loading && page === 0 && data.results.length === 0 ? <div className="species-message" role="status">Recherche dans le backbone taxonomique GBIF…</div> : data.results.length === 0 ? <div className="species-message">Aucun taxon trouvé. Essayez un autre nom ou élargissez les filtres.</div> : <>
+      {query.trim().length < 2 ? <>
+        <div className="species-featured-intro"><BookOpen size={20} /><div><h3>Des espèces à découvrir</h3><p>Une sélection illustrée, avec taxonomie GBIF et crédits photo vérifiables.</p></div></div>
+        {featuredSpecies.length ? <div className="species-featured-grid">{featuredSpecies.map((item) => <article className="species-featured-card" key={item.key}>
+          <Link className="species-featured-photo" href={`/especes/${item.key}`} aria-label={`Consulter la fiche de ${item.canonicalName}`}>
+            {item.image && <Image src={item.image.url} alt={item.image.title || `Photographie de ${item.canonicalName}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw" unoptimized />}
+            <span>{item.kingdom || "Espèce documentée"}</span>
+          </Link>
+          <div className="species-featured-body"><small>{item.rank || "Espèce"} · {item.class || item.phylum || "Biodiversité"}</small><h3><Link href={`/especes/${item.key}`}><i>{item.canonicalName}</i></Link></h3>{item.authorship && <p>{item.authorship}</p>}
+            {item.image && <div className="species-featured-credit"><span>{item.image.creator || item.image.publisher || "Crédit photo"} · {item.image.license}</span>{item.image.sourceUrl && <a href={item.image.sourceUrl} target="_blank" rel="noreferrer">Source photo</a>}</div>}
+            <Link className="species-featured-open" href={`/especes/${item.key}`}>Ouvrir la fiche <ArrowRight size={14} /></Link>
+          </div>
+        </article>)}</div> : <div className="species-message">La sélection illustrée est momentanément indisponible. Vous pouvez toujours rechercher une espèce ci-dessus.</div>}
+      </> : error ? <div className="species-message species-error" role="alert">{error}</div> : loading && page === 0 && data.results.length === 0 ? <div className="species-message" role="status">Recherche dans le backbone taxonomique GBIF…</div> : data.results.length === 0 ? <div className="species-message">Aucun taxon trouvé. Essayez un autre nom ou élargissez les filtres.</div> : <>
         <div className="species-card-grid">{data.results.map((item) => <Link className="species-card" key={item.key} href={`/especes/${item.key}`}>
           <div className="species-card-art"><Leaf size={26} /><span>{item.kingdom || "BIODIVERSITÉ"}</span></div>
           <div className="species-card-body"><span className="species-rank">{item.rank || "Taxon"}{item.taxonomicStatus && <span className="species-verified"><ShieldCheck size={12} /> Référencé</span>}</span><h3><i>{item.canonicalName}</i></h3>{item.authorship && <p className="species-authorship">{item.authorship}</p>}<p className="species-taxonomy">{[item.family, item.order, item.class].filter(Boolean).join(" · ") || "Classification détaillée sur la fiche"}</p><span className="species-card-link">Consulter la fiche <ArrowRight size={14} /></span></div>
