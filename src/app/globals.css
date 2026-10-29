@@ -1365,5 +1365,17 @@ small{font-size:max(12px,.9em)!important;line-height:1.45}
 :root[data-theme="dark"] .field-missions-page .field-mission-card h3{color:#e1ece1}
 :root[data-theme="dark"] .species-detail-page .species-synonym-list li>span[title],:root[data-theme="dark"] .species-detail-page .species-data-honesty>p{color:#c1d0c1}
 :root[data-theme="dark"] .species-detail-page .species-country-list>span,:root[data-theme="dark"] .species-detail-page .species-country-list>span small{color:#c1d0c1}
+:root:not([data-theme="dark"]) .species-featured-body>small,:root:not([data-theme="dark"]) .species-featured-credit{color:#536357}
+:root:not([data-theme="dark"]) .observation-detail-page .observation-detail-topbar>a:first-child,:root:not([data-theme="dark"]) .observation-detail-page .observation-detail-breadcrumb,:root:not([data-theme="dark"]) .observation-detail-page .observation-detail-breadcrumb a,:root:not([data-theme="dark"]) .observation-detail-page .observation-overline,:root:not([data-theme="dark"]) .observation-detail-page .observation-taxon-scientific,:root:not([data-theme="dark"]) .observation-detail-page .observation-author small,:root:not([data-theme="dark"]) .observation-detail-page .observation-taxon-stats,:root:not([data-theme="dark"]) .observation-detail-page .observation-photo-credit,:root:not([data-theme="dark"]) .observation-detail-page .observation-card-title small,:root:not([data-theme="dark"]) .observation-detail-page .observation-facts-grid small,:root:not([data-theme="dark"]) .observation-detail-page .observation-location-privacy,:root:not([data-theme="dark"]) .observation-detail-page .observation-contribute-card>small,:root:not([data-theme="dark"]) .observation-detail-page .observation-contribute-card>p{color:#536357}
+:root[data-theme="dark"] .observation-detail-page :is(.observation-detail-topbar>a:first-child,.observation-detail-breadcrumb,.observation-detail-breadcrumb a,.observation-overline,.observation-taxon-scientific,.observation-author small,.observation-taxon-stats,.observation-photo-credit,.observation-card-title small,.observation-facts-grid small,.observation-location-privacy,.observation-contribute-card>small,.observation-contribute-card>p){color:#c1d0c1}
+.terra-home-world-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1120px){.terra-home-world-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1000px){.terra-home-world-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:380px){.terra-home-world-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.terra-related-observations>header{align-items:flex-start;flex-direction:column;gap:9px}.terra-related-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.terra-related-error{align-items:stretch;flex-direction:column}.terra-related-error button{justify-content:center}}
 @media(max-width:440px){.terra-related-grid{grid-template-columns:1fr}}
+:root:not([data-theme="dark"]) .herbarium-button-primary{color:#153b21}
+:root[data-theme="dark"] .herbarium-button-primary{border-color:#2d6940;background:#2d6940;color:#fff}
+:root:not([data-theme="dark"]) .terra-ecosystems-page :is(.text-primary,.text-foreground\/60,.text-foreground\/50){color:#536357}
+:root[data-theme="dark"] .terra-ecosystems-page :is(.text-primary,.text-foreground\/60,.text-foreground\/50,.text-foreground\/70){color:#c1d0c1}
+:root[data-theme="dark"] .terra-ecosystems-page .herbarium-button:not(.herbarium-button-primary){border-color:#405346;background:#202d23;color:#dce8dc}

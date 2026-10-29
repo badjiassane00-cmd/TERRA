@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowDown, ArrowRight, BookOpen, Camera, Compass, Leaf, MapPinned, ShieldCheck, Sparkles, Target } from "lucide-react";
+import { ArrowDown, ArrowRight, BookOpen, Camera, Compass, Flower2, Leaf, MapPinned, ShieldCheck, Sparkles, Target } from "lucide-react";
 import type { CSSProperties } from "react";
 
 type FeaturedSpecies = {
@@ -15,6 +15,7 @@ const WORLDS = [
   { title: "Explorer les espèces", detail: "Noms, classification et références documentées.", href: "/biodiversite", icon: Leaf, label: "Encyclopédie" },
   { title: "Identifier le vivant", detail: "Photo de plante, insecte ou animal : obtenez des pistes à vérifier.", href: "/identifier", icon: Camera, label: "Reconnaissance" },
   { title: "Partager une rencontre", detail: "Parcourez les observations publiques et retrouvez vos collections dans votre espace.", href: "/explorer?section=observations", icon: MapPinned, label: "Communauté" },
+  { title: "Comprendre les écosystèmes", detail: "Explorez les rythmes saisonniers et les co-présences observées sur le terrain.", href: "/ecosystemes", icon: Flower2, label: "Écosystèmes" },
   { title: "Agir sur le terrain", detail: "Découvrez les missions proposées autour de la biodiversité.", href: "/missions", icon: Target, label: "Missions" },
 ];
 
