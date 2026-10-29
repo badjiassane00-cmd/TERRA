@@ -99,7 +99,7 @@ export default function AdminDashboard() {
   }
 
   if (loading) return <main className="mx-auto w-full max-w-7xl px-5 py-12" aria-live="polite">Chargement du tableau de bord…</main>;
-  if (!data) return <main className="mx-auto w-full max-w-7xl px-5 py-12"><p role="alert" className="text-terracotta">{error || "Données indisponibles."}</p></main>;
+  if (!data) return <main className="mx-auto w-full max-w-7xl px-5 py-12"><div role="alert" className="max-w-xl border border-border bg-card-bg p-6"><h1 className="font-serif text-2xl">Tableau de bord indisponible</h1><p className="mt-2 text-sm text-terracotta">{error || "Données indisponibles."}</p><button type="button" onClick={() => void load()} className="mt-5 min-h-11 border border-border px-4 text-sm font-semibold hover:bg-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Réessayer</button></div></main>;
 
   const { stats } = data;
   const reportStatuses = ["OPEN", "REVIEWED", "DISMISSED"] as const;
@@ -114,10 +114,10 @@ export default function AdminDashboard() {
   return <main className="mx-auto w-full max-w-7xl px-5 py-8 md:px-8 md:py-12">
     <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-border pb-6">
       <div><p className="text-xs font-semibold uppercase tracking-wide text-primary-dark">TERRA · Modération</p><h1 className="mt-2 font-serif text-3xl md:text-4xl">Administration</h1><p className="mt-2 text-sm text-foreground/65">Vue d’ensemble de la communauté et des signalements.</p></div>
-      <button type="button" onClick={() => void load()} aria-label="Actualiser" title="Actualiser" className="inline-flex h-10 w-10 items-center justify-center border border-border bg-card-bg hover:bg-paper"><RefreshCw size={17} /></button>
+      <button type="button" onClick={() => void load()} aria-label="Actualiser" title="Actualiser" className="inline-flex h-11 w-11 items-center justify-center border border-border bg-card-bg hover:bg-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><RefreshCw size={17} /></button>
     </header>
     <nav aria-label="Sections administration" className="mb-7 flex gap-5 overflow-x-auto border-b border-border">
-      {([["overview", "Synthèse"], ["reports", `Signalements · ${stats.openReportCount}`], ["accounts", "Comptes"]] as const).map(([key, label]) => <button key={key} type="button" onClick={() => setView(key)} className={`whitespace-nowrap border-b-2 px-1 pb-3 text-sm ${view === key ? "border-primary font-semibold text-foreground" : "border-transparent text-foreground/60 hover:text-foreground"}`}>{label}</button>)}
+      {([["overview", "Synthèse"], ["reports", `Signalements · ${stats.openReportCount}`], ["accounts", "Comptes"]] as const).map(([key, label]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => setView(key)} className={`min-h-11 whitespace-nowrap border-b-2 px-1 pb-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${view === key ? "border-primary font-semibold text-foreground" : "border-transparent text-foreground/60 hover:text-foreground"}`}>{label}</button>)}
     </nav>
     {error && <p role="alert" className="mb-5 border-l-2 border-terracotta bg-card-bg px-4 py-3 text-sm text-terracotta">{error}</p>}
 
