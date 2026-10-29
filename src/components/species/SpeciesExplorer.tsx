@@ -28,6 +28,17 @@ type FeaturedPage = { results: SpeciesResult[]; nextOffset: number; endOfRecords
 
 const EMPTY: SearchState = { results: [], count: 0, endOfRecords: true };
 
+function speciesPreviewUrl(source: string) {
+  try {
+    const url = new URL(source);
+    if (url.hostname !== "inaturalist-open-data.s3.amazonaws.com") return source;
+    url.pathname = url.pathname.replace(/\/original\.(jpe?g|png)$/i, "/medium.$1");
+    return url.href;
+  } catch {
+    return source;
+  }
+}
+
 const KINGDOMS = [
   ["", "Tous les règnes"], ["Plantae", "Plantes"], ["Animalia", "Animaux"], ["Fungi", "Champignons"],
   ["Bacteria", "Bactéries"], ["Archaea", "Archées"], ["Chromista", "Chromistes"], ["Protozoa", "Protozoaires"], ["Viruses", "Virus · catégorie distincte"],
@@ -150,7 +161,7 @@ export default function SpeciesExplorer({ initialQuery = "", featuredPage = { re
         <div className="species-featured-intro"><BookOpen size={20} /><div><h3>Des espèces à découvrir</h3><p>{featuredSpecies.length} fiches illustrées pour commencer. Explorez les espèces signalées au Sénégal dans GBIF, avec leurs sources et licences photo.</p></div></div>
         {featuredSpecies.length ? <><div className="species-featured-grid">{featuredSpecies.map((item) => <article className="species-featured-card" key={item.key}>
           <Link className="species-featured-photo" href={`/especes/${item.key}`} aria-label={`Consulter la fiche de ${item.canonicalName}`}>
-            {item.image && <Image src={item.image.url} alt={item.image.title || `Photographie de ${item.canonicalName}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 25vw" unoptimized />}
+            {item.image && <Image src={speciesPreviewUrl(item.image.url)} alt={item.image.title || `Photographie de ${item.canonicalName}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 25vw" loading="lazy" unoptimized />}
             <span>{item.kingdom || "Espèce documentée"}</span>
           </Link>
           <div className="species-featured-body"><small>{item.rank || "Espèce"} · {item.class || item.phylum || "Biodiversité"}</small><h3><Link href={`/especes/${item.key}`}><i>{item.canonicalName}</i></Link></h3>{item.authorship && <p>{item.authorship}</p>}
