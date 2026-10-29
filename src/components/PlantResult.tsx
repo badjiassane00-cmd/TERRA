@@ -129,7 +129,7 @@ export default function PlantResult({ result, isLoading, previewUrl, userId, use
               </p>
             )}
             <div className="mt-2">
-              <ConservationBadge scientificName={result.scientific_name} />
+              <ConservationBadge key={result.scientific_name} scientificName={result.scientific_name} />
             </div>
             {result.taxonomy && (
               (() => {
