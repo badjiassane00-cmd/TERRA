@@ -1069,7 +1069,7 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 :root[data-theme="dark"] .species-featured-credit{border-color:#35463a;color:#bfccbf}
 @media(max-width:680px){
   .nature-social-post{display:flex;flex-direction:column}
-  .nature-post-photo{height:auto;max-height:min(70svh,640px);aspect-ratio:4/3}
+  .nature-post-photo{height:auto;max-height:none;aspect-ratio:auto}
   .nature-post-body{width:100%;padding:9px 16px 18px}
   .species-featured-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
   .species-featured-photo{height:clamp(150px,32vw,210px)}
@@ -1123,3 +1123,12 @@ small{font-size:max(12px,.9em)!important;line-height:1.45}
 @media(pointer:coarse){button,select{min-height:44px}}
 @media(max-width:680px){input:not([type="checkbox"]):not([type="radio"]),select,textarea{font-size:16px!important}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition-duration:.01ms!important;transition-delay:0ms!important}}
+
+/* Observation and species photographs keep their original proportions. */
+.nature-post-photo{height:auto!important;max-height:none!important;aspect-ratio:auto!important;overflow:hidden;background:#eef2e9}
+.nature-post-photo>a{display:block;width:100%;height:auto!important}
+.nature-post-photo img{display:block;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;transform:none!important}
+.nature-post-photo video{display:block;width:100%;height:auto;max-height:min(80svh,760px);object-fit:contain}
+.explorer-observation-photo img,.explorer-observation-photo video,.observation-detail-image,.observation-photo-preview img,.observation-map-popup img,.species-featured-photo img,.species-detail-visual>img,.species-image-gallery figure>a img,.personal-catalog-media-gallery img,.personal-catalog-media-gallery video,.nature-profile-tile img{object-fit:contain!important}
+.species-featured-photo,.species-detail-visual,.species-image-gallery figure>a,.personal-catalog-media-gallery,.nature-profile-tile{background:#edf2e9}
+:root[data-theme="dark"] .species-featured-photo,:root[data-theme="dark"] .species-detail-visual,:root[data-theme="dark"] .species-image-gallery figure>a,:root[data-theme="dark"] .personal-catalog-media-gallery,:root[data-theme="dark"] .nature-profile-tile{background:#17231b}
