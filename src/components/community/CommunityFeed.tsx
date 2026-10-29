@@ -2,6 +2,7 @@
 
 import { apiFetch } from "@/lib/api-client";
 import { useState, useEffect, useCallback } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -487,7 +488,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             className="nature-social-post"
           >
             <div className="nature-post-header"><Link href={`/profile/${post.userId}`} className="nature-profile-avatar">{post.user.avatarUrl ? <Image src={post.user.avatarUrl} alt={`Photo de ${post.user.name}`} width={39} height={39} unoptimized /> : post.user.name.slice(0, 1).toUpperCase()}</Link><Link href={`/profile/${post.userId}`} className="nature-post-author"><strong>{post.user.name}</strong><span>{post.user.isDemo ? "Compte fictif · démonstration" : post.user.institution || "Naturaliste"} · {formatTimeAgo(post.timestamp)}</span></Link>{currentUserId && currentUserId !== post.userId && <button className={`nature-follow-button ${post.following ? "following" : ""}`} onClick={() => void toggleFollow(post.userId)}>{post.following ? "Abonné·e" : "Suivre"}</button>}<span className="nature-post-group-label">{ORGANISM_LABELS[post.organismGroup]}</span></div>
-            <div className={`${post.imageUrl ? "nature-post-photo" : "nature-post-photo empty"} bg-gradient-to-br from-primary/10 to-accent/10 relative`}>
+            <div className={`${post.imageUrl ? "nature-post-photo" : "nature-post-photo empty"} bg-gradient-to-br from-primary/10 to-accent/10 relative`} style={post.imageUrl ? ({ "--nature-post-photo-background": `url(${JSON.stringify(post.imageUrl)})` } as CSSProperties) : undefined}>
               {post.videoUrl ? (
                 <video src={post.videoUrl} poster={post.imageUrl} controls playsInline preload="metadata" aria-label={`Vidéo de ${post.plantName}`} />
               ) : post.imageUrl ? (
