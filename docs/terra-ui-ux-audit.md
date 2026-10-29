@@ -6,6 +6,7 @@
 - Vérification statique des états de chargement/erreur, des contrôles sans action, du mouvement réduit, des médias et des protections d’authentification déjà présentes.
 - Contrôle WCAG automatisé avec axe sur 12 parcours (accueil, identification, missions, catalogues, connexion, inscription, notifications, recherche, observations, fiche espèce, profil et page écosystèmes), en clair et en sombre, bureau (1365 px) et mobile (390 px). Aucun contraste WCAG testé ne remonte de violation et aucun de ces parcours ne déborde horizontalement.
 - Compilation de production, ESLint, TypeScript et contrôles HTTP locaux. L’API de santé locale indique une dépendance média indisponible dans l’environnement de test; le service déployé répond « ok » pour base et médias.
+- Contrôle en lecture seule de l’API iNaturalist taxonomique de production : HTTP 200, 1 285 résultats annoncés pour le taxon testé. Le serveur local signale aussi que sa base de développement n’a pas la table `api_rate_limits` de la migration existante; aucune migration n’a été lancée depuis l’environnement de travail.
 
 Cet audit n’est pas une certification WCAG de toutes les pages. Les interfaces d’administration, parcours authentifiés, claviers/lecteurs d’écran réels, mesures Core Web Vitals et tests de bout en bout complets restent à vérifier.
 
@@ -27,7 +28,7 @@ Cet audit n’est pas une certification WCAG de toutes les pages. Les interfaces
 4. **Pages principales — réalisée pour les parcours principaux, à approfondir.** Accueil, encyclopédie, identification et fiches espèce ont déjà été retravaillés dans les commits précédents; les contrôles actuels valident notamment accueil, identification, biodiversité et fiche espèce.
 5. **Écosystème et communauté — en cours.** `/ecosystemes` expose le calendrier, les co-présences, l’écoute sonore et les alertes locales avec états d’erreur et limites scientifiques explicites. Communauté, observations et missions existent; les prototypes non reliés doivent être traités séparément.
 6. **Optimisation — partiellement vérifiée.** Pas de débordement horizontal sur les 12 parcours testés, styles de mouvement réduit présents et chargement écologique annulable avec erreur/réessai. Aucune mesure Lighthouse/Core Web Vitals complète n’a été produite.
-7. **Validation — réalisée pour le lot publié.** `npm run lint`, `npx tsc --noEmit --incremental false`, `npm run build -- --webpack`, axe sur 12 routes × 2 thèmes × 2 dimensions, vérification de l’API/page en production. Le contrôle local de fumée a obtenu 8/9 : `/api/health` renvoie 503 parce que le stockage média local n’est pas joignable; les huit autres réponses attendues passent. En production `/api/health` renvoie 200 et `{database:true, media:true}`.
+7. **Validation — réalisée pour le lot publié.** `npm run lint`, `npx tsc --noEmit --incremental false`, `npm run build -- --webpack`, axe sur 12 routes × 2 thèmes × 2 dimensions, vérification de l’API/page en production. Le contrôle local de fumée a obtenu 8/9 : `/api/health` renvoie 503 parce que le stockage média local n’est pas joignable; les huit autres réponses attendues passent. L’environnement local a également une migration `api_rate_limits` non appliquée; l’endpoint taxonomique correspondant a répondu HTTP 200 en production. En production `/api/health` renvoie 200 et `{database:true, media:true}`.
 
 ## Lot livré
 
