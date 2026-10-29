@@ -19,6 +19,33 @@ const WORLDS = [
   { title: "Agir sur le terrain", detail: "Découvrez les missions proposées autour de la biodiversité.", href: "/missions", icon: Target, label: "Missions" },
 ];
 
+const PRACTICE_PATHS = [
+  {
+    title: "Cultures & jardinage",
+    detail: "Une photo peut aider à examiner des symptômes de culture. Le module couvre 38 classes et propose une piste visuelle, pas un diagnostic agronomique.",
+    href: "/identifier?mode=disease",
+    label: "Examiner une photo",
+  },
+  {
+    title: "Pollinisateurs & saisons",
+    detail: "Consultez les périodes et co-présences de plantes et d’insectes observées. Une co-présence ne confirme pas une relation entre espèces.",
+    href: "/ecosystemes",
+    label: "Explorer les écosystèmes",
+  },
+  {
+    title: "Élevage & pastoralisme",
+    detail: "Explorez les fiches taxonomiques d’animaux. Le suivi de troupeaux et les ressources fourragères ne sont pas encore proposés.",
+    href: "/biodiversite?kingdom=Animalia",
+    label: "Consulter les espèces",
+  },
+  {
+    title: "Études & observation",
+    detail: "Recherchez des taxons avec leurs références, ou parcourez le carnet public des rencontres partagées.",
+    href: "/biodiversite",
+    label: "Ouvrir l’encyclopédie",
+  },
+];
+
 export default function HomeLanding({ featuredSpecies }: Readonly<{ featuredSpecies: FeaturedSpecies[] }>) {
   return <main className="terra-home">
     <section className="terra-home-hero" aria-labelledby="terra-home-title">
@@ -47,6 +74,21 @@ export default function HomeLanding({ featuredSpecies }: Readonly<{ featuredSpec
         {WORLDS.map(({ title, detail, href, icon: Icon, label }, index) => <Link className="terra-home-world-card" href={href} key={href}>
           <span className="terra-home-world-number">0{index + 1}</span><span className="terra-home-world-icon"><Icon size={21} /></span><small>{label}</small><h3>{title}</h3><p>{detail}</p><span className="terra-home-world-link">Découvrir <ArrowRight size={15} /></span>
         </Link>)}
+      </div>
+    </section>
+
+    <section className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16" aria-labelledby="terra-home-practices-title">
+      <header className="mb-6 max-w-3xl">
+        <span className="text-xs font-bold uppercase tracking-[.14em] text-primary-dark">DES OUTILS SELON VOTRE PRATIQUE</span>
+        <h2 id="terra-home-practices-title" className="mt-2 font-serif text-3xl font-semibold leading-tight sm:text-4xl">Par où souhaitez-vous commencer ?</h2>
+        <p className="mt-3 text-sm leading-6 text-foreground/70 sm:text-base">Choisissez un point d’entrée. TERRA vous dirige vers les outils disponibles et précise leurs limites.</p>
+      </header>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {PRACTICE_PATHS.map((item) => <article key={item.title} className="flex min-h-56 flex-col rounded-2xl border border-border bg-card-bg p-5 shadow-sm">
+          <h3 className="font-serif text-xl font-semibold">{item.title}</h3>
+          <p className="mt-3 flex-1 text-sm leading-6 text-foreground/70">{item.detail}</p>
+          <Link href={item.href} className="mt-5 inline-flex min-h-11 items-center gap-2 self-start font-semibold text-primary-dark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">{item.label}<ArrowRight size={16} aria-hidden="true" /></Link>
+        </article>)}
       </div>
     </section>
 
