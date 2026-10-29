@@ -582,7 +582,6 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .nature-app-header nav>a{color:#526e57}.nature-app-header nav>a:hover{color:#267043}.nature-app-header .nature-notification-bell{color:#526e57}
 .nature-identifier-workspace{max-width:1380px;margin:0 auto 56px;padding:22px clamp(16px,4vw,52px) 0}
 .nature-identifier-hero{position:relative;isolation:isolate;min-height:340px;overflow:hidden;border:1px solid #dce9d8;border-radius:19px;background:#244c31 url('/images/terra-identification.webp') center 48%/cover no-repeat;box-shadow:0 20px 55px #1d3e241a}
-.nature-identifier-hero-video{position:absolute;z-index:-1;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 47%}
 .nature-identifier-hero:before{position:absolute;z-index:0;inset:0;background:linear-gradient(90deg,#163b29e8 0%,#1d482fc9 42%,#1c492e35 100%),linear-gradient(0deg,#183b2d38,transparent 55%);content:""}
 .nature-identifier-hero-copy,.nature-identifier-hero-art{position:relative;z-index:1}.nature-identifier-hero-copy{padding:clamp(28px,5vw,60px)}
 .nature-identifier-eyebrow{color:#e5f4dd;letter-spacing:.17em}
@@ -620,7 +619,6 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .nature-explorer-feed-wrap{max-width:1288px}.nature-explorer-feed-wrap .nature-feed-heading h3{color:#304b36}.nature-explorer-feed-wrap .nature-feed-heading p{color:#748275}
 @media(max-width:680px){.nature-app-header{align-items:center;padding:11px 14px}.nature-identifier-workspace{margin-bottom:36px;padding:13px 14px 0}.nature-identifier-hero{min-height:0;grid-template-columns:1fr;background-position:62% center}.nature-identifier-hero:before{background:linear-gradient(90deg,#163b29e8,#1d482fc9 75%,#1c492e55)}.nature-identifier-hero-copy{padding:30px 21px}.nature-identifier-hero h1{font-size:clamp(39px,11vw,53px)}.nature-identifier-hero-copy>p{font-size:11px}.nature-identifier-hero-art{display:none}.nature-hero-cta,.nature-hero-secondary{min-height:39px;padding:0 12px;font-size:9px}.nature-identifier-trust{display:grid;gap:7px;margin-top:13px}.nature-explorer-intro{min-height:690px;align-items:flex-end;padding:95px 21px 75px;background-position:58% center}.nature-explorer-intro:before{background:linear-gradient(0deg,#163b29ed 0%,#1d482fc9 51%,#1c492e35 100%)}.nature-explorer-copy h1{font-size:clamp(41px,12vw,58px)}.nature-explorer-copy>p{font-size:12px}.nature-explorer-copy li{font-size:10px}.nature-explorer-image-credit{right:17px;bottom:15px;font-size:7px}.nature-explorer-publications{padding-top:28px}.nature-explorer-section-heading{align-items:flex-start;flex-direction:column;padding:0 16px 16px}.nature-explorer-feed-wrap{padding-right:14px;padding-left:14px}}
 
-@media(prefers-reduced-motion:reduce){.nature-identifier-hero-video{display:none}}
 
 /* Menu global et carnets naturalistes personnels */
 .nature-app-header{position:sticky;top:0;z-index:100;flex:0 0 auto;width:100%;max-width:none;margin:0;padding:12px max(20px,calc((100vw - 1240px)/2));border-bottom:1px solid #e0eadc;background:#fffffff2;color:#263b2b;backdrop-filter:blur(16px)}
