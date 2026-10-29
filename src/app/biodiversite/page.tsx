@@ -11,6 +11,6 @@ export default async function BiodiversityPage({ searchParams }: { searchParams:
   const params = await searchParams;
   const requested = params.q;
   const initialQuery = Array.isArray(requested) ? requested[0] || "" : requested || "";
-  const featuredSpecies = initialQuery ? [] : await gbifSpeciesService.featured();
-  return <SpeciesExplorer initialQuery={initialQuery} featuredSpecies={featuredSpecies} />;
+  const featuredPage = await gbifSpeciesService.featured();
+  return <SpeciesExplorer initialQuery={initialQuery} featuredPage={featuredPage} />;
 }

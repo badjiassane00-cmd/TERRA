@@ -13,7 +13,6 @@ const KINGDOMS: Record<string, string> = {
 };
 
 const ACCEPTED_IMAGE_LICENSES = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0"] as const;
-const FEATURED_TAXON_KEYS = [5406695, 5360150, 3874097, 5219404, 2435350, 2953137];
 const LICENSE_URLS: Record<(typeof ACCEPTED_IMAGE_LICENSES)[number], string> = {
   "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
   "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/",
@@ -47,7 +46,20 @@ type GbifUsage = {
 
 type GbifPage<T> = { results?: T[]; count?: number; endOfRecords?: boolean; offset?: number; limit?: number };
 type GbifMedia = { type?: string; identifier?: string; license?: string; creator?: string; publisher?: string; rightsHolder?: string; title?: string; description?: string; references?: string; source?: string };
-type GbifOccurrence = { media?: GbifMedia[] };
+type GbifOccurrence = {
+  key?: number;
+  taxonKey?: number;
+  speciesKey?: number;
+  species?: string;
+  scientificName?: string;
+  kingdom?: string;
+  phylum?: string;
+  class?: string;
+  order?: string;
+  family?: string;
+  genus?: string;
+  media?: GbifMedia[];
+};
 
 export class GbifApiError extends Error {
   constructor(public readonly status: number) {
@@ -131,6 +143,36 @@ const FEATURED_IMAGE_FALLBACKS: Record<number, NonNullable<ReturnType<typeof nor
   2953137: { url: "https://inaturalist-open-data.s3.amazonaws.com/photos/613028613/original.jpg", title: null, creator: "Attila Oláh", publisher: "iNaturalist", license: "CC-BY-4.0", licenseUrl: LICENSE_URLS["CC-BY-4.0"], sourceUrl: "https://www.inaturalist.org/photos/613028613" },
 };
 
+type FeaturedTaxon = {
+  key: number; scientificName: string; canonicalName: string; authorship: string | null;
+  rank: string | null; kingdom: string | null; phylum: string | null; class: string | null;
+  order: string | null; family: string | null; genus: string | null; taxonomicStatus: string | null;
+  sourceUrl: string; image: NonNullable<ReturnType<typeof normalizeImage>>;
+};
+
+const FEATURED_TAXA: FeaturedTaxon[] = [
+  { key: 5406695, name: "Adansonia digitata", kingdom: "Plantae" },
+  { key: 5360150, name: "Faidherbia albida", kingdom: "Plantae" },
+  { key: 3874097, name: "Rhizophora racemosa", kingdom: "Plantae" },
+  { key: 5219404, name: "Panthera leo", kingdom: "Animalia" },
+  { key: 2435350, name: "Loxodonta africana", kingdom: "Animalia" },
+  { key: 2953137, name: "Piliostigma reticulatum", kingdom: "Plantae" },
+].map((taxon) => ({
+  ...taxon,
+  scientificName: taxon.name,
+  canonicalName: taxon.name,
+  authorship: null,
+  rank: "SPECIES",
+  phylum: null,
+  class: null,
+  order: null,
+  family: null,
+  genus: null,
+  taxonomicStatus: "ACCEPTED",
+  sourceUrl: `https://www.gbif.org/species/${taxon.key}`,
+  image: FEATURED_IMAGE_FALLBACKS[taxon.key],
+}));
+
 export type SpeciesSearchFilters = {
   query: string;
   kingdom?: string;
@@ -142,39 +184,52 @@ export type SpeciesSearchFilters = {
 };
 
 export const gbifSpeciesService = {
-  async featured() {
-    const entries = await Promise.all(FEATURED_TAXON_KEYS.map(async (key) => {
-      try {
-        const taxon = await gbifJson<GbifUsage>(`/species/${key}`);
-        const images = await occurrenceImages(taxon.nubKey || taxon.key, 1).catch(() => []);
-        const image = images[0] || FEATURED_IMAGE_FALLBACKS[key];
-        if (!image) return null;
-        return {
-          key: taxon.nubKey || taxon.key,
-          scientificName: taxon.scientificName || taxon.canonicalName || "Nom non renseigné",
-          canonicalName: taxon.canonicalName || taxon.scientificName || "Nom non renseigné",
-          authorship: taxon.authorship || null,
-          rank: taxon.rank || null,
-          kingdom: taxon.kingdom || null,
-          phylum: taxon.phylum || null,
-          class: taxon.class || null,
-          order: taxon.order || null,
-          family: taxon.family || null,
-          genus: taxon.genus || null,
-          taxonomicStatus: taxon.taxonomicStatus || taxon.status || null,
-          sourceUrl: `https://www.gbif.org/species/${taxon.nubKey || taxon.key}`,
+  async featured(offset = 0, pageSize = 24) {
+    const pinned = offset === 0 ? FEATURED_TAXA : [];
+    const targetCount = Math.max(1, pageSize - pinned.length);
+    const params = new URLSearchParams({ country: "SN", mediaType: "StillImage", offset: String(offset), limit: "300" });
+    params.append("license", "CC0_1_0");
+    params.append("license", "CC_BY_4_0");
+    try {
+      const page = await gbifJson<GbifPage<GbifOccurrence>>(`/occurrence/search?${params.toString()}`);
+      const results: FeaturedTaxon[] = [];
+      const seen = new Set(pinned.map((item) => item.key));
+      const occurrences = unwrapList(page);
+      let nextOffset = offset + occurrences.length;
+      for (const [index, record] of occurrences.entries()) {
+        nextOffset = offset + index + 1;
+        const key = record.speciesKey;
+        const name = record.species;
+        if (!key || !name || seen.has(key)) continue;
+        const image = (record.media || []).map(normalizeImage).find((item) => item !== null);
+        if (!image) continue;
+        seen.add(key);
+        results.push({
+          key,
+          scientificName: record.scientificName || name,
+          canonicalName: name,
+          authorship: null,
+          rank: "SPECIES",
+          kingdom: record.kingdom || null,
+          phylum: record.phylum || null,
+          class: record.class || null,
+          order: record.order || null,
+          family: record.family || null,
+          genus: record.genus || null,
+          taxonomicStatus: "GBIF",
+          sourceUrl: `https://www.gbif.org/species/${key}`,
           image,
-        };
-      } catch {
-        const image = FEATURED_IMAGE_FALLBACKS[key];
-        const fallbackNames: Record<number, string> = {
-          5406695: "Adansonia digitata", 5360150: "Faidherbia albida", 3874097: "Rhizophora racemosa",
-          5219404: "Panthera leo", 2435350: "Loxodonta africana", 2953137: "Piliostigma reticulatum",
-        };
-        return image ? { key, scientificName: fallbackNames[key], canonicalName: fallbackNames[key], authorship: null, rank: "SPECIES", kingdom: null, phylum: null, class: null, order: null, family: null, genus: null, taxonomicStatus: "ACCEPTED", sourceUrl: `https://www.gbif.org/species/${key}`, image } : null;
+        });
+        if (results.length >= targetCount) break;
       }
-    }));
-    return entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+      return {
+        results: [...pinned, ...results],
+        nextOffset,
+        endOfRecords: page.endOfRecords === true && nextOffset >= offset + occurrences.length,
+      };
+    } catch {
+      return { results: pinned, nextOffset: offset, endOfRecords: true };
+    }
   },
 
   async search(filters: SpeciesSearchFilters) {

@@ -24,6 +24,7 @@ type SpeciesResult = {
 };
 
 type SearchState = { results: SpeciesResult[]; count: number; endOfRecords: boolean };
+type FeaturedPage = { results: SpeciesResult[]; nextOffset: number; endOfRecords: boolean };
 
 const EMPTY: SearchState = { results: [], count: 0, endOfRecords: true };
 
@@ -33,7 +34,7 @@ const KINGDOMS = [
 ];
 const RANKS = [["", "Tous les rangs"], ["SPECIES", "Espèces"], ["GENUS", "Genres"], ["FAMILY", "Familles"], ["ORDER", "Ordres"], ["CLASS", "Classes"], ["PHYLUM", "Embranchements"]];
 
-export default function SpeciesExplorer({ initialQuery = "", featuredSpecies = [] }: { initialQuery?: string; featuredSpecies?: SpeciesResult[] }) {
+export default function SpeciesExplorer({ initialQuery = "", featuredPage = { results: [], nextOffset: 0, endOfRecords: true } }: { initialQuery?: string; featuredPage?: FeaturedPage }) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [kingdom, setKingdom] = useState("");
@@ -45,6 +46,32 @@ export default function SpeciesExplorer({ initialQuery = "", featuredSpecies = [
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [focused, setFocused] = useState(false);
+  const [featuredSpecies, setFeaturedSpecies] = useState(featuredPage.results);
+  const [featuredOffset, setFeaturedOffset] = useState(featuredPage.nextOffset);
+  const [featuredEnd, setFeaturedEnd] = useState(featuredPage.endOfRecords);
+  const [featuredLoading, setFeaturedLoading] = useState(false);
+  const [featuredError, setFeaturedError] = useState("");
+
+  async function loadMoreFeatured() {
+    if (featuredLoading || featuredEnd) return;
+    setFeaturedLoading(true);
+    setFeaturedError("");
+    try {
+      const response = await fetch(`/api/species/featured?offset=${featuredOffset}`, { cache: "no-store" });
+      const result = await response.json() as FeaturedPage & { error?: string };
+      if (!response.ok) throw new Error(result.error || "Chargement des espèces impossible.");
+      setFeaturedSpecies((previous) => {
+        const keys = new Set(previous.map((item) => item.key));
+        return [...previous, ...result.results.filter((item) => !keys.has(item.key))];
+      });
+      setFeaturedOffset(result.nextOffset);
+      setFeaturedEnd(result.endOfRecords);
+    } catch (cause) {
+      setFeaturedError(cause instanceof Error ? cause.message : "Chargement des espèces impossible.");
+    } finally {
+      setFeaturedLoading(false);
+    }
+  }
 
   useEffect(() => {
     const term = query.trim();
@@ -120,17 +147,20 @@ export default function SpeciesExplorer({ initialQuery = "", featuredSpecies = [
     <section className="species-search-results" aria-live="polite">
       <div className="species-results-heading"><div><span>RÉSULTATS TAXONOMIQUES</span><h2>{query.trim().length >= 2 ? `Espèces correspondant à « ${query.trim()} »` : "Votre prochaine découverte commence ici"}</h2></div>{data.count > 0 && <span className="species-result-count">{data.count.toLocaleString("fr-FR")} résultats GBIF</span>}</div>
       {query.trim().length < 2 ? <>
-        <div className="species-featured-intro"><BookOpen size={20} /><div><h3>Des espèces à découvrir</h3><p>Une sélection illustrée, avec taxonomie GBIF et crédits photo vérifiables.</p></div></div>
-        {featuredSpecies.length ? <div className="species-featured-grid">{featuredSpecies.map((item) => <article className="species-featured-card" key={item.key}>
+        <div className="species-featured-intro"><BookOpen size={20} /><div><h3>Des espèces à découvrir</h3><p>{featuredSpecies.length} fiches illustrées pour commencer. Explorez les espèces signalées au Sénégal dans GBIF, avec leurs sources et licences photo.</p></div></div>
+        {featuredSpecies.length ? <><div className="species-featured-grid">{featuredSpecies.map((item) => <article className="species-featured-card" key={item.key}>
           <Link className="species-featured-photo" href={`/especes/${item.key}`} aria-label={`Consulter la fiche de ${item.canonicalName}`}>
-            {item.image && <Image src={item.image.url} alt={item.image.title || `Photographie de ${item.canonicalName}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw" unoptimized />}
+            {item.image && <Image src={item.image.url} alt={item.image.title || `Photographie de ${item.canonicalName}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 25vw" unoptimized />}
             <span>{item.kingdom || "Espèce documentée"}</span>
           </Link>
           <div className="species-featured-body"><small>{item.rank || "Espèce"} · {item.class || item.phylum || "Biodiversité"}</small><h3><Link href={`/especes/${item.key}`}><i>{item.canonicalName}</i></Link></h3>{item.authorship && <p>{item.authorship}</p>}
             {item.image && <div className="species-featured-credit"><span>{item.image.creator || item.image.publisher || "Crédit photo"} · {item.image.license}</span>{item.image.sourceUrl && <a href={item.image.sourceUrl} target="_blank" rel="noreferrer">Source photo</a>}</div>}
             <Link className="species-featured-open" href={`/especes/${item.key}`}>Ouvrir la fiche <ArrowRight size={14} /></Link>
           </div>
-        </article>)}</div> : <div className="species-message">La sélection illustrée est momentanément indisponible. Vous pouvez toujours rechercher une espèce ci-dessus.</div>}
+        </article>)}</div>
+          {!featuredEnd && <button className="species-load-more" type="button" disabled={featuredLoading} onClick={loadMoreFeatured}>{featuredLoading ? "Chargement des espèces…" : "Afficher plus d’espèces"}</button>}
+          {featuredError && <div className="species-message species-error" role="alert">{featuredError}</div>}
+        </> : <div className="species-message">La sélection illustrée est momentanément indisponible. Vous pouvez toujours rechercher une espèce ci-dessus.</div>}
       </> : error ? <div className="species-message species-error" role="alert">{error}</div> : loading && page === 0 && data.results.length === 0 ? <div className="species-message" role="status">Recherche dans le backbone taxonomique GBIF…</div> : data.results.length === 0 ? <div className="species-message">Aucun taxon trouvé. Essayez un autre nom ou élargissez les filtres.</div> : <>
         <div className="species-card-grid">{data.results.map((item) => <Link className="species-card" key={item.key} href={`/especes/${item.key}`}>
           <div className="species-card-art"><Leaf size={26} /><span>{item.kingdom || "BIODIVERSITÉ"}</span></div>
