@@ -3,17 +3,20 @@ import { NextResponse } from "next/server";
 import { userRepository } from "@/server/users/user.repository";
 import { getSessionUserId } from "@/lib/session";
 import { isStorageConfigured, storePublicImage } from "@/server/media/object-storage";
+import { readLimitedJson } from "@/server/http/read-limited-form-data";
+import { ApiError } from "@/server/http/api-handler";
 
 const MAX_REQUEST_LENGTH = 460_000;
 async function PATCHImpl(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour modifier votre photo." }, { status: 401 });
 
-  const raw = await request.text();
-  if (raw.length > MAX_REQUEST_LENGTH) return NextResponse.json({ error: "La photo dépasse la taille autorisée." }, { status: 413 });
-
   let body: unknown;
-  try { body = JSON.parse(raw); } catch { return NextResponse.json({ error: "Requête invalide." }, { status: 400 }); }
+  try { body = await readLimitedJson<unknown>(request, MAX_REQUEST_LENGTH); }
+  catch (error) {
+    if (error instanceof ApiError && error.status === 413) return NextResponse.json({ error: "La photo dépasse la taille autorisée." }, { status: 413 });
+    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+  }
   if (!body || typeof body !== "object" || !("avatarUrl" in body)) {
     return NextResponse.json({ error: "Photo manquante." }, { status: 400 });
   }

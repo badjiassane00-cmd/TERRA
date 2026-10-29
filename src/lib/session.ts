@@ -11,11 +11,15 @@ function getJwtSecret(): string {
       "JWT_SECRET manquant. Définissez-le dans .env (ex: openssl rand -base64 32)."
     );
   }
+  if (Buffer.byteLength(secret, "utf8") < 32 || /^(change-me|secret|password)/i.test(secret)) {
+    throw new Error("JWT_SECRET doit être un secret aléatoire d’au moins 32 octets.");
+  }
   return secret;
 }
 
-export function signSessionToken(userId: string, email: string): string {
-  return jwt.sign({ userId, email }, getJwtSecret(), { expiresIn: "7d" });
+export function signSessionToken(userId: string, _legacyEmail?: string): string {
+  void _legacyEmail; // Accept the legacy argument during rollout, but never store email in the token.
+  return jwt.sign({ userId }, getJwtSecret(), { algorithm: "HS256", expiresIn: "7d" });
 }
 
 export const SESSION_COOKIE_NAME = COOKIE_NAME;
@@ -31,8 +35,8 @@ export async function getSessionUserId(): Promise<string | null> {
     const token = cookieStore.get(COOKIE_NAME)?.value;
     if (!token) return null;
 
-    const payload = jwt.verify(token, getJwtSecret()) as { userId?: string };
-    return payload.userId || null;
+    const payload = jwt.verify(token, getJwtSecret(), { algorithms: ["HS256"] }) as { userId?: unknown };
+    return typeof payload.userId === "string" && payload.userId.length > 0 ? payload.userId : null;
   } catch {
     return null;
   }

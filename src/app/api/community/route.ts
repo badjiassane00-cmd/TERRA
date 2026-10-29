@@ -6,6 +6,8 @@ import { ORGANISM_GROUPS } from "@/types/nature";
 import { publicCoordinates } from "@/server/observations/location";
 import { isImageDataUrl, isStorageConfigured, storePublicImage } from "@/server/media/object-storage";
 import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedJson } from "@/server/http/read-limited-form-data";
+import { ApiError } from "@/server/http/api-handler";
 
 const MAX_IMAGE_DATA_URL_LENGTH = 1_250_000;
 const MAX_REQUEST_LENGTH = 1_450_000;
@@ -67,11 +69,15 @@ async function POSTImpl(request: Request) {
     if (!authorId) {
       return NextResponse.json({ error: "Connectez-vous pour publier une observation." }, { status: 401 });
     }
-    const rawBody = await request.text();
-    if (rawBody.length > MAX_REQUEST_LENGTH) {
-      return NextResponse.json({ error: "La photo est trop lourde. Choisissez une image de moins de 850 Ko." }, { status: 413 });
+    let body: Record<string, unknown>;
+    try {
+      body = await readLimitedJson<Record<string, unknown>>(request, MAX_REQUEST_LENGTH);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 413) {
+        return NextResponse.json({ error: "La photo est trop lourde. Choisissez une image de moins de 850 Ko." }, { status: 413 });
+      }
+      throw error;
     }
-    const body = JSON.parse(rawBody) as Record<string, unknown>;
     const plantName = typeof body.plantName === "string" ? body.plantName.trim() : "";
     const description = typeof body.description === "string" ? body.description.trim() : "";
     if (plantName.length > 120 || description.length > 2000) {
@@ -129,6 +135,7 @@ async function POSTImpl(request: Request) {
     const post = await communityRepository.createPost({ userId: authorId, plantName: plantName || "Espèce non identifiée", scientificName, imageUrl: storedImageUrl, thumbnailUrl: storedThumbnailUrl, videoUrl: videoUrl || null, isEphemeral, expiresAt: isEphemeral ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null, region, description: description || null, organismGroup, observedAt, latitude, longitude, locationVisibility, publicShareEnabled, identificationProbability, clientSubmissionId });
     return NextResponse.json({ observation: { ...post, ...publicCoordinates(post, authorId) } }, { status: 201 });
   } catch (error) {
+    if (error instanceof ApiError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Erreur création observation:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }

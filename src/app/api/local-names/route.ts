@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { localNameRepository } from "@/server/local-names/local-name.repository";
 import { requireModerator } from "../../../lib/moderation";
 import { getSessionUserId } from "../../../lib/session";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedJson } from "@/server/http/read-limited-form-data";
+import { ApiError } from "@/server/http/api-handler";
 
 // Noms vernaculaires en langues locales (wolof, bambara, peul...),
 // contribués par la communauté. Un même nom scientifique peut avoir
@@ -31,10 +34,15 @@ export const GET = withApiErrors(GETImpl);
 
 async function POSTImpl(request: Request) {
   try {
-    const body = await request.json();
-    const { scientificName, language, languageName, name, contributedBy } = body;
+    const limited = await enforceRateLimit(request, "local-name-contribution", { limit: 20, windowMs: 60_000 });
+    if (limited) return limited;
+    const body = await readLimitedJson<Record<string, unknown>>(request, 8192);
+    const scientificName = typeof body.scientificName === "string" ? body.scientificName.trim() : "";
+    const language = typeof body.language === "string" ? body.language.trim() : "";
+    const languageName = typeof body.languageName === "string" ? body.languageName.trim() : "";
+    const name = typeof body.name === "string" ? body.name.trim() : "";
 
-    if (!scientificName || !language || !languageName || !name) {
+    if (!scientificName || !language || !languageName || !name || scientificName.length > 180 || language.length > 16 || languageName.length > 80 || name.length > 120) {
       return NextResponse.json(
         { error: "scientificName, language, languageName et name sont requis" },
         { status: 400 }
@@ -44,10 +52,12 @@ async function POSTImpl(request: Request) {
     // On crée la fiche plante minimale si elle n'existe pas encore
     // (une contribution de nom local ne doit pas dépendre d'un scan
     // préalable enregistré en base).
-    const localName = await localNameRepository.add({ scientificName, language, languageName, name, contributedBy: contributedBy || null });
+    const contributor = await getSessionUserId();
+    const localName = await localNameRepository.add({ scientificName, language, languageName, name, contributedBy: contributor });
 
     return NextResponse.json({ localName });
   } catch (error) {
+    if (error instanceof ApiError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Erreur POST /api/local-names:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }

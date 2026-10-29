@@ -8,7 +8,10 @@ export const fieldSessionRepository = {
     return prisma.fieldSession.findUnique({ where: { code }, include: { supervisor: { select: { name: true } } } });
   },
   findById(id: string) {
-    return prisma.fieldSession.findUnique({ where: { id }, include: { entries: { orderBy: { createdAt: "desc" }, include: { user: { select: { name: true } } } } } });
+    return prisma.fieldSession.findUnique({ where: { id }, include: { entries: { orderBy: { createdAt: "desc" }, take: 100, include: { user: { select: { name: true } } } } } });
+  },
+  findSummaryById(id: string) {
+    return prisma.fieldSession.findUnique({ where: { id }, select: { id: true, title: true, active: true, supervisorId: true, supervisor: { select: { name: true } } } });
   },
   findOwner(id: string) { return prisma.fieldSession.findUnique({ where: { id }, select: { id: true, supervisorId: true } }); },
   updateActive(id: string, active: boolean) { return prisma.fieldSession.update({ where: { id }, data: { active } }); },

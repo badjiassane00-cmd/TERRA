@@ -17,7 +17,7 @@ function authenticatedResponse(user: Awaited<ReturnType<typeof authService.authe
   const response = NextResponse.json({
     user: { ...safeUser, role: safeUser.role.toLowerCase() },
   });
-  response.cookies.set(SESSION_COOKIE_NAME, signSessionToken(user.id, user.email), {
+  response.cookies.set(SESSION_COOKIE_NAME, signSessionToken(user.id), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -62,7 +62,13 @@ export const POST = withApiErrors(POSTImpl);
 
 async function DELETEImpl() {
   const response = NextResponse.json({ success: true });
-  response.cookies.set(SESSION_COOKIE_NAME, "", { maxAge: 0, path: "/" });
+  response.cookies.set(SESSION_COOKIE_NAME, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/",
+  });
   return response;
 }
 

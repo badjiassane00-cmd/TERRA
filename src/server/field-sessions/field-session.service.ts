@@ -1,13 +1,15 @@
 import { fieldSessionRepository } from "./field-session.repository";
+import { randomInt } from "node:crypto";
 
 function generateCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 5 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+  return Array.from({ length: 5 }, () => alphabet[randomInt(alphabet.length)]).join("");
 }
 
 export const fieldSessionService = {
   listForSupervisor: (id: string) => fieldSessionRepository.listForSupervisor(id),
   findById: (id: string) => fieldSessionRepository.findById(id),
+  findSummaryById: (id: string) => fieldSessionRepository.findSummaryById(id),
   async join(code: string) {
     if (!code.trim()) return null;
     const session = await fieldSessionRepository.findByCode(code.trim().toUpperCase());

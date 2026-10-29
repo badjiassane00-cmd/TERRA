@@ -64,6 +64,9 @@
     "tsx": "^4.23.13",
     "typescript": "^5"
   },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
+  },
   "engines": {
     "node": ">=20.9.0"
   }
