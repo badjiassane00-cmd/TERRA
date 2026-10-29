@@ -164,24 +164,23 @@ export function SpecialtyCard({ specialty, index, isActive, onClick }: { special
   );
 }
 
-export function PlantCard({ plant, index, onClick }: { plant: Plant; index: number; onClick: () => void }) {
+export function PlantCard({ plant, index }: { plant: Plant; index: number }) {
   return (
-    <motion.div
+    <motion.article
       initial={{ opacity: 0, y: 50, rotateY: 15 }}
       whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
       transition={{ duration: 0.7, delay: index * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-      onClick={onClick}
-      className="herbarium-card rounded-xl overflow-hidden cursor-pointer group relative"
+      className="herbarium-card rounded-xl overflow-hidden group relative"
     >
       <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 relative overflow-hidden">
-        <motion.img
-          src={plant.imageUrl || "https://images.unsplash.com/photo-1599592574727-290c38af6f8f"}
+        {plant.imageUrl ? <motion.img
+          src={plant.imageUrl}
           alt={plant.name}
-          className="w-full h-full object-cover"
-          whileHover={{ scale: 1.08 }}
-          transition={{ duration: 0.6 }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          loading="lazy"
+          className="w-full h-full object-contain"
+          whileHover={{ scale: 1.03 }}
+          transition={{ duration: 0.3 }}
+        /> : <div className="flex h-full items-center justify-center px-6 text-center text-sm text-foreground/70">Aucune photographie documentée pour cette plante.</div>}
         <div className="absolute top-3 right-3">
           <span className={`herbarium-label text-xs backdrop-blur-sm ${
             plant.medicinal ? "bg-accent/90 text-white border-accent" : "bg-white/90 text-primary border-white"
@@ -191,7 +190,7 @@ export function PlantCard({ plant, index, onClick }: { plant: Plant; index: numb
         </div>
       </div>
       <div className="p-5">
-        <h4 className="font-serif font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+        <h4 className="font-serif font-semibold text-foreground mb-1">
           {plant.name}
         </h4>
         <p className="text-sm text-foreground/60 italic mb-2">{plant.scientificName}</p>
@@ -213,7 +212,7 @@ export function PlantCard({ plant, index, onClick }: { plant: Plant; index: numb
           </div>
         )}
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
 

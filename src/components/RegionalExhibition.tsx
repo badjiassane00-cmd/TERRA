@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { MapPin, Calendar, Search, Grid, List, Loader2, Globe, Flower2 } from "lucide-react";
-import { useRef } from "react";
 import { AnimatedCounter, PlantCard, RegionCard, SpecialtyCard } from "./regional-exhibition/Cards";
 import type { Plant, Region, Specialty } from "./regional-exhibition/types";
 
@@ -30,8 +29,6 @@ export default function RegionalExhibition() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const isInitialMount = useRef(true);
-
   const fetchExhibitionData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -48,11 +45,8 @@ export default function RegionalExhibition() {
   }, []);
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    fetchExhibitionData();
+    const timer = window.setTimeout(() => { void fetchExhibitionData(); }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchExhibitionData]);
 
   const filteredPlants = useMemo(() => {
@@ -308,7 +302,6 @@ export default function RegionalExhibition() {
                   key={plant.id}
                   plant={plant}
                   index={index}
-                  onClick={() => {}}
                 />
               ))}
             </div>

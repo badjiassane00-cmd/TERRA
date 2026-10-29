@@ -35,6 +35,7 @@ Cet audit n’est pas une certification WCAG de toutes les pages. Les interfaces
 - Ajout de `/ecosystemes`, accessible depuis l’accueil, avec explication que l’activité observée ne constitue ni une prévision ni une preuve d’interaction écologique.
 - Ajout d’états de chargement, erreur, annulation et nouvelle tentative autour du chargement écologique.
 - Corrections de contraste des cartes espèces, observation publique et actions principales selon le thème.
+- Réparation du chargement initial du prototype `RegionalExhibition`, retrait du clic sans action sur ses cartes et suppression de sa photo générique de remplacement. Le prototype reste non relié à une page, car ses regroupements régionaux/spécialités doivent être validés sur des données de source avant d’être présentés comme fiables.
 - Déploiement Render confirmé : page `/ecosystemes` en HTTP 200, santé de production HTTP 200.
 
-Commits : `0d9919e` et `819ea0b`.
+Commits : `0d9919e` et `819ea0b`. Le rapport a ensuite été poussé dans `e4f93e2` et `029c3c5`.
