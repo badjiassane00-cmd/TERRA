@@ -26,12 +26,13 @@ type SectionId = (typeof SECTIONS)[number]["id"];
 export default async function ExplorerPage({ searchParams }: { searchParams: Promise<{ section?: string | string[]; q?: string | string[]; publier?: string | string[]; source?: string | string[] }> }) {
   const params = await searchParams;
   const requestedSection = Array.isArray(params.section) ? params.section[0] : params.section;
-  const section: SectionId = SECTIONS.some((item) => item.id === requestedSection) ? requestedSection as SectionId : "fil";
+  let section: SectionId = SECTIONS.some((item) => item.id === requestedSection) ? requestedSection as SectionId : "fil";
   const requestedQuery = Array.isArray(params.q) ? params.q[0] : params.q;
   const requestedSource = Array.isArray(params.source) ? params.source[0] : params.source;
   const openComposer = Array.isArray(params.publier) ? params.publier[0] === "1" : params.publier === "1";
   const initialQuery = requestedQuery || "";
   const user = await getSessionUser();
+  if (!user && section === "fil") section = "observations";
   if (!user && section !== "observations") redirect(`/connexion?next=${encodeURIComponent(`/explorer?section=${section}`)}`);
   const role = user?.role.toLowerCase() as "user" | "admin" | "super_admin" | "institution" | undefined;
   const gallery = section === "galerie" && user ? await prisma.communityPost.findMany({
