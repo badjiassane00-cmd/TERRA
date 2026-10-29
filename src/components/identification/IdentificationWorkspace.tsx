@@ -3,7 +3,7 @@
 import { apiFetch } from "@/lib/api-client";
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowRight, BadgeCheck, Bug, Crosshair, FlaskConical, History, Leaf, Sparkles, Trees, Zap } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import PlantResult from "@/components/PlantResult";
@@ -58,42 +58,58 @@ export default function IdentificationWorkspace({ userId, userRole, initialMode 
   const [fieldSessionId, setFieldSessionId] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [voiceNote, setVoiceNote] = useState("");
+  const requestSequence = useRef(0);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      try { setHistory(JSON.parse(localStorage.getItem("sununature_identification_history") || "[]")); } catch { /* ignore cache */ }
+      try {
+        const stored = JSON.parse(localStorage.getItem("sununature_identification_history") || "[]");
+        if (Array.isArray(stored)) {
+          const cleanHistory = stored.slice(0, 12).filter((entry): entry is HistoryItem => Boolean(entry && typeof entry.name === "string" && typeof entry.date === "string" && Number.isFinite(entry.probability) && ["identify", "disease", "life"].includes(entry.mode))).map((entry) => ({ ...entry, imageUrl: null }));
+          setHistory(cleanHistory);
+          localStorage.setItem("sununature_identification_history", JSON.stringify(cleanHistory));
+        }
+      } catch { /* ignore invalid or unavailable cache */ }
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
   const identify = useCallback(async (file: File) => {
+    const requestId = ++requestSequence.current;
+    const requestedMode = mode;
+    const requestedLifeTarget = lifeTarget;
+    const requestedTreatmentStage = treatmentStage;
+    const requestedLocation = location;
+    const requestedFieldSessionId = fieldSessionId;
     setBusy(true); setError(""); setResult(null);
     try {
       let data: { result?: PlantIdentificationResult; candidates?: Array<{ scientific_name: string; common_names: string[]; probability: number }>; error?: string };
-      if (mode === "life") {
+      if (requestedMode === "life") {
         const form = new FormData();
         form.append("image", file);
-        form.append("group", lifeTarget);
+        form.append("group", requestedLifeTarget);
         const response = await apiFetch("/api/identify-life", { method: "POST", body: form });
         data = await response.json();
         if (!response.ok) throw new Error(data.error || "L’identification du vivant a échoué.");
       } else {
-        const form = new FormData(); form.append("image", file); form.append("mode", mode);
-        if (mode === "disease") form.append("treatmentStage", treatmentStage);
-        if (location) { form.append("lat", String(location.lat)); form.append("lng", String(location.lng)); }
-        if (fieldSessionId) form.append("sessionId", fieldSessionId);
-        const response = await apiFetch(mode === "disease" ? "/api/diagnose-disease" : "/api/identify", { method: "POST", body: form });
+        const form = new FormData(); form.append("image", file); form.append("mode", requestedMode);
+        if (requestedMode === "disease") form.append("treatmentStage", requestedTreatmentStage);
+        if (requestedLocation) { form.append("lat", String(requestedLocation.lat)); form.append("lng", String(requestedLocation.lng)); }
+        if (requestedFieldSessionId) form.append("sessionId", requestedFieldSessionId);
+        const response = await apiFetch(requestedMode === "disease" ? "/api/diagnose-disease" : "/api/identify", { method: "POST", body: form });
         data = await response.json();
         if (!response.ok) throw new Error(data.error || "L’analyse a échoué.");
       }
       if (!data.result?.scientific_name) throw new Error("Aucun résultat. Réessayez avec une photo nette et bien cadrée.");
-      const identified = { ...data.result, alternatives: mode === "life" ? data.candidates : undefined };
+      if (requestId !== requestSequence.current) return;
+      const identified = { ...data.result, alternatives: requestedMode === "life" ? data.candidates : undefined };
       setResult(identified);
-      const item: HistoryItem = { date: new Date().toISOString(), name: identified.common_names?.[0] || identified.scientific_name, imageUrl: preview, probability: identified.probability, mode };
+      // Keep uploaded photos out of localStorage: data URLs can be large and contain private location/context.
+      const item: HistoryItem = { date: new Date().toISOString(), name: identified.common_names?.[0] || identified.scientific_name, imageUrl: null, probability: identified.probability, mode: requestedMode };
       setHistory((previous) => { const next = [item, ...previous].slice(0, 12); try { localStorage.setItem("sununature_identification_history", JSON.stringify(next)); } catch { /* quota or private mode */ } return next; });
-    } catch (caught) { setError(caught instanceof Error ? caught.message : "Une erreur a empêché l’identification."); }
-    finally { setBusy(false); }
-  }, [mode, treatmentStage, location, fieldSessionId, preview, lifeTarget]);
+    } catch (caught) { if (requestId === requestSequence.current) setError(caught instanceof Error ? caught.message : "Une erreur a empêché l’identification."); }
+    finally { if (requestId === requestSequence.current) setBusy(false); }
+  }, [mode, treatmentStage, location, fieldSessionId, lifeTarget]);
 
   function identifyPhoto(file: File) {
     setImageFile(file);
@@ -112,8 +128,8 @@ export default function IdentificationWorkspace({ userId, userRole, initialMode 
 
   return <div className="nature-identifier-workspace">
     <section className="nature-identifier-hero"><video className="nature-identifier-hero-video" autoPlay muted loop playsInline preload="metadata" poster="/images/terra-hero.webp" aria-hidden="true" tabIndex={-1}><source src="/videos/terra-biodiversity.mp4" type="video/mp4" /></video><div className="nature-identifier-hero-copy"><span className="nature-identifier-eyebrow"><Sparkles size={14} /> TERRA · {t("LE RÉSEAU MONDIAL DU VIVANT", "THE GLOBAL NETWORK FOR LIFE")}</span><h1>{t("Photographiez la", "Photograph the")}<br /><em>{t("vie", "life")}</em> {t("autour de vous.", "around you.")}</h1><p>{t("Plante, insecte, oiseau ou mammifère : partagez une image, obtenez des pistes d’identification et enrichissez les savoirs du terrain.", "Plants, insects, birds, or mammals: share a photo, get identification suggestions, and add to field knowledge.")}</p><div className="nature-hero-actions"><Link href="#reconnaissance" className="nature-hero-cta">{t("Commencer une identification", "Start identifying")} <ArrowRight size={16} /></Link><Link href="/biodiversite" className="nature-hero-secondary">{t("Explorer les espèces", "Explore species")}</Link><Link href="/explorer" className="nature-hero-secondary">{t("Découvrir le réseau", "Explore the network")}</Link></div><div className="nature-identifier-trust"><span><BadgeCheck size={15} /> {t("Une proposition, à confirmer", "A suggestion to verify")}</span><span><Trees size={15} /> {t("Des savoirs naturalistes partagés partout", "Naturalist knowledge shared worldwide")}</span></div></div><div className="nature-identifier-hero-art"><span>01 / {t("OBSERVER", "OBSERVE")}</span><div className="nature-identifier-orbit"><Leaf /><Bug /><span>✳</span></div><strong>{t("Observer.", "Observe.")}<br />{t("Comprendre.", "Understand.")}<br />{t("Transmettre.", "Share knowledge.")}</strong></div></section>
-    <div className="nature-identifier-layout"><section className="nature-identifier-main" id="reconnaissance"><div className="nature-mode-selector" id="identifier">{MODES.map(({ id, label, englishLabel, note, englishNote, icon: Icon }) => <button key={id} className={mode === id ? "active" : ""} onClick={() => { setMode(id); setResult(null); setError(""); }}><span><Icon size={18} /></span><strong>{t(label, englishLabel)}</strong><small>{t(note, englishNote)}</small></button>)}</div>
-      {mode === "life" && <><div className="nature-mode-selector" aria-label={t("Type de vivant", "Type of life")}><button className={lifeTarget === "all" ? "active" : ""} onClick={() => { setLifeTarget("all"); setResult(null); }}><span><Sparkles size={18} /></span><strong>{t("Tous les êtres vivants", "All living things")}</strong><small>{t("Plantes, champignons, animaux…", "Plants, fungi, animals…")}</small></button><button className={lifeTarget === "insects" ? "active" : ""} onClick={() => { setLifeTarget("insects"); setResult(null); }}><span><Bug size={18} /></span><strong>{t("Insectes & invertébrés", "Insects & invertebrates")}</strong><small>{t("Insectes, araignées, mollusques", "Insects, spiders, mollusks")}</small></button><button className={lifeTarget === "animals" ? "active" : ""} onClick={() => { setLifeTarget("animals"); setResult(null); }}><span><Trees size={18} /></span><strong>{t("Animaux terrestres", "Land animals")}</strong><small>{t("Oiseaux, reptiles, mammifères", "Birds, reptiles, mammals")}</small></button><button className={lifeTarget === "fish" ? "active" : ""} onClick={() => { setLifeTarget("fish"); setResult(null); }}><span><Leaf size={18} /></span><strong>{t("Poissons & vie aquatique", "Fish & aquatic life")}</strong><small>{t("Poissons, animaux aquatiques", "Fish and aquatic animals")}</small></button></div><p className="nature-identifier-note"><Zap size={14} /> {t("BioCLIP analyse la photo; Gemini sert de solution de repli si le service BioCLIP ne répond pas. La photo est transmise au fournisseur utilisé; vérifiez les suggestions auprès de la communauté ou d’une personne spécialiste.", "BioCLIP analyzes the photo; Gemini is used as a fallback if BioCLIP is unavailable. Your photo is sent to the provider used. Verify suggestions with the naturalist community or a specialist.")}</p></>}
+    <div className="nature-identifier-layout"><section className="nature-identifier-main" id="reconnaissance"><div className="nature-mode-selector" id="identifier" role="group" aria-label={t("Type d’identification", "Identification type")}>{MODES.map(({ id, label, englishLabel, note, englishNote, icon: Icon }) => <button type="button" key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => { requestSequence.current++; setBusy(false); setMode(id); setResult(null); setError(""); }}><span><Icon size={18} /></span><strong>{t(label, englishLabel)}</strong><small>{t(note, englishNote)}</small></button>)}</div>
+      {mode === "life" && <><div className="nature-mode-selector" role="group" aria-label={t("Groupe du vivant", "Life group")}>{[{ id: "all" as const, label: t("Tous les êtres vivants", "All living things"), note: t("Plantes, champignons, animaux…", "Plants, fungi, animals…"), icon: Sparkles }, { id: "insects" as const, label: t("Insectes & invertébrés", "Insects & invertebrates"), note: t("Insectes, araignées, mollusques", "Insects, spiders, mollusks"), icon: Bug }, { id: "animals" as const, label: t("Animaux terrestres", "Land animals"), note: t("Oiseaux, reptiles, mammifères", "Birds, reptiles, mammals"), icon: Trees }, { id: "fish" as const, label: t("Poissons & vie aquatique", "Fish & aquatic life"), note: t("Poissons, animaux aquatiques", "Fish and aquatic animals"), icon: Leaf }].map(({ id, label, note, icon: Icon }) => <button type="button" key={id} className={lifeTarget === id ? "active" : ""} aria-pressed={lifeTarget === id} onClick={() => { requestSequence.current++; setBusy(false); setLifeTarget(id); setResult(null); setError(""); }}><span><Icon size={18} /></span><strong>{label}</strong><small>{note}</small></button>)}</div><p className="nature-identifier-note"><Zap size={14} /> {t("BioCLIP analyse la photo; Gemini sert de solution de repli si le service BioCLIP ne répond pas. La photo est transmise au fournisseur utilisé; vérifiez les suggestions auprès de la communauté ou d’une personne spécialiste.", "BioCLIP analyzes the photo; Gemini is used as a fallback if BioCLIP is unavailable. Your photo is sent to the provider used. Verify suggestions with the naturalist community or a specialist.")}</p></>}
       {mode === "disease" && <p className="nature-identifier-note"><AlertTriangle size={14} /> Modèle open source PlantVillage (38 classes de cultures). Le résultat est une piste visuelle et ne remplace pas un diagnostic agronomique ; espèces et conditions de terrain limitées.</p>}
       {mode === "disease" && <div className="nature-treatment-choice"><span><AlertTriangle size={16} /> Moment du diagnostic</span>{(["before", "after"] as const).map((stage) => <button key={stage} onClick={() => setTreatmentStage(stage)} className={treatmentStage === stage ? "active" : ""}>{stage === "before" ? "Avant traitement" : "Après traitement"}</button>)}</div>}
       <div className="nature-identifier-tools"><button onClick={requestLocation} className={location ? "enabled" : ""}><Crosshair size={16} /> {location ? "Position activée" : "Ajouter ma position"}</button>{userId && <span><BadgeCheck size={14} /> Session de terrain disponible dans votre espace</span>}</div>

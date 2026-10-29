@@ -453,6 +453,8 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .nature-recognition-grid{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:15px}
 .nature-recognition-grid>div{min-width:0}
 .nature-identification-result{display:grid;gap:12px}
+.identification-result-image{display:grid;place-items:center;min-height:240px;aspect-ratio:4/3;background:#edf2e8}
+.identification-result-image img{max-height:min(70vh,680px)}
 .nature-identifier-error{margin-top:10px;border:1px solid #f1d6c9;border-radius:10px;background:#fff5f0;padding:11px;color:#a45b4a;font-size:10px}
 .nature-identifier-side{position:sticky;top:20px}
 .nature-identify-side-card{display:grid;justify-items:start;gap:8px;border:1px solid #e3ebda;border-radius:16px;background:linear-gradient(145deg,#eef6e8,#fff);padding:17px}

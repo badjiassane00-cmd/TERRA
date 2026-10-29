@@ -2,7 +2,7 @@ const base = (process.env.TERRA_BASE_URL || "http://127.0.0.1:3000").replace(/\/
 const checks = [
   { method: "GET", path: "/api/health", expected: 200 },
   { method: "GET", path: "/api/plants/list", expected: 200 },
-  { method: "GET", path: "/api/community?limit=1", expected: 200 },
+  { method: "GET", path: "/api/community?limit=1", expected: 401 },
   { method: "GET", path: "/api/training", expected: 200 },
   { method: "GET", path: "/api/model?limit=1", expected: 200 },
   { method: "GET", path: "/api/catalogues", expected: 401 },

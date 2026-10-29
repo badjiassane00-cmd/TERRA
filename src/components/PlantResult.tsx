@@ -85,22 +85,6 @@ function ConfidenceGauge({ value, mode }: { value: number; mode: "identify" | "d
   );
 }
 
-function CalloutDot({ label, x, y }: { label: string; x: string; y: string }) {
-  return (
-    <div
-      className="absolute group"
-      style={{ left: x, top: y }}
-    >
-      <div className="w-2.5 h-2.5 rounded-full bg-terracotta border border-white shadow-sm" />
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block">
-        <div className="bg-primary-dark text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-          {label}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function PlantResult({ result, isLoading, previewUrl, userId, userRole, mode = "identify" }: PlantResultProps) {
   if (isLoading) {
     return (
@@ -108,7 +92,7 @@ export default function PlantResult({ result, isLoading, previewUrl, userId, use
         <div className="herbarium-card rounded-xl p-8">
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-base font-medium text-foreground">
+            <p className="text-base font-medium text-foreground" role="status" aria-live="polite">
               Analyse de l&apos;image en cours...
             </p>
             <p className="text-sm text-foreground/60 mt-2">
@@ -188,17 +172,12 @@ export default function PlantResult({ result, isLoading, previewUrl, userId, use
         </>}
 
         {imageToShow && (
-          <div className="relative rounded-lg overflow-hidden mb-6 border border-border">
+          <div className="identification-result-image mb-6 overflow-hidden rounded-lg border border-border">
             <img
               src={imageToShow}
               alt={result.scientific_name}
-              className="w-full h-64 object-cover"
+              className="h-full w-full object-contain"
             />
-            {isBotanical && <>
-              <CalloutDot label="Forme générale" x="25%" y="30%" />
-              <CalloutDot label="Nervures" x="60%" y="45%" />
-              <CalloutDot label="Texture" x="40%" y="70%" />
-            </>}
           </div>
         )}
 
