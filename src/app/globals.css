@@ -1047,8 +1047,8 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .species-featured-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
 .species-featured-card{min-width:0;overflow:hidden;border:1px solid #e0e8dc;border-radius:17px;background:#fff;box-shadow:0 8px 26px #1f39210a;transition:transform .2s,box-shadow .2s,border-color .2s}
 .species-featured-card:hover{transform:translateY(-3px);border-color:#bad1b4;box-shadow:0 15px 35px #1f392115}
-.species-featured-photo{position:relative;display:block;height:clamp(175px,19vw,230px);overflow:hidden;background:radial-gradient(circle at 50% 45%,#f9fbf6,#e4eee0);padding:8px}
-.species-featured-photo img{object-fit:contain;transition:transform .25s}
+.species-featured-photo{position:relative;display:block;height:clamp(175px,19vw,230px);overflow:hidden;background:radial-gradient(circle at 50% 45%,#f9fbf6,#e4eee0);padding:0}
+.species-featured-photo img{object-fit:cover;object-position:center;transition:transform .25s}
 .species-featured-card:hover .species-featured-photo img{transform:scale(1.035)}
 .species-featured-photo>span{position:absolute;top:12px;left:12px;border:1px solid #ffffffc0;border-radius:999px;background:#fffffff0;padding:7px 10px;color:#47734f;font-size:10px;font-weight:750}
 .species-featured-body{padding:15px 16px 16px}
@@ -1059,7 +1059,7 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 .species-featured-credit{display:grid;gap:4px;min-height:36px;margin:10px 0;border-top:1px solid #edf1ea;padding-top:8px;color:#748276;font-size:10px;line-height:1.45}
 .species-featured-credit a{width:max-content;color:#34764a;text-decoration:underline;text-underline-offset:2px}
 .species-featured-open{display:inline-flex;min-height:42px;align-items:center;gap:6px;color:#34764a;font-size:12px;font-weight:800;text-decoration:none}
-.species-detail-visual>img{object-fit:contain;padding:12px}
+.species-detail-visual>img{object-fit:cover;padding:0}
 .nature-profile-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .observation-detail-image{object-fit:contain;background:linear-gradient(145deg,#eef3e8,#dfe9dc)}
 .explorer-observation-photo img,.explorer-observation-photo video{object-fit:contain;background:linear-gradient(145deg,#eef3e8,#dfe9dc)}
