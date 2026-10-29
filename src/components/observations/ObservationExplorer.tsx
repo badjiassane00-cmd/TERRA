@@ -91,7 +91,7 @@ export default function ObservationExplorer({ isAuthenticated, initialQuery }: R
           <h1>Observations de la nature</h1>
           <p>Explorez les découvertes naturalistes du monde entier et les histoires de terrain partagées par la communauté.</p>
         </div>
-        <Link href="/connexion" className="observation-contribute-button"><MapPinned size={17} /> Ajouter une observation</Link>
+        <Link href={isAuthenticated ? "/explorer?section=fil&publier=1" : "/connexion?next=%2Fexplorer%3Fsection%3Dobservations"} className="observation-contribute-button"><MapPinned size={17} /> Ajouter une observation</Link>
       </header>
 
       <div className="observation-source-switch" role="tablist" aria-label="Source des observations">
