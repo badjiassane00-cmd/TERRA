@@ -45,4 +45,4 @@ Cet audit n’est pas une certification WCAG de toutes les pages. Les interfaces
 - La vidéo d’ambiance de 8,7 Mo a été retirée de l’interface d’identification : Chrome ne demande plus ce fichier sur desktop ou mobile; l’image fixe existante reste en place.
 - Déploiement Render confirmé : page `/ecosystemes` en HTTP 200, santé de production HTTP 200.
 
-Commits précédents : `0d9919e`, `819ea0b`, `e4f93e2`, `029c3c5`, `91f9a4b`.
+Commits du chantier : `0d9919e`, `819ea0b`, `e4f93e2`, `029c3c5`, `91f9a4b`, `956942b`, `52fd4a6`, `b628ce2`.
