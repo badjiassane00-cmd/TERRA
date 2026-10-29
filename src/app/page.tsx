@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const featuredPage = await gbifSpeciesService.featured(0, 4);
-  return <HomeLanding featuredSpecies={featuredPage.results} />;
+  return <HomeLanding featuredSpecies={featuredPage.results.slice(0, 4)} />;
 }

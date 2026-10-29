@@ -116,9 +116,12 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [newOrganismGroup, setNewOrganismGroup] = useState<OrganismGroup>("PLANT");
   const [postError, setPostError] = useState<string | null>(null);
-  const visiblePosts = groupFilter === "ALL" ? posts : posts.filter((post) => post.organismGroup === groupFilter);
+  const [localGroupFilter, setLocalGroupFilter] = useState<OrganismFilter>(groupFilter);
+  const activeGroupFilter = onGroupFilterChange ? groupFilter : localGroupFilter;
+  const visiblePosts = activeGroupFilter === "ALL" ? posts : posts.filter((post) => post.organismGroup === activeGroupFilter);
   const [showForm, setShowForm] = useState(initialComposerOpen);
   const [loading, setLoading] = useState(true);
+  const [feedError, setFeedError] = useState("");
   const [posting, setPosting] = useState(false);
   const [pendingObservations, setPendingObservations] = useState<PendingObservation[]>([]);
   const [shareNotice, setShareNotice] = useState<{ postId: string; message: string } | null>(null);
@@ -133,12 +136,14 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
   };
 
   const loadPosts = useCallback(async () => {
+    setLoading(true);
+    setFeedError("");
     try {
       const res = await apiFetch("/api/community?limit=20");
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(
-          (data.data || []).map((post: ApiPost) => ({
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Le fil de la communauté est momentanément indisponible.");
+      setPosts(
+        (data.data || []).map((post: ApiPost) => ({
             id: post.id,
             userId: post.userId,
             user: { name: post.user?.name || "Membre", institution: post.user?.institution, avatarUrl: post.user?.avatarUrl, isDemo: post.user?.isDemo },
@@ -164,11 +169,10 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
             sourceObserver: post.sourceObserver,
             photoAttribution: post.photoAttribution,
             photoLicense: post.photoLicense,
-          }))
-        );
-      }
-    } catch {
-      // Erreur silencieuse : liste vide affichée
+        }))
+      );
+    } catch (cause) {
+      setFeedError(cause instanceof Error ? cause.message : "Le fil de la communauté est momentanément indisponible.");
     } finally {
       setLoading(false);
     }
@@ -470,14 +474,15 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
       {pendingObservations.length > 0 && <aside className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4" aria-live="polite"><strong className="text-sm">{pendingObservations.length} observation(s) en attente de connexion</strong><p className="mt-1 text-xs text-foreground/60">Elles seront envoyées automatiquement quand le réseau reviendra.</p><ul className="mt-2 space-y-1">{pendingObservations.map((item) => <li key={item.id} className="flex items-center justify-between gap-3 text-xs"><span className="truncate">{String(item.body.plantName)} · enregistrée le {new Date(item.queuedAt).toLocaleString("fr-FR")}</span><button type="button" className="text-terracotta underline" onClick={() => { const next = pendingObservations.filter((pending) => pending.id !== item.id); setPendingObservations(next); localStorage.setItem("sununature:pending-observations", JSON.stringify(next)); }}>Supprimer</button></li>)}</ul></aside>}
 
       <div className="nature-filter-row">
-        <button type="button" onClick={() => onGroupFilterChange?.("ALL")} className={`nature-filter-chip ${groupFilter === "ALL" ? "active" : ""}`}>Tout</button>
-        {ORGANISM_GROUPS.map((group) => <button type="button" key={group} onClick={() => onGroupFilterChange?.(group)} className={`nature-filter-chip ${groupFilter === group ? "active" : ""}`}>{ORGANISM_LABELS[group]}</button>)}
+        <button type="button" aria-pressed={activeGroupFilter === "ALL"} onClick={() => onGroupFilterChange ? onGroupFilterChange("ALL") : setLocalGroupFilter("ALL")} className={`nature-filter-chip ${activeGroupFilter === "ALL" ? "active" : ""}`}>Tout</button>
+        {ORGANISM_GROUPS.map((group) => <button type="button" key={group} aria-pressed={activeGroupFilter === group} onClick={() => onGroupFilterChange ? onGroupFilterChange(group) : setLocalGroupFilter(group)} className={`nature-filter-chip ${activeGroupFilter === group ? "active" : ""}`}>{ORGANISM_LABELS[group]}</button>)}
       </div>
       <div className="nature-post-list">
         {loading && (
-          <p className="nature-empty-feed">Les observations de la communauté arrivent…</p>
+          <p className="nature-empty-feed" role="status">Les observations de la communauté arrivent…</p>
         )}
-        {!loading && visiblePosts.length === 0 && (
+        {!loading && feedError && <div className="nature-feed-error" role="alert"><p>{feedError}</p><button type="button" onClick={() => void loadPosts()}>Réessayer</button></div>}
+        {!loading && !feedError && visiblePosts.length === 0 && (
           <p className="nature-empty-feed">
             {posts.length === 0 ? "Aucune observation pour le moment. Soyez le premier à partager votre découverte !" : "Aucune observation dans ce groupe pour l’instant."}
           </p>

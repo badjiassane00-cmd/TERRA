@@ -1,5 +1,6 @@
 const GBIF_API = "https://api.gbif.org/v1";
 const REVALIDATE_SECONDS = 6 * 60 * 60;
+const OCCURRENCE_PAGE_SIZE = 100;
 
 const KINGDOMS: Record<string, string> = {
   animalia: "Animalia",
@@ -187,7 +188,7 @@ export const gbifSpeciesService = {
   async featured(offset = 0, pageSize = 24) {
     const pinned = offset === 0 ? FEATURED_TAXA : [];
     const targetCount = Math.max(1, pageSize - pinned.length);
-    const params = new URLSearchParams({ country: "SN", mediaType: "StillImage", offset: String(offset), limit: "300" });
+    const params = new URLSearchParams({ country: "SN", mediaType: "StillImage", offset: String(offset), limit: String(OCCURRENCE_PAGE_SIZE) });
     params.append("license", "CC0_1_0");
     params.append("license", "CC_BY_4_0");
     try {

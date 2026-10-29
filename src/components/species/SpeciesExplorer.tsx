@@ -142,8 +142,8 @@ export default function SpeciesExplorer({ initialQuery = "", featuredPage = { re
           placeholder="Nom d’espèce, nom scientifique ou nom commun…"
         />
         <kbd>ENTRÉE</kbd>
-        {suggestions.length > 0 && <ul id="species-suggestions" className="species-autocomplete" role="listbox" aria-label="Suggestions d’espèces">
-          {suggestions.map((item) => <li key={item.key} role="option" aria-selected="false"><button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => router.push(`/especes/${item.key}`)}><strong><i>{item.canonicalName}</i></strong><small>{item.kingdom || "Règne non indiqué"} · {item.rank || "rang non indiqué"}<ArrowRight size={13} /></small></button></li>)}
+        {suggestions.length > 0 && <ul id="species-suggestions" className="species-autocomplete" aria-label="Suggestions d’espèces">
+          {suggestions.map((item) => <li key={item.key}><button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => router.push(`/especes/${item.key}`)}><strong><i>{item.canonicalName}</i></strong><small>{item.kingdom || "Règne non indiqué"} · {item.rank || "rang non indiqué"}<ArrowRight size={13} /></small></button></li>)}
         </ul>}
       </div>
       <div className="species-filter-title"><Filter size={14} /> Affiner la recherche</div>

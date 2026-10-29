@@ -31,9 +31,9 @@ export default async function ExplorerPage({ searchParams }: { searchParams: Pro
   const openComposer = Array.isArray(params.publier) ? params.publier[0] === "1" : params.publier === "1";
   const initialQuery = requestedQuery || "";
   const user = await getSessionUser();
-  if (!user) redirect(`/connexion?next=${encodeURIComponent(`/explorer?section=${section}`)}`);
-  const role = user.role.toLowerCase() as "user" | "admin" | "super_admin" | "institution";
-  const gallery = section === "galerie" ? await prisma.communityPost.findMany({
+  if (!user && section !== "observations") redirect(`/connexion?next=${encodeURIComponent(`/explorer?section=${section}`)}`);
+  const role = user?.role.toLowerCase() as "user" | "admin" | "super_admin" | "institution" | undefined;
+  const gallery = section === "galerie" && user ? await prisma.communityPost.findMany({
     where: { userId: user.id, removed: false, isEphemeral: false },
     orderBy: { createdAt: "desc" },
     select: { id: true, plantName: true, imageUrl: true, thumbnailUrl: true, organismGroup: true, createdAt: true },
@@ -51,12 +51,12 @@ export default async function ExplorerPage({ searchParams }: { searchParams: Pro
 
     {section === "fil" && <>
       <section className="community-hub-section-heading"><div><span>LE CARNET COLLECTIF</span><h2>Rencontres récentes</h2><p>Échangez autour des découvertes des naturalistes.</p></div><Link href="/explorer?section=observations">Parcourir les observations <MapPinned size={15} /></Link></section>
-      <div className="nature-explorer-feed-wrap"><CommunityFeed currentUserId={user.id} currentUserRole={role} initialComposerOpen={openComposer} /></div>
+      <div className="nature-explorer-feed-wrap"><CommunityFeed currentUserId={user?.id} currentUserRole={role} initialComposerOpen={openComposer} /></div>
     </>}
 
-    {section === "observations" && <ObservationExplorer isAuthenticated initialQuery={initialQuery} />}
+    {section === "observations" && <ObservationExplorer isAuthenticated={Boolean(user)} initialQuery={initialQuery} />}
 
-    {section === "galerie" && <section className="community-hub-gallery">
+    {section === "galerie" && user && <section className="community-hub-gallery">
       <header><div><span>VOS RENCONTRES DOCUMENTÉES</span><h2>Ma galerie naturaliste</h2><p>Les observations que vous avez publiées dans la communauté TERRA.</p></div><Link href={`/profile/${user.id}`}>Gérer mon profil</Link></header>
       {gallery.length ? <div className="nature-profile-grid">{gallery.map((post) => <Link key={post.id} href={`/observations/${post.id}`} className="nature-profile-tile"><Image src={post.thumbnailUrl || post.imageUrl} alt={post.plantName} fill sizes="(max-width: 650px) 33vw, 320px" unoptimized /><span>{post.plantName}<small>{ORGANISM_LABELS[post.organismGroup]} · {post.createdAt.toLocaleDateString("fr-FR")}</small></span></Link>)}</div> : <div className="nature-profile-empty"><Camera size={27} /><p>Votre galerie est vide pour l’instant. Partagez votre première rencontre avec le vivant.</p><Link href="/explorer?section=fil&publier=1">Publier une observation</Link></div>}
       <Link className="community-hub-profile-link" href={`/profile/${user.id}`}>Ouvrir mon profil complet et partager ma galerie</Link>

@@ -14,7 +14,7 @@ type FeaturedSpecies = {
 const WORLDS = [
   { title: "Explorer les espèces", detail: "Noms, classification et références documentées.", href: "/biodiversite", icon: Leaf, label: "Encyclopédie" },
   { title: "Identifier le vivant", detail: "Photo de plante, insecte ou animal : obtenez des pistes à vérifier.", href: "/identifier", icon: Camera, label: "Reconnaissance" },
-  { title: "Partager une rencontre", detail: "Retrouvez les observations et les collections des naturalistes.", href: "/explorer", icon: MapPinned, label: "Communauté" },
+  { title: "Partager une rencontre", detail: "Parcourez les observations publiques et retrouvez vos collections dans votre espace.", href: "/explorer?section=observations", icon: MapPinned, label: "Communauté" },
   { title: "Agir sur le terrain", detail: "Découvrez les missions proposées autour de la biodiversité.", href: "/missions", icon: Target, label: "Missions" },
 ];
 
@@ -66,6 +66,12 @@ export default function HomeLanding({ featuredSpecies }: Readonly<{ featuredSpec
         </Link>
         <div className="terra-home-species-copy"><small>{species.class || "Biodiversité"}</small><h3><Link href={`/especes/${species.key}`}><i>{species.canonicalName}</i></Link></h3><p>{species.image.creator || species.image.publisher || "Crédit photo fourni"} · {species.image.license}</p>{species.image.sourceUrl && <a href={species.image.sourceUrl} target="_blank" rel="noreferrer">Voir la source photo</a>}</div>
       </article>)}</div> : <div className="terra-home-species-empty"><p>La sélection d’espèces est momentanément indisponible.</p><Link href="/biodiversite">Rechercher dans l’encyclopédie <ArrowRight size={15} /></Link></div>}
+    </section>
+
+    <section className="terra-home-community" aria-labelledby="terra-home-community-title">
+      <div className="terra-home-community-mark"><MapPinned size={26} /><span>OBSERVATIONS · ÉCHANGES · CARNETS</span></div>
+      <div><h2 id="terra-home-community-title">La nature se découvre aussi ensemble.</h2><p>Parcourez des observations publiques du monde entier. Connectez-vous pour partager les vôtres et retrouver vos collections dans l’espace TERRA.</p></div>
+      <Link href="/explorer?section=observations">Explorer les observations <ArrowRight size={16} /></Link>
     </section>
 
     <section className="terra-home-conservation"><div><span><Compass size={15} /> CONNAÎTRE POUR MIEUX PRÉSERVER</span><h2>Chaque observation peut enrichir la connaissance du vivant.</h2><p>TERRA relie les fiches taxonomiques aux observations de terrain. Les données sensibles restent protégées et les sources sont indiquées lorsqu’elles sont disponibles.</p></div><Link href="/missions">Découvrir les missions <ArrowRight size={16} /></Link></section>

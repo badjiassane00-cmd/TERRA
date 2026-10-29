@@ -52,7 +52,7 @@ export default async function SpeciesPage({ params }: PageProps) {
   const leadImage = species.images[0];
 
   return <main className="species-detail-page">
-    <Link href="/biodiversite" className="species-back"><ArrowLeft size={15} /> Retour à l’encyclopédie</Link>
+    <nav className="species-detail-breadcrumb" aria-label="Fil d’Ariane"><Link href="/">Accueil</Link><span aria-hidden="true">/</span><Link href="/biodiversite">Encyclopédie</Link><span aria-hidden="true">/</span><span aria-current="page"><i>{species.canonicalName}</i></span></nav>
     <section className="species-detail-hero">
       <div className="species-detail-copy">
         <span className="species-eyebrow"><Leaf size={14} /> FICHE TAXONOMIQUE · GBIF {species.key}</span>
