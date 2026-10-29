@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     ".kilo/**",
     ".kombai/**",
+    // This is an ignored archived copy, not part of the deployed application.
+    "TERRA/**",
   ]),
 ]);
 

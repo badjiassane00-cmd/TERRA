@@ -49,8 +49,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-background">
         <AppPreferences>
+          <a className="skip-to-main" href="#main-content">Aller au contenu principal</a>
           <NatureAppHeader user={user ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl, role: user.role } : null} />
-          {children}
+          <div id="main-content" className="app-main-content" tabIndex={-1}>{children}</div>
         </AppPreferences>
       </body>
     </html>

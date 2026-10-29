@@ -17,7 +17,7 @@ export function AppPreferenceControls() {
   const { locale, theme, toggleLocale, toggleTheme } = useAppPreferences();
   return <div className="app-preference-controls" aria-label={locale === "en" ? "Display preferences" : "Préférences d’affichage"}>
     <button type="button" onClick={toggleLocale} aria-label={locale === "en" ? "Switch to French" : "Switch to English"} title={locale === "en" ? "Switch to French" : "Switch to English"}>
-      <Languages size={15} /><span>{locale.toUpperCase()}</span>
+      <Languages size={15} /><span>{locale === "en" ? "FR" : "EN"}</span>
     </button>
     <button type="button" onClick={toggleTheme} aria-label={theme === "dark" ? (locale === "en" ? "Switch to light mode" : "Activer le mode clair") : (locale === "en" ? "Switch to dark mode" : "Activer le mode nuit")} title={theme === "dark" ? (locale === "en" ? "Light mode" : "Mode clair") : (locale === "en" ? "Dark mode" : "Mode nuit")}>
       {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}<span>{theme === "dark" ? (locale === "en" ? "Light" : "Clair") : (locale === "en" ? "Dark" : "Nuit")}</span>

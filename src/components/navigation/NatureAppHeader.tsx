@@ -29,18 +29,18 @@ export default function NatureAppHeader({ user }: Readonly<{ user: HeaderUser | 
         </Link>
         <div className="nature-app-header-tools">
           <AppPreferenceControls />
-          <button className="nature-mobile-menu-toggle" type="button" aria-expanded={menuOpen} aria-controls="terra-primary-navigation" onClick={() => setMenuOpen((open) => !open)}>
+          <button className="nature-mobile-menu-toggle" type="button" aria-label={menuOpen ? t("Fermer le menu", "Close menu") : t("Ouvrir le menu", "Open menu")} aria-expanded={menuOpen} aria-controls="terra-primary-navigation" onClick={() => setMenuOpen((open) => !open)}>
             {menuOpen ? <X size={19} /> : <Menu size={19} />}<span>{menuOpen ? t("Fermer", "Close") : t("Menu", "Menu")}</span>
           </button>
         </div>
       </div>
-      <nav id="terra-primary-navigation" className={menuOpen ? "is-open" : ""} aria-label={t("Navigation principale", "Main navigation")} onClick={(event) => { if ((event.target as HTMLElement).closest("a")) setMenuOpen(false); }}>
+      <nav id="terra-primary-navigation" className={menuOpen ? "is-open" : ""} aria-label={t("Navigation principale", "Main navigation")} onClick={(event) => { if ((event.target as HTMLElement).closest("a")) setMenuOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}>
         <Link href="/" className={activeClass("/")} aria-current={pathname === "/" ? "page" : undefined}><Camera size={16} /> {t("Reconnaître", "Identify")}</Link>
         <Link href="/biodiversite" className={`${activeClass("/biodiversite")}${pathname.startsWith("/especes/") ? " active" : ""}`} aria-current={pathname.startsWith("/biodiversite") || pathname.startsWith("/especes/") ? "page" : undefined}><Leaf size={16} /> {t("Biodiversité", "Biodiversity")}</Link>
         <Link href="/explorer" className={`${activeClass("/explorer")}${pathname.startsWith("/observations") || pathname.startsWith("/catalogues") ? " active" : ""}`} aria-current={pathname.startsWith("/explorer") || pathname.startsWith("/observations") || pathname.startsWith("/catalogues") ? "page" : undefined}><Compass size={16} /> {t("Communauté", "Community")}</Link>
-        <Link href="/missions" className={activeClass("/missions")}><Target size={16} /> {t("Missions", "Missions")}</Link>
+        <Link href="/missions" className={activeClass("/missions")} aria-current={pathname.startsWith("/missions") ? "page" : undefined}><Target size={16} /> {t("Missions", "Missions")}</Link>
         <CommunitySearch />
-        {user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && <Link href="/admin" className={activeClass("/admin")}><Shield size={16} /> {t("Administration", "Administration")}</Link>}
+        {user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && <Link href="/admin" className={activeClass("/admin")} aria-current={pathname.startsWith("/admin") ? "page" : undefined}><Shield size={16} /> {t("Administration", "Administration")}</Link>}
         {user ? (
           <>
             <NotificationBell />

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Leaf, Lock, Loader2 } from "lucide-react";
+import Image from "next/image";
 import BackLink from "@/components/navigation/BackLink";
 
 interface ExhibitionItem {
@@ -67,9 +68,9 @@ export default function PublicExhibitionPage() {
         </div>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <main className="max-w-3xl mx-auto px-4 py-12" aria-busy={isLoading}>
         {isLoading && (
-          <div className="flex items-center justify-center py-20 text-foreground/50">
+          <div className="flex items-center justify-center py-20 text-foreground/50" role="status" aria-live="polite">
             <Loader2 className="w-6 h-6 animate-spin mr-2" />
             Chargement de l&apos;exposition...
           </div>
@@ -113,7 +114,7 @@ export default function PublicExhibitionPage() {
                   const commonNames = parseCommonNames(item.plant.commonNames);
                   return (
                     <div key={item.id} className="border border-border rounded-lg p-4">
-                      {item.videoUrl ? <video src={item.videoUrl} poster={item.imageUrl || undefined} controls playsInline className="public-exhibition-media" /> : item.imageUrl && <img src={item.imageUrl} alt={commonNames[0] || item.plant.scientificName} className="public-exhibition-media" />}
+                      {item.videoUrl ? <video src={item.videoUrl} poster={item.imageUrl || undefined} controls playsInline className="public-exhibition-media" /> : item.imageUrl && <Image src={item.imageUrl} alt={commonNames[0] || item.plant.scientificName} width={1200} height={800} sizes="(max-width: 640px) 100vw, 50vw" unoptimized className="public-exhibition-media" />}
                       <div className="flex items-center gap-2 mb-2">
                         <Leaf className="w-4 h-4 text-primary" />
                         <p className="font-medium text-foreground">
@@ -137,7 +138,7 @@ export default function PublicExhibitionPage() {
             )}
           </>
         )}
-      </div>
+      </main>
     </div>
   );
 }

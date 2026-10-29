@@ -1113,3 +1113,13 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 }
 :root[data-theme="dark"] .nature-app-header .app-preference-controls button,:root[data-theme="dark"] .nature-mobile-menu-toggle{border-color:#405346;background:#1d2a21;color:#e1ede1}
 :root[data-theme="dark"] .nature-app-header nav{border-color:#35463a}
+
+/* Shared accessibility defaults: readable captions, keyboard entry and calm motion. */
+html{scroll-behavior:smooth;scroll-padding-top:5.5rem;-webkit-text-size-adjust:100%}
+.app-main-content{min-width:0;flex:1}
+.skip-to-main{position:fixed;z-index:1000;top:10px;left:10px;transform:translateY(-160%);border:2px solid #fff;border-radius:8px;background:#174c34;padding:12px 16px;color:#fff;font-size:16px;font-weight:750;text-decoration:none;box-shadow:0 4px 18px #0003}
+.skip-to-main:focus{transform:translateY(0);outline:3px solid #d39a48;outline-offset:2px}
+small{font-size:max(12px,.9em)!important;line-height:1.45}
+@media(pointer:coarse){button,select{min-height:44px}}
+@media(max-width:680px){input:not([type="checkbox"]):not([type="radio"]),select,textarea{font-size:16px!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition-duration:.01ms!important;transition-delay:0ms!important}}
