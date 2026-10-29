@@ -1,3 +1,5 @@
+import { deduplicateTaxonUsages } from "@/server/species/taxon-deduplication";
+
 const GBIF_API = "https://api.gbif.org/v1";
 const REVALIDATE_SECONDS = 6 * 60 * 60;
 const OCCURRENCE_PAGE_SIZE = 100;
@@ -258,7 +260,8 @@ export const gbifSpeciesService = {
       limit: filters.limit,
     });
     const page = await gbifJson<GbifPage<GbifUsage>>(`/species/search?${query}`);
-    const results = unwrapList(page).filter((item) => item.key && item.scientificName).map((item) => ({
+    const usages = deduplicateTaxonUsages(unwrapList(page).filter((item) => item.key && item.scientificName));
+    const results = usages.map((item) => ({
       key: item.nubKey || item.key,
       scientificName: item.scientificName || item.canonicalName || "Nom non renseigné",
       canonicalName: item.canonicalName || item.scientificName || "Nom non renseigné",

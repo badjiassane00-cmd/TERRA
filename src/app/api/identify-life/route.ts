@@ -6,6 +6,7 @@ import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/server/http/rate-limit";
 import { readLimitedFormData } from "@/server/http/read-limited-form-data";
+import { validateIdentificationImage } from "@/lib/identification-image";
 
 export const runtime = "nodejs";
 
@@ -21,8 +22,8 @@ async function POSTImpl(request: Request) {
     : "all";
 
   if (!(image instanceof File)) throw new ApiError("Prenez ou choisissez une photo nette du vivant.", 400);
-  if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) throw new ApiError("Utilisez une image JPEG, PNG ou WebP.", 415);
-  if (image.size > 10 * 1024 * 1024) throw new ApiError("L’image ne doit pas dépasser 10 Mo.", 413);
+  const imageValidation = validateIdentificationImage(image, "life");
+  if (imageValidation) throw new ApiError(imageValidation.message, imageValidation.status);
 
   const { provider, candidates: identified } = await identifyLifeSpecies(image, group);
 

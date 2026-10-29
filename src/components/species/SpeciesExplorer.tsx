@@ -107,7 +107,16 @@ export default function SpeciesExplorer({ initialQuery = "", initialKingdom = ""
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Recherche momentanément indisponible.");
         const pageData = result as SearchState;
-        setData((previous) => ({ ...pageData, results: page === 0 ? pageData.results : [...previous.results, ...pageData.results] }));
+        setData((previous) => {
+          if (page === 0) return pageData;
+          const seen = new Set(previous.results.map((item) => item.key));
+          const nextResults = pageData.results.filter((item) => {
+            if (seen.has(item.key)) return false;
+            seen.add(item.key);
+            return true;
+          });
+          return { ...pageData, results: [...previous.results, ...nextResults] };
+        });
       } catch (cause) {
         if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Recherche momentanément indisponible.");
       } finally {
@@ -161,7 +170,7 @@ export default function SpeciesExplorer({ initialQuery = "", initialKingdom = ""
     </section>
 
     <section className="species-search-results" aria-live="polite">
-      <div className="species-results-heading"><div><span>RÉSULTATS TAXONOMIQUES</span><h2>{query.trim().length >= 2 ? `Taxons correspondant à « ${query.trim()} »` : hasActiveSearch ? "Taxons selon vos filtres" : "Votre prochaine découverte commence ici"}</h2></div>{hasActiveSearch && data.count > 0 && <span className="species-result-count">{data.count.toLocaleString("fr-FR")} résultats GBIF</span>}</div>
+      <div className="species-results-heading"><div><span>RÉSULTATS TAXONOMIQUES</span><h2>{query.trim().length >= 2 ? `Taxons correspondant à « ${query.trim()} »` : hasActiveSearch ? "Taxons selon vos filtres" : "Votre prochaine découverte commence ici"}</h2></div>{hasActiveSearch && data.count > 0 && <span className="species-result-count">{data.count.toLocaleString("fr-FR")} correspondances GBIF</span>}</div>
       {!hasActiveSearch ? <>
         <div className="species-featured-intro"><BookOpen size={20} /><div><h3>Des espèces à découvrir</h3><p>{featuredSpecies.length} fiches illustrées pour commencer. Explorez les espèces signalées au Sénégal dans GBIF, avec leurs sources et licences photo.</p></div></div>
         {featuredSpecies.length ? <><div className="species-featured-grid">{featuredSpecies.map((item) => <article className="species-featured-card" key={item.key}>

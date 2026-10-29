@@ -2,41 +2,69 @@
 /* eslint-disable @next/next/no-img-element -- image previews come from local FileReader data URLs */
 
 import { useCallback, useState, useRef } from "react";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type Accept } from "react-dropzone";
 import { Camera, Upload, X } from "lucide-react";
+import { acceptedIdentificationImageTypes, MAX_IDENTIFICATION_IMAGE_BYTES, type IdentificationImageMode, type IdentificationImageType, validateIdentificationImage } from "@/lib/identification-image";
 
 interface PhotoUploadProps {
   onImageUpload: (file: File) => void;
   isLoading?: boolean;
   onPreviewChange?: (preview: string | null) => void;
+  mode?: IdentificationImageMode;
 }
 
-export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange }: PhotoUploadProps) {
+const EXTENSIONS: Record<IdentificationImageType, string[]> = {
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+};
+
+export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange, mode = "plants" }: PhotoUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [useCamera, setUseCamera] = useState(false);
+  const [fileError, setFileError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const acceptedImageTypes = acceptedIdentificationImageTypes(mode);
+  const accept = acceptedImageTypes.reduce<Accept>((types, type) => {
+    types[type] = EXTENSIONS[type];
+    return types;
+  }, {});
+
+  const uploadFile = useCallback((file: File) => {
+    const validation = validateIdentificationImage(file, mode);
+    if (validation) {
+      setFileError(validation.message);
+      return;
+    }
+    setFileError("");
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setPreview(dataUrl);
+      onPreviewChange?.(dataUrl);
+    };
+    reader.readAsDataURL(file);
+    onImageUpload(file);
+  }, [mode, onImageUpload, onPreviewChange]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        setPreview(dataUrl);
-        onPreviewChange?.(dataUrl);
-      };
-      reader.readAsDataURL(file);
-      onImageUpload(file);
-    }
-  }, [onImageUpload, onPreviewChange]);
+    if (file) uploadFile(file);
+  }, [uploadFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-        "image/jpeg": [".jpeg", ".jpg"],
-        "image/png": [".png"],
-        "image/webp": [".webp"],
+    onDropRejected: (rejections) => {
+      const rejection = rejections[0];
+      if (!rejection) return;
+      if (rejection.errors.some((error) => error.code === "too-many-files")) {
+        setFileError("Choisissez une seule image à la fois.");
+        return;
+      }
+      setFileError(validateIdentificationImage(rejection.file, mode)?.message || "Cette image ne peut pas être utilisée.");
     },
+    accept,
+    maxSize: MAX_IDENTIFICATION_IMAGE_BYTES,
     maxFiles: 1,
     disabled: isLoading,
   });
@@ -44,6 +72,7 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
   const clearImage = () => {
     setPreview(null);
     setUseCamera(false);
+    setFileError("");
     onPreviewChange?.(null);
   };
 
@@ -56,16 +85,8 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        setPreview(dataUrl);
-        onPreviewChange?.(dataUrl);
-      };
-      reader.readAsDataURL(file);
-      onImageUpload(file);
-    }
+    if (file) uploadFile(file);
+    e.currentTarget.value = "";
   };
 
   return (
@@ -91,7 +112,7 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
                   : "Photographiez ou importez un organisme vivant"}
               </p>
               <p className="text-sm text-foreground/60">
-                Formats acceptés : JPEG, PNG (10 Mo maximum)
+                Formats acceptés : {acceptedImageTypes.map((type) => EXTENSIONS[type][0].replace(".", "").toUpperCase()).join(", ")} (10 Mo maximum)
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-3 mt-2">
@@ -126,6 +147,7 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
               onChange={handleFileChange}
               className="hidden"
             />
+            {fileError && <p className="mt-3 text-sm text-terracotta" role="alert">{fileError}</p>}
           </div>
         </div>
       ) : (
@@ -158,6 +180,7 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
           )}
         </div>
       )}
+      {preview && fileError && <p className="mt-3 text-sm text-terracotta" role="alert">{fileError}</p>}
     </div>
   );
 }

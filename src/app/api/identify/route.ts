@@ -6,9 +6,7 @@ import { getSessionUserId } from "../../../lib/session";
 import { geminiIdentificationAdapter } from "@/server/identification/gemini.adapter";
 import { enforceRateLimit } from "@/server/http/rate-limit";
 import { readLimitedFormData } from "@/server/http/read-limited-form-data";
-
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png"]);
+import { validateIdentificationImage } from "@/lib/identification-image";
 
 export const runtime = "nodejs";
 async function POSTImpl(request: Request) {
@@ -27,8 +25,8 @@ async function POSTImpl(request: Request) {
     const hasCoords = lat !== null && lng !== null && Number.isFinite(lat) && Number.isFinite(lng);
 
     if (!(image instanceof File)) return NextResponse.json({ error: "Ajoutez une photo de plante." }, { status: 400 });
-    if (!ACCEPTED_TYPES.has(image.type)) return NextResponse.json({ error: "Utilisez une image JPEG ou PNG." }, { status: 415 });
-    if (image.size > MAX_IMAGE_BYTES) return NextResponse.json({ error: "L'image ne doit pas dépasser 10 Mo." }, { status: 413 });
+    const imageValidation = validateIdentificationImage(image, mode === "disease" ? "disease" : "plants");
+    if (imageValidation) return NextResponse.json({ error: imageValidation.message }, { status: imageValidation.status });
 
     // Gemini can identify plants even when a Pl@ntNet API key is not configured.
     if (mode === "identify" && process.env.GEMINI_API_KEY) {
