@@ -77,9 +77,9 @@ export default function HomeLanding({ featuredSpecies }: Readonly<{ featuredSpec
       </div>
     </section>
 
-    <section className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16" aria-labelledby="terra-home-practices-title">
+    <section className="terra-home-practices mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16" aria-labelledby="terra-home-practices-title">
       <header className="mb-6 max-w-3xl">
-        <span className="text-xs font-bold uppercase tracking-[.14em] text-primary-dark">DES OUTILS SELON VOTRE PRATIQUE</span>
+        <span className="terra-home-practice-eyebrow text-xs font-bold uppercase tracking-[.14em]">DES OUTILS SELON VOTRE PRATIQUE</span>
         <h2 id="terra-home-practices-title" className="mt-2 font-serif text-3xl font-semibold leading-tight sm:text-4xl">Par où souhaitez-vous commencer ?</h2>
         <p className="mt-3 text-sm leading-6 text-foreground/70 sm:text-base">Choisissez un point d’entrée. TERRA vous dirige vers les outils disponibles et précise leurs limites.</p>
       </header>
@@ -87,7 +87,7 @@ export default function HomeLanding({ featuredSpecies }: Readonly<{ featuredSpec
         {PRACTICE_PATHS.map((item) => <article key={item.title} className="flex min-h-56 flex-col rounded-2xl border border-border bg-card-bg p-5 shadow-sm">
           <h3 className="font-serif text-xl font-semibold">{item.title}</h3>
           <p className="mt-3 flex-1 text-sm leading-6 text-foreground/70">{item.detail}</p>
-          <Link href={item.href} className="mt-5 inline-flex min-h-11 items-center gap-2 self-start font-semibold text-primary-dark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">{item.label}<ArrowRight size={16} aria-hidden="true" /></Link>
+          <Link href={item.href} className="terra-home-practice-link mt-5 inline-flex min-h-11 items-center gap-2 self-start font-semibold underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">{item.label}<ArrowRight size={16} aria-hidden="true" /></Link>
         </article>)}
       </div>
     </section>
