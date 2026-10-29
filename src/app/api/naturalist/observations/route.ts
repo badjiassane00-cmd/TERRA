@@ -24,7 +24,12 @@ async function GETImpl(request: Request) {
 
   try {
     const data = await inaturalistService.list({ page, perPage, group, query, taxonName });
-    return NextResponse.json({ source: "iNaturalist", attribution: "Données et photos par les observateurs iNaturalist", ...data });
+    const observations = taxonName
+      ? data.observations.map(({ id, sourceUrl, plantName, scientificName, imageUrl, photoAttribution, photoLicense, region, observedAt, observer }) => ({
+          id, sourceUrl, plantName, scientificName, imageUrl, photoAttribution, photoLicense, region, observedAt, observer,
+        }))
+      : data.observations;
+    return NextResponse.json({ source: "iNaturalist", attribution: "Données et photos par les observateurs iNaturalist", ...data, observations });
   } catch (error) {
     console.error("Erreur de récupération iNaturalist:", error);
     return NextResponse.json({ error: "Les observations iNaturalist sont temporairement indisponibles." }, { status: 502 });
