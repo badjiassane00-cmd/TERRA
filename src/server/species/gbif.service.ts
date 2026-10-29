@@ -86,8 +86,8 @@ function encodeParams(values: Record<string, string | number | undefined>) {
 }
 
 async function kingdomKey(kingdomName: string) {
-  const result = await gbifJson<{ key?: number }>(`/species/match?${encodeParams({ name: kingdomName, rank: "KINGDOM", strict: "true" })}`);
-  return result.key;
+  const result = await gbifJson<{ key?: number; usageKey?: number; kingdomKey?: number }>(`/species/match?${encodeParams({ name: kingdomName, rank: "KINGDOM", strict: "true" })}`);
+  return result.kingdomKey ?? result.usageKey ?? result.key;
 }
 
 function unwrapList<T>(value: T[] | GbifPage<T> | null | undefined): T[] {
