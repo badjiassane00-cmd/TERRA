@@ -51,5 +51,6 @@ Cet audit n’est pas une certification WCAG de toutes les pages. Les interfaces
 - Déploiement Render confirmé : page `/ecosystemes` en HTTP 200, santé de production HTTP 200.
 - Le tableau admin propose maintenant une nouvelle tentative accessible au clavier lorsque l’API échoue dès l’ouverture; les commandes de section ont un état courant explicite et un focus clavier visible.
 - L’accueil propose quatre portes d’entrée contextualisées, dont les descriptions précisent quand l’outil n’est qu’une piste visuelle ou une co-présence et quand le module métier n’existe pas encore.
+- L’accueil de production a été revérifié après le déploiement Render du commit `1981e84`; le nouveau bloc de parcours contextualisés est présent dans le HTML servi.
 
-Commits du chantier : `0d9919e`, `819ea0b`, `e4f93e2`, `029c3c5`, `91f9a4b`, `956942b`, `52fd4a6`, `b628ce2`.
+Commits du chantier : `0d9919e`, `819ea0b`, `e4f93e2`, `029c3c5`, `91f9a4b`, `956942b`, `52fd4a6`, `b628ce2`, `2243890`, `0fbb45a`, `1981e84`.
