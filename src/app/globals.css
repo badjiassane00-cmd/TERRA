@@ -1069,7 +1069,7 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 :root[data-theme="dark"] .species-featured-credit{border-color:#35463a;color:#bfccbf}
 @media(max-width:680px){
   .nature-social-post{display:flex;flex-direction:column}
-  .nature-post-photo{height:clamp(220px,67vw,360px);max-height:360px;aspect-ratio:4/3}
+  .nature-post-photo{height:auto;max-height:min(70svh,640px);aspect-ratio:4/3}
   .nature-post-body{width:100%;padding:9px 16px 18px}
   .species-featured-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
   .species-featured-photo{height:clamp(150px,32vw,210px)}

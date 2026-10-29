@@ -483,7 +483,7 @@ export default function CommunityFeed({ currentUserId, currentUserRole, groupFil
               {post.videoUrl ? (
                 <video src={post.videoUrl} poster={post.imageUrl} controls playsInline preload="metadata" aria-label={`Vidéo de ${post.plantName}`} />
               ) : post.imageUrl ? (
-                <Link href={`/observations/${post.id}`} aria-label={`Voir ${post.plantName}`}><Image src={post.imageUrl} alt={post.plantName} width={1280} height={960} unoptimized className="w-full h-full object-contain" /></Link>
+                <Link href={`/observations/${post.id}`} aria-label={`Voir ${post.plantName}`}><Image src={post.imageUrl} alt={post.plantName} width={1280} height={960} unoptimized className="w-full h-full object-contain" onLoad={(event) => { const image = event.currentTarget; const frame = image.closest<HTMLElement>(".nature-post-photo"); if (frame && image.naturalWidth && image.naturalHeight) frame.style.aspectRatio = `${image.naturalWidth} / ${image.naturalHeight}`; }} /></Link>
               ) : (
                 <div className="flex min-h-28 items-center justify-center gap-3 px-5 text-primary/70">
                   <Leaf className="h-7 w-7" />
