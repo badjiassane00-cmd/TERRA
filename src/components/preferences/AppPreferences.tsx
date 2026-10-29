@@ -5,12 +5,24 @@ import { Languages, Moon, Sun } from "lucide-react";
 
 type Locale = "fr" | "en";
 type Theme = "light" | "dark";
-type Preferences = { locale: Locale; theme: Theme; t: (fr: string, en: string) => string };
+type Preferences = { locale: Locale; theme: Theme; t: (fr: string, en: string) => string; toggleLocale: () => void; toggleTheme: () => void };
 
-const PreferencesContext = createContext<Preferences>({ locale: "fr", theme: "light", t: (fr) => fr });
+const PreferencesContext = createContext<Preferences>({ locale: "fr", theme: "light", t: (fr) => fr, toggleLocale: () => {}, toggleTheme: () => {} });
 
 export function useAppPreferences() {
   return useContext(PreferencesContext);
+}
+
+export function AppPreferenceControls() {
+  const { locale, theme, toggleLocale, toggleTheme } = useAppPreferences();
+  return <div className="app-preference-controls" aria-label={locale === "en" ? "Display preferences" : "Préférences d’affichage"}>
+    <button type="button" onClick={toggleLocale} aria-label={locale === "en" ? "Switch to French" : "Switch to English"} title={locale === "en" ? "Switch to French" : "Switch to English"}>
+      <Languages size={15} /><span>{locale.toUpperCase()}</span>
+    </button>
+    <button type="button" onClick={toggleTheme} aria-label={theme === "dark" ? (locale === "en" ? "Switch to light mode" : "Activer le mode clair") : (locale === "en" ? "Switch to dark mode" : "Activer le mode nuit")} title={theme === "dark" ? (locale === "en" ? "Light mode" : "Mode clair") : (locale === "en" ? "Dark mode" : "Mode nuit")}>
+      {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}<span>{theme === "dark" ? (locale === "en" ? "Light" : "Clair") : (locale === "en" ? "Dark" : "Nuit")}</span>
+    </button>
+  </div>;
 }
 
 export function AppPreferences({ children }: Readonly<{ children: ReactNode }>) {
@@ -37,16 +49,8 @@ export function AppPreferences({ children }: Readonly<{ children: ReactNode }>) 
     localStorage.setItem("terra-theme", theme);
   }, [locale, theme, ready]);
 
-  const value = useMemo(() => ({ locale, theme, t: (fr: string, en: string) => locale === "en" ? en : fr }), [locale, theme]);
+  const value = useMemo(() => ({ locale, theme, t: (fr: string, en: string) => locale === "en" ? en : fr, toggleLocale: () => setLocale((current) => current === "fr" ? "en" : "fr"), toggleTheme: () => setTheme((current) => current === "light" ? "dark" : "light") }), [locale, theme]);
   return <PreferencesContext.Provider value={value}>
-    <div className="app-preference-controls" aria-label={locale === "en" ? "Display preferences" : "Préférences d’affichage"}>
-      <button type="button" onClick={() => setLocale((current) => current === "fr" ? "en" : "fr")} aria-label={locale === "en" ? "Switch to French" : "Switch to English"} title={locale === "en" ? "Switch to French" : "Switch to English"}>
-        <Languages size={15} /><span>{locale.toUpperCase()}</span>
-      </button>
-      <button type="button" onClick={() => setTheme((current) => current === "light" ? "dark" : "light")} aria-label={theme === "dark" ? (locale === "en" ? "Switch to light mode" : "Activer le mode clair") : (locale === "en" ? "Switch to dark mode" : "Activer le mode nuit")} title={theme === "dark" ? (locale === "en" ? "Light mode" : "Mode clair") : (locale === "en" ? "Dark mode" : "Mode nuit")}>
-        {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}<span>{theme === "dark" ? (locale === "en" ? "Light" : "Clair") : (locale === "en" ? "Dark" : "Nuit")}</span>
-      </button>
-    </div>
     <div className="app-preferences-content">{children}</div>
   </PreferencesContext.Provider>;
 }

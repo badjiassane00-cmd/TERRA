@@ -1079,3 +1079,37 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 }
 @media(min-width:681px) and (max-width:1100px){.species-featured-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:420px){.species-featured-grid{grid-template-columns:1fr}.species-featured-photo{height:220px}}
+
+/* Navigation mobile compacte, préférences visibles dans l’en-tête. */
+.nature-app-header{gap:clamp(12px,2vw,28px)}
+.nature-app-header-top{display:contents}
+.nature-app-header>.nature-identifier-brand{order:1;flex:0 0 auto}
+.nature-app-header nav{order:2;flex:1;justify-content:center;flex-wrap:nowrap;min-width:0;gap:clamp(3px,.8vw,12px)}
+.nature-app-header nav>a.nature-nav-link{padding:0 clamp(5px,.7vw,10px);font-size:11px}
+.nature-app-header-tools{order:3;display:flex;flex:0 0 auto;align-items:center;gap:8px}
+.nature-app-header .app-preference-controls{position:static;z-index:auto;gap:5px}
+.nature-app-header .app-preference-controls button{min-height:36px;padding:0 9px;box-shadow:none}
+.nature-mobile-menu-toggle{display:none}
+@media(max-width:920px){
+  .nature-app-header{align-items:stretch;flex-direction:column;gap:0;padding:9px 14px}
+  .nature-app-header-top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px}
+  .nature-app-header>.nature-identifier-brand{order:initial}
+  .nature-app-header-tools{order:initial}
+  .nature-mobile-menu-toggle{display:inline-flex;min-height:36px;align-items:center;gap:6px;border:1px solid #dce8dc;border-radius:9px;background:#fff;padding:0 9px;color:#34523b;font:700 11px var(--font-geist-sans),Arial,sans-serif}
+  .nature-app-header nav,.nature-app-header nav.is-open{display:none;order:initial;flex:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;padding:8px 0 3px;border-top:1px solid #e7ede2}
+  .nature-app-header nav.is-open{display:grid}
+  .nature-app-header nav>a.nature-nav-link,.nature-app-header nav>a.nature-app-header-profile{min-height:42px;justify-content:flex-start;gap:8px;padding:0 10px;font-size:11px}
+  .nature-app-header nav>a.nature-nav-link svg{width:16px;height:16px}
+  .nature-app-header nav>a.nature-notification-bell{width:100%;height:42px;flex-basis:auto;border-radius:10px}
+  .nature-app-header nav .nature-app-header-profile{font-size:11px}
+  .nature-app-header nav .nature-header-search-wrap{grid-column:1/-1}
+  .nature-app-header nav .nature-global-search{top:44px;right:0;width:min(100%,420px)}
+}
+@media(max-width:380px){
+  .nature-app-header{padding-right:10px;padding-left:10px}
+  .nature-app-header .app-preference-controls{gap:3px}
+  .nature-app-header .app-preference-controls button{min-height:34px;padding:0 7px;font-size:9px}
+  .nature-mobile-menu-toggle{min-height:34px;padding:0 7px;font-size:10px}
+}
+:root[data-theme="dark"] .nature-app-header .app-preference-controls button,:root[data-theme="dark"] .nature-mobile-menu-toggle{border-color:#405346;background:#1d2a21;color:#e1ede1}
+:root[data-theme="dark"] .nature-app-header nav{border-color:#35463a}
