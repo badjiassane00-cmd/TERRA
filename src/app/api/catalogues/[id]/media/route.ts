@@ -2,6 +2,7 @@ import { getSessionUserId } from "@/lib/session";
 import { withApiErrors } from "@/server/http/api-handler";
 import { catalogueRepository } from "@/server/catalogues/catalogue.repository";
 import { NextResponse } from "next/server";
+import { mediaRepository } from "@/server/media/media.repository";
 
 async function POSTImpl(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
@@ -11,9 +12,10 @@ async function POSTImpl(request: Request, { params }: { params: Promise<{ id: st
   const body = await request.json();
   const mediaUrl = typeof body.mediaUrl === "string" ? body.mediaUrl.trim().slice(0, 2048) : "";
   const mediaType = body.mediaType === "video" ? "video" : body.mediaType === "image" ? "image" : "";
-  if (!mediaType || (!/^https:\/\//i.test(mediaUrl) && !/^\/api\/media\/(?:avatars|observations)\/[\w-]+\.(?:jpg|png|webp|mp4|webm|mov)$/i.test(mediaUrl))) {
+  if (!mediaType || (!/^https:\/\//i.test(mediaUrl) && !/^\/api\/media\/(?:avatars|observations)\/[\w-]+\.(?:jpg|png|webp|mp4|webm|mov)$/i.test(mediaUrl) && !/^\/api\/media\/private\/[a-z0-9]+$/i.test(mediaUrl))) {
     return NextResponse.json({ error: "Média ou format non valide." }, { status: 400 });
   }
+  if (!await mediaRepository.ownsPrivateUrl(mediaUrl, userId)) return NextResponse.json({ error: "Ce média privé ne vous appartient pas." }, { status: 403 });
   const media = await catalogueRepository.addMedia({ catalogId, mediaUrl, mediaType });
   return NextResponse.json({ media }, { status: 201 });
 }

@@ -419,6 +419,17 @@ model MediaAsset {
   @@map("media_assets")
 }
 
+// Fenêtres de limitation persistées pour partager les quotas entre instances.
+model ApiRateLimit {
+  identifier  String   @db.VarChar(64)
+  windowStart DateTime @db.DateTime(3)
+  count       Int      @default(0)
+
+  @@id([identifier, windowStart])
+  @@index([windowStart])
+  @@map("api_rate_limits")
+}
+
 model CatalogEntry {
   id             String        @id @default(cuid())
   catalogId      String

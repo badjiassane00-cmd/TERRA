@@ -4,13 +4,17 @@ import { bioClipIdentificationAdapter } from "@/server/identification/bioclip.ad
 import { geminiIdentificationAdapter } from "@/server/identification/gemini.adapter";
 import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedFormData } from "@/server/http/read-limited-form-data";
 
 export const runtime = "nodejs";
 
 async function POSTImpl(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) throw new ApiError("Connectez-vous pour enregistrer une identification d’insecte.", 401);
-  const formData = await request.formData();
+  const limited = await enforceRateLimit(request, "identify-insect", { limit: 12, windowMs: 60_000 });
+  if (limited) return limited;
+  const formData = await readLimitedFormData(request, 11 * 1024 * 1024);
   const image = formData.get("image");
   if (!(image instanceof File)) throw new ApiError("Ajoutez une photo d’insecte.", 400);
   if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) throw new ApiError("Utilisez une image JPEG, PNG ou WebP.", 415);

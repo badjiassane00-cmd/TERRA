@@ -1,4 +1,5 @@
 import { mlRepository } from "./ml.repository";
+import { hasValidImageSignature } from "@/server/media/object-storage";
 
 export const mlService = {
   listModels(limit: number) { return mlRepository.listModels(Math.min(Math.max(limit, 1), 50)); },
@@ -14,13 +15,17 @@ export const mlService = {
     const label = input.label.trim();
     if (!label || label.length > 200) throw new Error("Le nom de l’espèce doit contenir entre 1 et 200 caractères.");
     const confidence = Number.isFinite(input.confidence) ? Math.max(0, Math.min(1, input.confidence)) : 0;
-    return input.image.arrayBuffer().then((bytes) => mlRepository.addTrainingSample({
+    return input.image.arrayBuffer().then((arrayBuffer) => {
+      const bytes = Buffer.from(arrayBuffer);
+      if (!hasValidImageSignature(input.image.type, bytes)) throw new Error("Le contenu de l’image est invalide.");
+      return mlRepository.addTrainingSample({
       userId: input.userId,
       plantName: label,
       scientificName: input.scientificName.trim().slice(0, 200) || label,
       imageUrl: `data:${input.image.type};base64,${Buffer.from(bytes).toString("base64")}`,
       label,
       confidence,
-    }));
+      });
+    });
   },
 };

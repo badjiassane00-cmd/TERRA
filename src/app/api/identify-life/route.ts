@@ -4,11 +4,15 @@ import { identifyLifeSpecies } from "@/server/identification/life-identification
 import type { GeminiLifeGroup } from "@/server/identification/gemini.adapter";
 import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedFormData } from "@/server/http/read-limited-form-data";
 
 export const runtime = "nodejs";
 
 async function POSTImpl(request: Request) {
-  const formData = await request.formData();
+  const limited = await enforceRateLimit(request, "identify-life", { limit: 12, windowMs: 60_000 });
+  if (limited) return limited;
+  const formData = await readLimitedFormData(request, 11 * 1024 * 1024);
   const image = formData.get("image");
   const groupValue = formData.get("group");
   const allowedGroups: GeminiLifeGroup[] = ["plants", "insects", "animals", "fish", "all"];

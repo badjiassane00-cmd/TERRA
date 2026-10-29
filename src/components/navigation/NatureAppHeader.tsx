@@ -26,6 +26,7 @@ export default function NatureAppHeader({ user }: Readonly<{ user: HeaderUser | 
       </Link>
       <nav aria-label={t("Navigation principale", "Main navigation")}>
         <Link href="/" className={activeClass("/")} aria-current={pathname === "/" ? "page" : undefined}><Camera size={16} /> {t("Reconnaître", "Identify")}</Link>
+        <Link href="/biodiversite" className={`${activeClass("/biodiversite")}${pathname.startsWith("/especes/") ? " active" : ""}`} aria-current={pathname.startsWith("/biodiversite") || pathname.startsWith("/especes/") ? "page" : undefined}><Leaf size={16} /> {t("Biodiversité", "Biodiversity")}</Link>
         <Link href="/explorer" className={activeClass("/explorer")} aria-current={pathname.startsWith("/explorer") ? "page" : undefined}><Compass size={16} /> {t("Explorer", "Explore")}</Link>
         <Link href="/missions" className={activeClass("/missions")}><Target size={16} /> {t("Missions", "Missions")}</Link>
         <CommunitySearch />

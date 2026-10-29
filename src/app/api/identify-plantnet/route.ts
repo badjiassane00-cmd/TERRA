@@ -1,6 +1,8 @@
-import { withApiErrors } from "@/server/http/api-handler";
+import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { plantRepository } from "@/server/plants/plant.repository";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedFormData } from "@/server/http/read-limited-form-data";
 
 interface PlantNetSpecies {
   name?: string;
@@ -16,7 +18,9 @@ const PLANTNET_API_KEY = process.env.PLANTNET_API_KEY || "";
 const PLANTNET_API_URL = "https://my-api.plantnet.org/v2/identify/all";
 async function POSTImpl(request: Request) {
   try {
-    const formData = await request.formData();
+    const limited = await enforceRateLimit(request, "identify-plantnet", { limit: 12, windowMs: 60_000 });
+    if (limited) return limited;
+    const formData = await readLimitedFormData(request, 11 * 1024 * 1024);
     const image = formData.get("image") as File;
 
     if (!image) {
@@ -76,6 +80,7 @@ async function POSTImpl(request: Request) {
       results: enrichedResults,
     });
   } catch (error) {
+    if (error instanceof ApiError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Erreur Pl@ntNet:", error);
     return NextResponse.json(
       { error: "Erreur serveur lors de l'identification Pl@ntNet" },

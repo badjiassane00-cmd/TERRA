@@ -1,9 +1,12 @@
 import { withApiErrors } from "@/server/http/api-handler";
+import { enforceRateLimit } from "@/server/http/rate-limit";
 import { NextResponse } from "next/server";
 import { communityInteractionRepository } from "@/server/observations/community-interaction.repository";
 import { getSessionUserId } from "@/lib/session";
 import { createCommunityNotification } from "@/server/notifications/notification.service";
 async function POSTImpl(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const limited = await enforceRateLimit(request, "observation-comment", { limit: 12, windowMs: 60_000 });
+  if (limited) return limited;
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Connectez-vous pour répondre." }, { status: 401 });
   try {

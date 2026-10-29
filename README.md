@@ -1,13 +1,13 @@
 # TERRA — Le réseau mondial du vivant
 
-Réseau social naturaliste international pour observer, identifier et partager les plantes, insectes, oiseaux, mammifères et autres formes de vie. Les observations sont stockées dans MySQL via Prisma et les photos utilisateur dans un stockage objet S3 compatible; les comptes sont protégés par mot de passe haché et cookie de session httpOnly.
+Réseau social naturaliste international pour observer, identifier et partager les plantes, insectes, oiseaux, mammifères et autres formes de vie. Les observations sont stockées dans MySQL via Prisma et les médias dans un stockage objet S3 compatible. Les avatars sont publics; les médias d’observation exigent une session sauf s’ils appartiennent à un contenu explicitement public. Les photos des catalogues personnels passent par une route authentifiée liée au propriétaire. Les comptes utilisent un mot de passe haché et un cookie de session httpOnly.
 
 ## Fonctionnalités
 
 ### Réseau naturaliste
 - ✅ Fil communautaire multi-groupes du vivant avec localisation par pays/région
 - ✅ Connexion et inscription dédiées
-- ✅ Base MySQL relationnelle gérée par Prisma et migrations versionnées; médias servis depuis un bucket MinIO privé
+- ✅ Base MySQL relationnelle gérée par Prisma et migrations versionnées; objets conservés dans un bucket MinIO privé et publiés par l’application selon le type de média
 
 ### Core
 - ✅ Identification de plantes par photo via Pl@ntNet, enrichie par GBIF
@@ -38,7 +38,7 @@ Réseau social naturaliste international pour observer, identifier et partager l
 - ✅ Next.js 16 + TypeScript + Tailwind CSS
 - ✅ Prisma ORM + MySQL 8 + MinIO (API S3 compatible)
 - ✅ API Routes : `/api/identify`, `/api/auth`, `/api/locations`, `/api/voice-assistant`, `/api/community`, `/api/gamification`
-- ✅ Base de données relationnelle MySQL complète et stockage privé des images
+- ✅ Base de données relationnelle MySQL complète et stockage objet des images
 
 ## Installation
 
@@ -98,7 +98,7 @@ Le dépôt utilise MySQL 8.4 et MinIO AIStor pour les images. Pour démarrer les
 docker compose up -d mysql minio
 ```
 
-MinIO expose l’API S3 sur `http://127.0.0.1:9000` et la console sur `http://127.0.0.1:9001`. Les ports sont liés à l’interface locale seulement. Le volume Docker `terra_minio_data` conserve les objets après le redémarrage du conteneur. TERRA utilise le bucket privé `terra-media` avec un compte applicatif limité à la lecture et l’écriture des objets du bucket. Les images personnelles restent protégées par la session de leur propriétaire.
+MinIO expose l’API S3 sur `http://127.0.0.1:9000` et la console sur `http://127.0.0.1:9001`. Les ports sont liés à l’interface locale seulement. Le volume Docker `terra_minio_data` conserve les objets après le redémarrage du conteneur. TERRA utilise le bucket privé `terra-media` avec un compte applicatif limité à la lecture et l’écriture des objets du bucket. Les avatars sont publics. Les médias d’observation sont accessibles après connexion, sauf lorsqu’une publication ou une exposition est explicitement publique. Les médias des catalogues personnels utilisent une route authentifiée et liée au propriétaire.
 
 Pour créer une licence gratuite AIStor Free, suivez la [documentation MinIO sur les licences](https://docs.min.io/aistor/operations/licenses/). Configurez `MINIO_ROOT_USER` et `MINIO_ROOT_PASSWORD` pour l’administration, puis `MEDIA_S3_ENDPOINT`, `MEDIA_S3_BUCKET`, `MEDIA_S3_ACCESS_KEY` et `MEDIA_S3_SECRET_KEY` pour l’application. Le compte média doit disposer des droits `GetBucketLocation`, `ListBucket`, `GetObject` et `PutObject` sur `terra-media`. Ne mettez jamais la licence ou les secrets dans Git.
 
@@ -111,7 +111,7 @@ CONFIRM_POSTGRES_TO_MYSQL=yes npm run db:transfer:mysql
 npm run media:externalize
 ```
 
-Le transfert ne modifie pas PostgreSQL et s’arrête si la cible MySQL contient déjà des lignes. `npm run media:externalize` envoie les images intégrées restantes vers le bucket privé, puis TERRA les sert via ses routes publiques ou par la session de leur propriétaire.
+Le transfert ne modifie pas PostgreSQL et s’arrête si la cible MySQL contient déjà des lignes. `npm run media:externalize` envoie les images intégrées restantes vers le bucket privé; leur exposition dépend ensuite de la route applicative qui les sert.
 
 ### Prisma
 

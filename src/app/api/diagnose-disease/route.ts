@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { ApiError, withApiErrors } from "@/server/http/api-handler";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedFormData } from "@/server/http/read-limited-form-data";
 
 export const runtime = "nodejs";
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -36,7 +38,9 @@ function cropName(label: string): string {
 }
 
 async function POSTImpl(request: Request) {
-  const form = await request.formData();
+  const limited = await enforceRateLimit(request, "diagnose-disease", { limit: 12, windowMs: 60_000 });
+  if (limited) return limited;
+  const form = await readLimitedFormData(request, 11 * 1024 * 1024);
   const image = form.get("image");
   if (!(image instanceof File)) throw new ApiError("Ajoutez une photo de feuille.", 400);
   if (!ACCEPTED_TYPES.has(image.type)) throw new ApiError("Utilisez une image JPEG, PNG ou WebP.", 415);

@@ -1,7 +1,9 @@
-import { withApiErrors } from "@/server/http/api-handler";
+import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { signSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "@/lib/session";
 import { AuthError, authService } from "@/server/auth/auth.service";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedJson } from "@/server/http/read-limited-form-data";
 
 function authenticatedResponse(user: Awaited<ReturnType<typeof authService.authenticate>>, remember = true) {
   const safeUser = {
@@ -25,8 +27,10 @@ function authenticatedResponse(user: Awaited<ReturnType<typeof authService.authe
   return response;
 }
 async function POSTImpl(request: Request) {
+  const limited = await enforceRateLimit(request, "auth", { limit: 10, windowMs: 60_000 });
+  if (limited) return limited;
   try {
-    const body = await request.json();
+    const body = await readLimitedJson<Record<string, unknown>>(request, 16_384);
     const email = typeof body.email === "string" ? body.email.trim() : "";
     const phoneNumber = typeof body.phoneNumber === "string" ? body.phoneNumber.trim() : "";
     const identifier = typeof body.identifier === "string" ? body.identifier.trim() : email || phoneNumber;
@@ -43,6 +47,7 @@ async function POSTImpl(request: Request) {
 
     return authenticatedResponse(user, action === "signup" || body.remember !== false);
   } catch (error) {
+    if (error instanceof ApiError) return NextResponse.json({ error: error.message }, { status: error.status });
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

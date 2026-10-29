@@ -1,11 +1,15 @@
-import { withApiErrors } from "@/server/http/api-handler";
+import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { identificationRepository } from "@/server/identification/identification.repository";
 import { identificationService } from "@/server/identification/identification.service";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedFormData } from "@/server/http/read-limited-form-data";
 async function POSTImpl(request: Request) {
   try {
-    const formData = await request.formData();
+    const limited = await enforceRateLimit(request, "identify-ensemble", { limit: 12, windowMs: 60_000 });
+    if (limited) return limited;
+    const formData = await readLimitedFormData(request, 11 * 1024 * 1024);
     const image = formData.get("image");
     if (!(image instanceof File)) return NextResponse.json({ error: "Aucune image fournie" }, { status: 400 });
     if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) return NextResponse.json({ error: "Utilisez une image JPEG, PNG ou WebP." }, { status: 415 });
@@ -18,6 +22,7 @@ async function POSTImpl(request: Request) {
     }
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof ApiError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Erreur identification ensemble:", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Erreur serveur lors de l'identification" }, { status: 502 });
   }

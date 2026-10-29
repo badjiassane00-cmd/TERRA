@@ -25,10 +25,6 @@ export const authService = {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new AuthError("Identifiant ou mot de passe incorrect", 401);
     }
-    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
-    if (superAdminEmail && user.email === superAdminEmail && user.role !== "SUPER_ADMIN") {
-      return authRepository.updateRole(user.id, "SUPER_ADMIN");
-    }
     return user;
   },
 
@@ -48,7 +44,10 @@ export const authService = {
     if (await authRepository.findUserByIdentifier(email, phone)) {
       throw new AuthError("Un compte existe déjà avec cet identifiant.", 409);
     }
-    const isSuperAdmin = !!process.env.SUPER_ADMIN_EMAIL && email === process.env.SUPER_ADMIN_EMAIL.trim().toLowerCase();
+    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
+    if (superAdminEmail && email === superAdminEmail) {
+      throw new AuthError("Ce compte doit être initialisé par l’administrateur système.", 403);
+    }
 
     try {
       return await authRepository.createUser({
@@ -56,7 +55,7 @@ export const authService = {
         name,
         authPhone: phone,
         phoneNumber: phone,
-        role: isSuperAdmin ? "SUPER_ADMIN" : "USER",
+        role: "USER",
         password: await bcrypt.hash(input.password, 12),
       });
     } catch (error) {

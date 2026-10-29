@@ -92,7 +92,7 @@ export default function IdentificationSharingActions({
         const compressed = await compressObservationPhoto(imageFile);
         const blob = await fetch(compressed.imageUrl).then((response) => response.blob());
         const photo = new File([blob], "identification.jpg", { type: blob.type || "image/jpeg" });
-        const form = new FormData(); form.set("file", photo);
+        const form = new FormData(); form.set("file", photo); form.set("visibility", "private");
         const upload = await apiFetch("/api/media/upload", { method: "POST", body: form });
         const uploaded = await upload.json();
         if (!upload.ok) throw new Error(uploaded.error || "Téléversement de la photo impossible.");

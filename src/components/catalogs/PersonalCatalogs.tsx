@@ -102,7 +102,7 @@ export default function PersonalCatalogs() {
     let savedCount = 0;
     try {
       for (const file of files) {
-        const form = new FormData(); form.set("file", file);
+        const form = new FormData(); form.set("file", file); form.set("visibility", "private");
         const uploadResponse = await apiFetch("/api/media/upload", { method: "POST", body: form });
         const uploaded = await uploadResponse.json();
         if (!uploadResponse.ok) throw new Error(uploaded.error || `Échec du téléversement de ${file.name}.`);

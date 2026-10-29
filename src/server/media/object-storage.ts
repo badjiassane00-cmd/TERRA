@@ -14,9 +14,15 @@ function decodeImageDataUrl(dataUrl: string): { bytes: Buffer; mime: ImageMime }
   const mime = match[1] as ImageMime;
   const bytes = Buffer.from(match[2], "base64");
   if (!bytes.length || bytes.length > MAX_MEDIA_BYTES) throw new Error("L’image dépasse la taille maximale de 8 Mo.");
-  const valid = mime === "image/jpeg" ? bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff : mime === "image/png" ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) : bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
-  if (!valid) throw new Error("Le contenu du fichier image est invalide.");
+  if (!hasValidImageSignature(mime, bytes)) throw new Error("Le contenu du fichier image est invalide.");
   return { bytes, mime };
+}
+
+export function hasValidImageSignature(mime: string, bytes: Uint8Array) {
+  if (mime === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (mime === "image/png") return Buffer.from(bytes).subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  if (mime === "image/webp") return Buffer.from(bytes).toString("ascii", 0, 4) === "RIFF" && Buffer.from(bytes).toString("ascii", 8, 12) === "WEBP";
+  return false;
 }
 
 export function isImageDataUrl(value: string) { return value.startsWith("data:image/"); }

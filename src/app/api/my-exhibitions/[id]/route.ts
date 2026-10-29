@@ -14,6 +14,13 @@ async function GETImpl(
       return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
     }
 
+    if (!exhibition.isPublic) {
+      const viewerId = await getSessionUserId();
+      if (!viewerId) return NextResponse.json({ error: "Connexion requise" }, { status: 401 });
+      const owner = await exhibitionService.findOwner(id);
+      if (owner?.userId !== viewerId) return NextResponse.json({ error: "Exposition introuvable" }, { status: 404 });
+    }
+
     return NextResponse.json({ exhibition });
   } catch (error) {
     console.error("Erreur GET /api/my-exhibitions/[id]:", error);

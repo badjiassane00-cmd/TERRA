@@ -1,5 +1,8 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedJson } from "@/server/http/read-limited-form-data";
+import { ApiError } from "@/server/http/api-handler";
 
 // Dictionnaire de secours utilisé uniquement si aucune clé IA n'est
 // configurée, pour que l'assistant reste fonctionnel en dev sans clé.
@@ -108,10 +111,12 @@ async function askClaude(query: string, apiKey: string) {
 }
 async function POSTImpl(request: Request) {
   try {
-    const body = await request.json();
+    const limited = await enforceRateLimit(request, "voice-assistant", { limit: 20, windowMs: 60_000 });
+    if (limited) return limited;
+    const body = await readLimitedJson<Record<string, unknown>>(request, 16_384);
     const { query } = body;
 
-    if (!query || typeof query !== "string") {
+    if (!query || typeof query !== "string" || query.length > 4_000) {
       return NextResponse.json({ error: "Requête vocale vide" }, { status: 400 });
     }
 
@@ -136,6 +141,7 @@ async function POSTImpl(request: Request) {
 
     return NextResponse.json(fallbackAnswer(query));
   } catch (error) {
+    if (error instanceof ApiError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Erreur assistant vocal:", error);
     return NextResponse.json(
       { error: "Erreur lors du traitement vocal" },

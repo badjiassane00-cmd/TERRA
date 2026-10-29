@@ -1,16 +1,20 @@
 import { withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedFormData } from "@/server/http/read-limited-form-data";
 
 // Compatible with a self-hosted acoustic classifier. Keep the provider URL and
 // credentials server-side; no audio is saved by TERRA.
 async function POSTImpl(request: Request) {
   if (!await getSessionUserId()) return NextResponse.json({ error: "Connectez-vous pour analyser un enregistrement." }, { status: 401 });
+  const limited = await enforceRateLimit(request, "sound-identification", { limit: 10, windowMs: 60_000 });
+  if (limited) return limited;
   const endpoint = process.env.SOUND_IDENTIFICATION_API_URL;
   if (!endpoint) {
     return NextResponse.json({ error: "Le moteur audio n’est pas encore configuré sur le serveur." }, { status: 503 });
   }
-  const incoming = await request.formData();
+  const incoming = await readLimitedFormData(request, 16 * 1024 * 1024);
   const audio = incoming.get("audio");
   if (!(audio instanceof File) || !audio.type.startsWith("audio/") || audio.size > 15 * 1024 * 1024) {
     return NextResponse.json({ error: "Fournissez un enregistrement audio de 15 Mo maximum." }, { status: 400 });

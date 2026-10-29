@@ -3,10 +3,13 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { withApiErrors } from "@/server/http/api-handler";
+import { enforceRateLimit } from "@/server/http/rate-limit";
 
 const VALID_REASONS = ["SPAM", "HARASSMENT", "INAPPROPRIATE", "MISINFORMATION", "OTHER"] as const;
 
 async function POSTImpl(request: Request) {
+  const limited = await enforceRateLimit(request, "report", { limit: 5, windowMs: 5 * 60_000 });
+  if (limited) return limited;
   const reporterId = await getSessionUserId();
   if (!reporterId) return NextResponse.json({ error: "Connectez-vous pour signaler ce contenu." }, { status: 401 });
 

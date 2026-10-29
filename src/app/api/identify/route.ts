@@ -1,9 +1,11 @@
-import { withApiErrors } from "@/server/http/api-handler";
+import { ApiError, withApiErrors } from "@/server/http/api-handler";
 import { NextResponse } from "next/server";
 import { identificationRepository } from "@/server/identification/identification.repository";
 import { enrichWithGbif, normalizeDiseases, normalizePlantNet, type Identification } from "@/lib/botany";
 import { getSessionUserId } from "../../../lib/session";
 import { geminiIdentificationAdapter } from "@/server/identification/gemini.adapter";
+import { enforceRateLimit } from "@/server/http/rate-limit";
+import { readLimitedFormData } from "@/server/http/read-limited-form-data";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png"]);
@@ -11,7 +13,9 @@ const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png"]);
 export const runtime = "nodejs";
 async function POSTImpl(request: Request) {
   try {
-    const formData = await request.formData();
+    const limited = await enforceRateLimit(request, "identify", { limit: 12, windowMs: 60_000 });
+    if (limited) return limited;
+    const formData = await readLimitedFormData(request, 11 * 1024 * 1024);
     const image = formData.get("image");
     const mode = formData.get("mode") === "disease" ? "disease" : "identify";
     const userId = await getSessionUserId();
@@ -73,6 +77,7 @@ async function POSTImpl(request: Request) {
     if (userId) await identificationRepository.saveScan(userId, result, hasCoords ? lat : null, hasCoords ? lng : null, sessionId);
     return NextResponse.json({ result, mode, provider: "plantnet", quota: raw?.remainingIdentificationRequests });
   } catch (error) {
+    if (error instanceof ApiError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Identification failed", error);
     return NextResponse.json({ error: "Impossible d'analyser la photo pour le moment. Réessayez avec une photo nette." }, { status: 500 });
   }

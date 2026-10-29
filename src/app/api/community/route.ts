@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/session";
 import { ORGANISM_GROUPS } from "@/types/nature";
 import { publicCoordinates } from "@/server/observations/location";
 import { isImageDataUrl, isStorageConfigured, storePublicImage } from "@/server/media/object-storage";
+import { enforceRateLimit } from "@/server/http/rate-limit";
 
 const MAX_IMAGE_DATA_URL_LENGTH = 1_250_000;
 const MAX_REQUEST_LENGTH = 1_450_000;
@@ -60,6 +61,8 @@ export const GET = withApiErrors(GETImpl);
 
 async function POSTImpl(request: Request) {
   try {
+    const limited = await enforceRateLimit(request, "community-publish", { limit: 8, windowMs: 60_000 });
+    if (limited) return limited;
     const authorId = await getSessionUserId();
     if (!authorId) {
       return NextResponse.json({ error: "Connectez-vous pour publier une observation." }, { status: 401 });
