@@ -920,3 +920,116 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 :root[data-theme="dark"] .community-hub-tabs>a{color:#adbcad}
 :root[data-theme="dark"] .community-hub-tabs>a.active{background:#263b2b;color:#cce3ca}
 :root[data-theme="dark"] .community-hub-gallery .nature-profile-empty{border-color:#35463a;background:#1b261f}
+
+/* Simple et lisible : commandes plus grandes, libellés visibles et photos moins envahissantes. */
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid #28784e;outline-offset:3px}
+.nature-app-header nav>a.nature-nav-link{min-height:44px;padding:0 10px;font-size:12px}
+.nature-app-header .nature-identifier-brand{font-size:20px}
+.nature-social-feed{max-width:920px;margin:0 auto}
+.nature-post-list{gap:22px}
+.nature-social-post{overflow:hidden;border:1px solid #dfe8dc;border-radius:20px;box-shadow:0 12px 34px #203b260c}
+.nature-post-header{min-height:72px;padding:12px 18px}
+.nature-post-author strong{font-size:13px}
+.nature-post-author span,.nature-observation-caption{font-size:12px}
+.nature-post-group-label{font-size:10px}
+.nature-post-photo{min-height:0;max-height:460px;aspect-ratio:4/3;border:7px solid #fff;border-radius:18px;background:linear-gradient(145deg,#eef4e9,#e4ede0)}
+.nature-post-photo img,.nature-post-photo video{width:100%;height:100%;max-height:100%;border-radius:12px;object-fit:cover}
+.nature-post-actions .nature-action-like,.nature-post-actions .nature-action-comment,.nature-post-actions .nature-action-share{min-height:44px;font-size:12px}
+.nature-field-insight>span,.nature-field-insight>p,.nature-field-insight>a{font-size:11px}
+.nature-publish-button{min-height:44px;font-size:13px}
+.community-hub-tabs>a{min-height:48px;font-size:14px}
+.community-hub-section-heading p,.community-hub-gallery header p{font-size:13px}
+.community-hub-section-heading>a,.community-hub-gallery header>a,.community-hub-profile-link{min-height:44px;font-size:13px}
+.observation-overline{font-size:11px}
+.observations-explorer-heading p{max-width:680px;font-size:15px;line-height:1.6}
+.observation-contribute-button{min-height:48px;padding:0 18px;font-size:13px}
+.observation-search,.observation-select-wrap{min-height:48px}
+.observation-search input,.observation-select-wrap select{font-size:14px}
+.observation-view-switch button{width:42px;height:42px}
+.observation-results-line{font-size:12px}
+.explorer-observation-card{border-radius:18px;box-shadow:0 8px 25px #1939200b}
+.explorer-observation-photo{height:auto;aspect-ratio:4/3;background:linear-gradient(145deg,#eef3e8,#e3ebdf)}
+.explorer-observation-photo img,.explorer-observation-photo video{width:100%;height:100%;object-fit:cover}
+.explorer-observation-copy{padding:18px}
+.explorer-observation-meta,.explorer-observer,.observation-photo-credit{font-size:11px}
+.explorer-observation-copy h2{font-size:24px}
+.explorer-scientific-name,.explorer-observation-description{font-size:13px}
+.observation-detail-hero{max-width:1120px;grid-template-columns:minmax(0,1.25fr) minmax(280px,.8fr);gap:18px}
+.observation-detail-image-wrap{height:clamp(300px,38vw,500px);min-height:0;border:1px solid #dfe7db;border-radius:22px;box-shadow:0 15px 38px #19392016}
+.observation-detail-image{height:100%;min-height:0;max-height:none;object-fit:cover}
+.observation-image-placeholder{min-height:300px}
+.nature-profile-grid{gap:8px}
+.nature-profile-tile{overflow:hidden;border-radius:13px;box-shadow:0 4px 14px #19392012}
+.personal-catalog-panel label{font-size:13px}
+.personal-catalog-panel input,.personal-catalog-panel select,.personal-catalog-panel textarea{min-height:46px;font-size:14px}
+.personal-catalog-panel textarea{min-height:90px}
+.personal-catalog-panel form>button{min-height:48px;font-size:13px}
+.personal-catalog-card-select{min-height:100px}
+.personal-catalog-card-select h3{font-size:22px}
+.personal-catalog-card-select p{font-size:12px}
+.personal-catalog-entry strong{font-size:13px}
+.personal-catalog-entry i,.personal-catalog-entry small{font-size:11px}
+.personal-catalog-media-gallery{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.personal-catalog-media-gallery img,.personal-catalog-media-gallery video{height:88px;border:1px solid #dce6d9;border-radius:12px;box-shadow:0 4px 12px #19392010}
+.species-searchbox{min-height:62px}
+.species-searchbox input{font-size:16px}
+.species-filters label{font-size:12px}
+.species-filters select{min-height:44px;font-size:12px}
+.species-card-art{height:96px;border-radius:14px 14px 0 0}
+.species-card-body{padding:17px}
+.species-card h3{font-size:21px}
+.species-authorship,.species-taxonomy,.species-card-link{font-size:12px}
+.species-detail-visual{min-height:0;height:clamp(300px,35vw,460px);border-radius:0 0 18px 0}
+.species-no-image{min-height:0;height:100%}
+.species-image-gallery figure{overflow:hidden;border:1px solid #dfe8dc;border-radius:15px;box-shadow:0 8px 22px #1f39210c}
+.species-image-gallery figure>a{height:clamp(150px,20vw,230px)}
+.species-image-gallery figure>a img{transition:transform .25s}
+.species-image-gallery figure>a:hover img{transform:scale(1.025)}
+.herbarium-button{min-height:44px;font-size:13px}
+.nature-mode-selector>button{min-height:88px}
+.nature-mode-selector>button>strong{font-size:12px}
+.nature-mode-selector>button>small{font-size:10px}
+:root[data-theme="dark"] .species-image-gallery figure{border-color:#35463a;box-shadow:none}
+:root[data-theme="dark"] .species-detail-visual{background:radial-gradient(circle at 50% 38%,#263b2a,#17231b 100%)}
+@media(max-width:680px){
+  .nature-app-header{align-items:center;padding:9px 12px}
+  .nature-app-header nav{justify-content:flex-start;gap:4px;max-height:38vh;overflow:auto}
+  .nature-app-header nav>a.nature-nav-link,.nature-app-header nav .nature-app-header-profile{min-height:42px;gap:5px;padding:0 8px;font-size:11px}
+  .nature-app-header nav>a.nature-nav-link svg{width:16px;height:16px}
+  .nature-app-header-profile .nature-app-header-avatar{width:28px;height:28px}
+  .community-hub-hero h1{font-size:42px}
+  .community-hub-tabs{margin-right:10px;margin-left:10px}
+  .community-hub-tabs>a{min-height:46px;font-size:12px}
+  .nature-social-feed{max-width:100%}
+  .nature-social-post{grid-template-columns:minmax(0,1fr)}
+  .nature-post-header{grid-column:1;grid-row:1}
+  .nature-post-photo{grid-column:1;grid-row:2;min-height:0;max-height:360px;aspect-ratio:4/3;border-width:5px}
+  .nature-post-body{grid-column:1;grid-row:3;padding:9px 16px 18px}
+  .nature-post-actions{gap:6px}
+  .nature-post-actions .nature-action-like,.nature-post-actions .nature-action-comment,.nature-post-actions .nature-action-share{min-height:44px;padding:0 9px;font-size:11px}
+  .observations-explorer{padding:22px 14px 52px}
+  .observations-explorer-heading{align-items:flex-start;flex-direction:column}
+  .observations-explorer-heading h1{font-size:36px}
+  .observation-explorer-toolbar{align-items:stretch;flex-direction:column}
+  .observation-select-wrap{width:100%}
+  .observation-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .explorer-observation-copy{padding:12px}
+  .explorer-observation-copy h2{font-size:18px}
+  .explorer-observation-meta{align-items:flex-start;flex-direction:column;gap:5px}
+  .observation-card-grid.list-view .explorer-observation-card{grid-template-columns:120px minmax(0,1fr)}
+  .observation-card-grid.list-view .explorer-observation-photo{height:auto;min-height:130px}
+  .observation-detail-page{padding-right:14px;padding-left:14px}
+  .observation-detail-hero{grid-template-columns:1fr}
+  .observation-detail-image-wrap{height:clamp(240px,70vw,390px)}
+  .observation-detail-taxon-card{padding:18px}
+  .personal-catalog-page{padding:22px 14px 48px}
+  .nature-profile-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .species-detail-visual{height:300px;border-radius:0}
+  .species-image-gallery figure>a{height:200px}
+}
+@media(prefers-reduced-motion:reduce){.nature-post-photo img,.explorer-observation-photo img,.nature-profile-tile img{transition:none!important}}
+:root[data-theme="dark"] .nature-social-post,:root[data-theme="dark"] .observation-taxon-card,:root[data-theme="dark"] .explorer-observation-card{border-color:#35463a;background:#1b261f;color:#e2eae2}
+:root[data-theme="dark"] .nature-post-photo{border-color:#1b261f;background:#17231b}
+:root[data-theme="dark"] .community-hub-section-heading h2,:root[data-theme="dark"] .observations-explorer-heading h1,:root[data-theme="dark"] .explorer-observation-copy h2{color:#e1ece1}
+:root[data-theme="dark"] .explorer-observation-copy p,:root[data-theme="dark"] .observations-explorer-heading p{color:#b5c2b6}
+:root[data-theme="dark"] .personal-catalog-media-gallery img,:root[data-theme="dark"] .personal-catalog-media-gallery video{border-color:#35463a;background:#17231b}

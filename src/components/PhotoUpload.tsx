@@ -133,11 +133,13 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
           {/* Local FileReader data URLs are intentionally rendered without the image optimizer. */}
           <img
             src={preview}
-            alt="Aperçu de la plante"
+            alt="Aperçu de la photo choisie"
             className="w-full h-80 object-cover"
           />
           {!isLoading && (
             <button
+              type="button"
+              aria-label="Retirer la photo"
               onClick={clearImage}
               className="absolute top-3 right-3 w-9 h-9 border border-border bg-paper/90 hover:bg-paper rounded-full flex items-center justify-center text-foreground transition-colors"
             >
