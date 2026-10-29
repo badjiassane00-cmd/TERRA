@@ -1035,8 +1035,9 @@ footer.bg-primary-dark .border-white\/10{border-color:#72957866}
 :root[data-theme="dark"] .personal-catalog-media-gallery img,:root[data-theme="dark"] .personal-catalog-media-gallery video{border-color:#35463a;background:#17231b}
 .nature-social-feed{max-width:760px}
 .nature-social-post{display:flex;flex-direction:column;min-width:0}
-.nature-post-photo{width:100%;height:clamp(260px,36vw,430px);max-height:430px;aspect-ratio:16/10;flex:0 0 auto}
-.nature-post-photo img,.nature-post-photo video{object-fit:contain}
+.nature-post-photo{width:100%;height:auto;min-height:0;max-height:640px;aspect-ratio:4/3;flex:0 0 auto;background:#eef2e9}
+.nature-post-photo>a{display:grid;place-items:center;min-width:0;min-height:0}
+.nature-post-photo img,.nature-post-photo video{width:100%;height:100%;max-height:100%;object-fit:contain!important;transform:none!important}
 .nature-post-body{width:100%;min-width:0;flex:1;padding:14px 18px 20px}
 .nature-post-actions{min-width:0;flex-wrap:wrap}
 .species-featured-intro{display:flex;align-items:flex-start;gap:12px;margin:3px 0 17px;color:#56845e}
