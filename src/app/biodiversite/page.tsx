@@ -7,10 +7,15 @@ export const metadata: Metadata = {
   description: "Recherche mondiale d’espèces et de taxons appuyée sur le backbone taxonomique GBIF, avec références et crédits documentés.",
 };
 
-export default async function BiodiversityPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
+export default async function BiodiversityPage({ searchParams }: { searchParams: Promise<{ q?: string | string[]; kingdom?: string | string[]; rank?: string | string[]; habitat?: string | string[]; threatStatus?: string | string[] }> }) {
   const params = await searchParams;
-  const requested = params.q;
-  const initialQuery = Array.isArray(requested) ? requested[0] || "" : requested || "";
-  const featuredPage = await gbifSpeciesService.featured();
-  return <SpeciesExplorer initialQuery={initialQuery} featuredPage={featuredPage} />;
+  const first = (value?: string | string[]) => Array.isArray(value) ? value[0] || "" : value || "";
+  const initialQuery = first(params.q);
+  const initialKingdom = first(params.kingdom);
+  const initialRank = first(params.rank);
+  const initialHabitat = first(params.habitat);
+  const initialThreatStatus = first(params.threatStatus);
+  const hasActiveSearch = initialQuery.trim().length >= 2 || Boolean(initialKingdom || initialRank || initialHabitat || initialThreatStatus);
+  const featuredPage = hasActiveSearch ? { results: [], nextOffset: 0, endOfRecords: true } : await gbifSpeciesService.featured();
+  return <SpeciesExplorer initialQuery={initialQuery} initialKingdom={initialKingdom} initialRank={initialRank} initialHabitat={initialHabitat} initialThreatStatus={initialThreatStatus} featuredPage={featuredPage} />;
 }

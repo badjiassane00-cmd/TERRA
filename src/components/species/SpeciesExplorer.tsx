@@ -45,14 +45,15 @@ const KINGDOMS = [
 ];
 const RANKS = [["", "Tous les rangs"], ["SPECIES", "Espèces"], ["GENUS", "Genres"], ["FAMILY", "Familles"], ["ORDER", "Ordres"], ["CLASS", "Classes"], ["PHYLUM", "Embranchements"]];
 
-export default function SpeciesExplorer({ initialQuery = "", featuredPage = { results: [], nextOffset: 0, endOfRecords: true } }: { initialQuery?: string; featuredPage?: FeaturedPage }) {
+export default function SpeciesExplorer({ initialQuery = "", initialKingdom = "", initialRank = "", initialHabitat = "", initialThreatStatus = "", featuredPage = { results: [], nextOffset: 0, endOfRecords: true } }: { initialQuery?: string; initialKingdom?: string; initialRank?: string; initialHabitat?: string; initialThreatStatus?: string; featuredPage?: FeaturedPage }) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
-  const [kingdom, setKingdom] = useState("");
-  const [rank, setRank] = useState("");
-  const [habitat, setHabitat] = useState("");
-  const [threatStatus, setThreatStatus] = useState("");
+  const [kingdom, setKingdom] = useState(initialKingdom);
+  const [rank, setRank] = useState(initialRank);
+  const [habitat, setHabitat] = useState(initialHabitat);
+  const [threatStatus, setThreatStatus] = useState(initialThreatStatus);
   const [page, setPage] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
   const [data, setData] = useState<SearchState>(EMPTY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -62,6 +63,7 @@ export default function SpeciesExplorer({ initialQuery = "", featuredPage = { re
   const [featuredEnd, setFeaturedEnd] = useState(featuredPage.endOfRecords);
   const [featuredLoading, setFeaturedLoading] = useState(false);
   const [featuredError, setFeaturedError] = useState("");
+  const hasActiveSearch = query.trim().length >= 2 || Boolean(kingdom || rank || habitat || threatStatus);
 
   async function loadMoreFeatured() {
     if (featuredLoading || featuredEnd) return;
@@ -95,7 +97,7 @@ export default function SpeciesExplorer({ initialQuery = "", featuredPage = { re
     const queryString = params.toString();
     window.history.replaceState(null, "", queryString ? `/biodiversite?${queryString}` : "/biodiversite");
 
-    if (term.length < 2) return;
+    if (!hasActiveSearch) return;
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setLoading(true); setError("");
@@ -113,7 +115,7 @@ export default function SpeciesExplorer({ initialQuery = "", featuredPage = { re
       }
     }, page === 0 ? 320 : 0);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [query, kingdom, rank, habitat, threatStatus, page]);
+  }, [query, kingdom, rank, habitat, threatStatus, page, retryCount, hasActiveSearch]);
 
   const suggestions = focused && query.trim().length >= 2 && !loading ? data.results.slice(0, 5) : [];
 
@@ -137,8 +139,11 @@ export default function SpeciesExplorer({ initialQuery = "", featuredPage = { re
           onBlur={() => window.setTimeout(() => setFocused(false), 130)}
           onKeyDown={(event) => { if (event.key === "Escape") setFocused(false); if (event.key === "Enter" && data.results[0]) router.push(`/especes/${data.results[0].key}`); }}
           aria-label="Nom d’espèce, nom scientifique ou nom commun"
+          role="combobox"
+          aria-haspopup="listbox"
           aria-autocomplete="list"
           aria-controls="species-suggestions"
+          aria-expanded={suggestions.length > 0}
           placeholder="Nom d’espèce, nom scientifique ou nom commun…"
         />
         <kbd>ENTRÉE</kbd>
@@ -156,8 +161,8 @@ export default function SpeciesExplorer({ initialQuery = "", featuredPage = { re
     </section>
 
     <section className="species-search-results" aria-live="polite">
-      <div className="species-results-heading"><div><span>RÉSULTATS TAXONOMIQUES</span><h2>{query.trim().length >= 2 ? `Espèces correspondant à « ${query.trim()} »` : "Votre prochaine découverte commence ici"}</h2></div>{data.count > 0 && <span className="species-result-count">{data.count.toLocaleString("fr-FR")} résultats GBIF</span>}</div>
-      {query.trim().length < 2 ? <>
+      <div className="species-results-heading"><div><span>RÉSULTATS TAXONOMIQUES</span><h2>{query.trim().length >= 2 ? `Taxons correspondant à « ${query.trim()} »` : hasActiveSearch ? "Taxons selon vos filtres" : "Votre prochaine découverte commence ici"}</h2></div>{hasActiveSearch && data.count > 0 && <span className="species-result-count">{data.count.toLocaleString("fr-FR")} résultats GBIF</span>}</div>
+      {!hasActiveSearch ? <>
         <div className="species-featured-intro"><BookOpen size={20} /><div><h3>Des espèces à découvrir</h3><p>{featuredSpecies.length} fiches illustrées pour commencer. Explorez les espèces signalées au Sénégal dans GBIF, avec leurs sources et licences photo.</p></div></div>
         {featuredSpecies.length ? <><div className="species-featured-grid">{featuredSpecies.map((item) => <article className="species-featured-card" key={item.key}>
           <Link className="species-featured-photo" href={`/especes/${item.key}`} aria-label={`Consulter la fiche de ${item.canonicalName}`}>
@@ -172,7 +177,7 @@ export default function SpeciesExplorer({ initialQuery = "", featuredPage = { re
           {!featuredEnd && <button className="species-load-more" type="button" disabled={featuredLoading} onClick={loadMoreFeatured}>{featuredLoading ? "Chargement des espèces…" : "Afficher plus d’espèces"}</button>}
           {featuredError && <div className="species-message species-error" role="alert">{featuredError}</div>}
         </> : <div className="species-message">La sélection illustrée est momentanément indisponible. Vous pouvez toujours rechercher une espèce ci-dessus.</div>}
-      </> : error ? <div className="species-message species-error" role="alert">{error}</div> : loading && page === 0 && data.results.length === 0 ? <div className="species-message" role="status">Recherche dans le backbone taxonomique GBIF…</div> : data.results.length === 0 ? <div className="species-message">Aucun taxon trouvé. Essayez un autre nom ou élargissez les filtres.</div> : <>
+      </> : error ? <div className="species-message species-error" role="alert">{error} <button type="button" onClick={() => setRetryCount((count) => count + 1)}>Réessayer</button></div> : loading && page === 0 && data.results.length === 0 ? <div className="species-message" role="status">Recherche dans le backbone taxonomique GBIF…</div> : data.results.length === 0 ? <div className="species-message"><p>Aucun taxon trouvé. Essayez un autre nom ou élargissez les filtres.</p><button type="button" onClick={() => { setQuery(""); setKingdom(""); setRank(""); setHabitat(""); setThreatStatus(""); setPage(0); }}>Effacer les filtres</button></div> : <>
         <div className="species-card-grid">{data.results.map((item) => <Link className="species-card" key={item.key} href={`/especes/${item.key}`}>
           <div className="species-card-art"><Leaf size={26} /><span>{item.kingdom || "BIODIVERSITÉ"}</span></div>
           <div className="species-card-body"><span className="species-rank">{item.rank || "Taxon"}{item.taxonomicStatus && <span className="species-verified"><ShieldCheck size={12} /> Référencé</span>}</span><h3><i>{item.canonicalName}</i></h3>{item.authorship && <p className="species-authorship">{item.authorship}</p>}<p className="species-taxonomy">{[item.family, item.order, item.class].filter(Boolean).join(" · ") || "Classification détaillée sur la fiche"}</p><span className="species-card-link">Consulter la fiche <ArrowRight size={14} /></span></div>
