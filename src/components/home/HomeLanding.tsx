@@ -1,0 +1,74 @@
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowDown, ArrowRight, BookOpen, Camera, Compass, Leaf, MapPinned, ShieldCheck, Sparkles, Target } from "lucide-react";
+import type { CSSProperties } from "react";
+
+type FeaturedSpecies = {
+  key: number;
+  canonicalName: string;
+  kingdom: string | null;
+  class: string | null;
+  image: { url: string; title: string | null; creator: string | null; publisher: string | null; license: string; sourceUrl: string | null };
+};
+
+const WORLDS = [
+  { title: "Explorer les espèces", detail: "Noms, classification et références documentées.", href: "/biodiversite", icon: Leaf, label: "Encyclopédie" },
+  { title: "Identifier le vivant", detail: "Photo de plante, insecte ou animal : obtenez des pistes à vérifier.", href: "/identifier", icon: Camera, label: "Reconnaissance" },
+  { title: "Partager une rencontre", detail: "Retrouvez les observations et les collections des naturalistes.", href: "/explorer", icon: MapPinned, label: "Communauté" },
+  { title: "Agir sur le terrain", detail: "Découvrez les missions proposées autour de la biodiversité.", href: "/missions", icon: Target, label: "Missions" },
+];
+
+export default function HomeLanding({ featuredSpecies }: Readonly<{ featuredSpecies: FeaturedSpecies[] }>) {
+  return <main className="terra-home">
+    <section className="terra-home-hero" aria-labelledby="terra-home-title">
+      <Image className="terra-home-hero-image" src="/images/terra-network.webp" alt="Paysage naturel associé à la découverte de la biodiversité" fill priority sizes="100vw" />
+      <div className="terra-home-hero-shade" />
+      <div className="terra-home-hero-copy">
+        <span className="terra-home-eyebrow"><Leaf size={16} /> OBSERVER · COMPRENDRE · TRANSMETTRE · PRÉSERVER</span>
+        <h1 id="terra-home-title">Le vivant est partout.<br /><em>Découvrez-le.</em></h1>
+        <p>Explorez la biodiversité, identifiez les espèces qui vous entourent et partagez vos découvertes avec une communauté passionnée par la nature.</p>
+        <div className="terra-home-actions">
+          <Link href="/identifier" className="terra-home-primary"><Camera size={18} /> Identifier une espèce <ArrowRight size={17} /></Link>
+          <Link href="/biodiversite" className="terra-home-secondary"><BookOpen size={17} /> Explorer la biodiversité</Link>
+        </div>
+        <div className="terra-home-trust"><ShieldCheck size={16} /><span>Des pistes d’identification à confirmer, des sources affichées sur les fiches.</span></div>
+      </div>
+      <a className="terra-home-scroll" href="#decouvrir"><span>Découvrir TERRA</span><ArrowDown size={15} /></a>
+    </section>
+
+    <section className="terra-home-worlds" id="decouvrir" aria-labelledby="terra-home-worlds-title">
+      <header className="terra-home-section-heading">
+        <span>UN MÊME ESPACE, PLUSIEURS FAÇONS D’EXPLORER</span>
+        <h2 id="terra-home-worlds-title">Entrez dans le monde vivant.</h2>
+        <p>Commencez par une espèce, une observation ou une action de terrain.</p>
+      </header>
+      <div className="terra-home-world-grid">
+        {WORLDS.map(({ title, detail, href, icon: Icon, label }, index) => <Link className="terra-home-world-card" href={href} key={href}>
+          <span className="terra-home-world-number">0{index + 1}</span><span className="terra-home-world-icon"><Icon size={21} /></span><small>{label}</small><h3>{title}</h3><p>{detail}</p><span className="terra-home-world-link">Découvrir <ArrowRight size={15} /></span>
+        </Link>)}
+      </div>
+    </section>
+
+    <section className="terra-home-identify" aria-labelledby="terra-home-identify-title">
+      <div className="terra-home-identify-art"><Image src="/images/terra-identification.webp" alt="Détail d’une plante observée dans son milieu" fill sizes="(max-width: 760px) 100vw, 45vw" /></div>
+      <div className="terra-home-identify-copy"><span><Sparkles size={15} /> UNE PHOTO. UNE DÉCOUVERTE.</span><h2 id="terra-home-identify-title">Une image ouvre<br />tout un monde.</h2><p>Photographiez un organisme, consultez les propositions d’identification, puis explorez les références disponibles. La position reste facultative.</p>
+        <ol><li><span>01</span><div><strong>Photographiez</strong><small>Importez une image ou prenez une photo.</small></div></li><li><span>02</span><div><strong>Explorez les pistes</strong><small>Les suggestions automatiques ne remplacent pas une validation scientifique.</small></div></li><li><span>03</span><div><strong>Documentez la rencontre</strong><small>Enregistrez et partagez si vous le souhaitez.</small></div></li></ol>
+        <Link href="/identifier" className="terra-home-text-link">Commencer une identification <ArrowRight size={16} /></Link>
+      </div>
+    </section>
+
+    <section className="terra-home-discoveries" aria-labelledby="terra-home-discoveries-title">
+      <header className="terra-home-section-heading terra-home-discoveries-heading"><div><span>RÉFÉRENCES TAXONOMIQUES · GBIF</span><h2 id="terra-home-discoveries-title">Espèces documentées au Sénégal.</h2><p>Une sélection issue d’observations GBIF avec crédits et licences photo consultables.</p></div><Link href="/biodiversite">Parcourir l’encyclopédie <ArrowRight size={15} /></Link></header>
+      {featuredSpecies.length ? <div className="terra-home-species-grid">{featuredSpecies.map((species) => <article className="terra-home-species-card" key={species.key}>
+        <Link href={`/especes/${species.key}`} className="terra-home-species-photo" aria-label={`Voir la fiche ${species.canonicalName}`} style={{ "--terra-home-species-background": `url(${JSON.stringify(species.image.url)})` } as CSSProperties}>
+          <Image src={species.image.url} alt={species.image.title || `Photographie de ${species.canonicalName}`} fill sizes="(max-width: 680px) 100vw, (max-width: 1050px) 50vw, 25vw" unoptimized />
+          <span>{species.kingdom || "Espèce documentée"}</span>
+        </Link>
+        <div className="terra-home-species-copy"><small>{species.class || "Biodiversité"}</small><h3><Link href={`/especes/${species.key}`}><i>{species.canonicalName}</i></Link></h3><p>{species.image.creator || species.image.publisher || "Crédit photo fourni"} · {species.image.license}</p>{species.image.sourceUrl && <a href={species.image.sourceUrl} target="_blank" rel="noreferrer">Voir la source photo</a>}</div>
+      </article>)}</div> : <div className="terra-home-species-empty"><p>La sélection d’espèces est momentanément indisponible.</p><Link href="/biodiversite">Rechercher dans l’encyclopédie <ArrowRight size={15} /></Link></div>}
+    </section>
+
+    <section className="terra-home-conservation"><div><span><Compass size={15} /> CONNAÎTRE POUR MIEUX PRÉSERVER</span><h2>Chaque observation peut enrichir la connaissance du vivant.</h2><p>TERRA relie les fiches taxonomiques aux observations de terrain. Les données sensibles restent protégées et les sources sont indiquées lorsqu’elles sont disponibles.</p></div><Link href="/missions">Découvrir les missions <ArrowRight size={16} /></Link></section>
+    <footer className="terra-home-footer"><span>TERRA · Le réseau du vivant</span><Link href="/biodiversite">Encyclopédie</Link><Link href="/identifier">Identifier</Link><Link href="/missions">Missions</Link></footer>
+  </main>;
+}

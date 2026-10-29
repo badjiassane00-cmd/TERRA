@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, Compass, Leaf, LogIn, Menu, Shield, Target, X } from "lucide-react";
+import { BookOpen, Camera, Compass, Home, Leaf, LogIn, Menu, Shield, Target, X } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import NotificationBell from "@/components/notifications/NotificationBell";
@@ -35,8 +35,9 @@ export default function NatureAppHeader({ user }: Readonly<{ user: HeaderUser | 
         </div>
       </div>
       <nav id="terra-primary-navigation" className={menuOpen ? "is-open" : ""} aria-label={t("Navigation principale", "Main navigation")} onClick={(event) => { if ((event.target as HTMLElement).closest("a")) setMenuOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}>
-        <Link href="/" className={activeClass("/")} aria-current={pathname === "/" ? "page" : undefined}><Camera size={16} /> {t("Reconnaître", "Identify")}</Link>
-        <Link href="/biodiversite" className={`${activeClass("/biodiversite")}${pathname.startsWith("/especes/") ? " active" : ""}`} aria-current={pathname.startsWith("/biodiversite") || pathname.startsWith("/especes/") ? "page" : undefined}><Leaf size={16} /> {t("Biodiversité", "Biodiversity")}</Link>
+        <Link href="/" className={activeClass("/")} aria-current={pathname === "/" ? "page" : undefined}><Home size={16} /> {t("Accueil", "Home")}</Link>
+        <Link href="/biodiversite" className={`${activeClass("/biodiversite")}${pathname.startsWith("/especes/") ? " active" : ""}`} aria-current={pathname.startsWith("/biodiversite") || pathname.startsWith("/especes/") ? "page" : undefined}><BookOpen size={16} /> {t("Explorer", "Explore")}</Link>
+        <Link href="/identifier" className={activeClass("/identifier")} aria-current={pathname.startsWith("/identifier") ? "page" : undefined}><Camera size={16} /> {t("Identifier", "Identify")}</Link>
         <Link href="/explorer" className={`${activeClass("/explorer")}${pathname.startsWith("/observations") || pathname.startsWith("/catalogues") ? " active" : ""}`} aria-current={pathname.startsWith("/explorer") || pathname.startsWith("/observations") || pathname.startsWith("/catalogues") ? "page" : undefined}><Compass size={16} /> {t("Communauté", "Community")}</Link>
         <Link href="/missions" className={activeClass("/missions")} aria-current={pathname.startsWith("/missions") ? "page" : undefined}><Target size={16} /> {t("Missions", "Missions")}</Link>
         <CommunitySearch />

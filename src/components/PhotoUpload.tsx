@@ -134,7 +134,7 @@ export default function PhotoUpload({ onImageUpload, isLoading, onPreviewChange 
           <img
             src={preview}
             alt="Aperçu de la photo choisie"
-            className="w-full h-80 object-cover"
+            className="w-full h-80 bg-paper-dark object-contain"
           />
           {!isLoading && (
             <button
