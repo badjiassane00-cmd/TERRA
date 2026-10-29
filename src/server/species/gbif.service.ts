@@ -12,6 +12,16 @@ const KINGDOMS: Record<string, string> = {
   archaea: "Archaea",
   viruses: "Viruses",
 };
+const THREAT_STATUSES: Record<string, string> = {
+  EX: "EXTINCT",
+  EW: "EXTINCT_IN_THE_WILD",
+  CR: "CRITICALLY_ENDANGERED",
+  EN: "ENDANGERED",
+  VU: "VULNERABLE",
+  NT: "NEAR_THREATENED",
+  LC: "LEAST_CONCERN",
+  DD: "DATA_DEFICIENT",
+};
 
 const ACCEPTED_IMAGE_LICENSES = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0"] as const;
 const LICENSE_URLS: Record<(typeof ACCEPTED_IMAGE_LICENSES)[number], string> = {
@@ -242,7 +252,7 @@ export const gbifSpeciesService = {
       status: "ACCEPTED",
       rank: filters.rank,
       habitat: filters.habitat,
-      threatStatus: filters.threatStatus,
+      threat: filters.threatStatus ? THREAT_STATUSES[filters.threatStatus] : undefined,
       highertaxonKey: higherKey,
       offset: filters.offset,
       limit: filters.limit,
