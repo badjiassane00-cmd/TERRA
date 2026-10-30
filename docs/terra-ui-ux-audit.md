@@ -71,3 +71,9 @@ Commits du chantier : `0d9919e`, `819ea0b`, `e4f93e2`, `029c3c5`, `91f9a4b`, `95
 - Les icônes 192 px, 512 px, Apple Touch et favicon reprennent le symbole de biodiversité recadré; les fichiers PNG d’installation sont quantifiés pour limiter leur poids. Le visuel complet est livré en WebP.
 - Contrôles après intégration : `npm test` (4 fichiers/suites passés), `npm run lint`, `npx tsc --noEmit --incremental false` et `npm run build -- --webpack` réussis. `git diff --check` ne signale pas d’erreur de whitespace.
 - Restent à faire sur les autres recommandations : essais de bout en bout des parcours authentifiés et du tableau administrateur avec comptes de test; mesures répétées de performance terrain; validation clavier/lecteur d’écran manuelle; configuration d’une clé UICN; rédaction exacte des pages légales après réception de l’identité et de l’adresse de l’éditeur et du contact confidentialité. Aucun résultat de ces vérifications n’est présumé par le présent lot.
+
+## Addendum — correction du déploiement du logo, 30 octobre 2026
+
+- Le déploiement Render du commit `92ac4c2` a échoué pendant le traitement de `src/app/favicon.ico` : les images PNG embarquées dans le conteneur ICO étaient en mode RGB, alors que Turbopack attend RGBA.
+- Le favicon a été régénéré avec des frames 16×16 et 32×32 en RGBA. `file` confirme les deux formats, `npm test` passe (4 fichiers), `npm run build -- --webpack` réussit, et le contrôle `git diff --check` ne signale pas d’erreur.
+- Un nouveau déploiement est nécessaire pour servir le logo. La confirmation HTTP Render sera faite après publication de ce correctif.
