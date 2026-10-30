@@ -64,3 +64,10 @@ Commits du chantier : `0d9919e`, `819ea0b`, `e4f93e2`, `029c3c5`, `91f9a4b`, `95
 - Les pages `/mentions-legales` et `/confidentialite` sont toujours absentes. Leur rédaction reste suspendue aux informations exactes de l'éditeur, son adresse et un contact de confidentialité; aucune identité n'a été déduite de la configuration technique.
 - Les parcours de création, de modification et de suppression d'observations, ainsi que l'administration authentifiée, restent non vérifiés de bout en bout faute de compte de test. Les vérifications publiques ne remplacent pas ces essais.
 - Limites persistantes : aucune certification WCAG manuelle avec lecteur d'écran, aucune mesure répétée des Core Web Vitals terrain et aucune refonte globale de `globals.css`. Ces actions doivent rester graduelles et accompagnées de mesures afin d'éviter les régressions.
+
+## Addendum — identité visuelle TERRA, 30 octobre 2026
+
+- Intégration de l’emblème TERRA fourni : le menu utilise un symbole carré optimisé avec le nom textuel accessible, et le héros de l’accueil présente l’affiche complète sur grand écran. L’affiche est masquée sur mobile pour préserver l’espace du titre et des actions.
+- Les icônes 192 px, 512 px, Apple Touch et favicon reprennent le symbole de biodiversité recadré; les fichiers PNG d’installation sont quantifiés pour limiter leur poids. Le visuel complet est livré en WebP.
+- Contrôles après intégration : `npm test` (4 fichiers/suites passés), `npm run lint`, `npx tsc --noEmit --incremental false` et `npm run build -- --webpack` réussis. `git diff --check` ne signale pas d’erreur de whitespace.
+- Restent à faire sur les autres recommandations : essais de bout en bout des parcours authentifiés et du tableau administrateur avec comptes de test; mesures répétées de performance terrain; validation clavier/lecteur d’écran manuelle; configuration d’une clé UICN; rédaction exacte des pages légales après réception de l’identité et de l’adresse de l’éditeur et du contact confidentialité. Aucun résultat de ces vérifications n’est présumé par le présent lot.

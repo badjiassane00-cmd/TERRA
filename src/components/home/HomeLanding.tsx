@@ -51,6 +51,7 @@ export default function HomeLanding({ featuredSpecies }: Readonly<{ featuredSpec
     <section className="terra-home-hero" aria-labelledby="terra-home-title">
       <Image className="terra-home-hero-image" src="/images/terra-network.webp" alt="Paysage naturel associé à la découverte de la biodiversité" fill priority sizes="100vw" />
       <div className="terra-home-hero-shade" />
+      <div className="terra-home-emblem" role="img" aria-label="Emblème TERRA : Observer. Comprendre. Préserver. Flore, faune, champignons, écosystèmes, agriculture, communauté et conservation."><Image src="/images/terra-emblem.webp" alt="" fill sizes="(max-width: 1000px) 0px, 38vw" priority /></div>
       <div className="terra-home-hero-copy">
         <span className="terra-home-eyebrow"><Leaf size={16} /> OBSERVER · COMPRENDRE · TRANSMETTRE · PRÉSERVER</span>
         <h1 id="terra-home-title">Le vivant est partout.<br /><em>Découvrez-le.</em></h1>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Camera, Compass, Home, Leaf, LogIn, Menu, Shield, Target, X } from "lucide-react";
+import { BookOpen, Camera, Compass, Home, LogIn, Menu, Shield, Target, X } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import NotificationBell from "@/components/notifications/NotificationBell";
@@ -25,7 +25,7 @@ export default function NatureAppHeader({ user }: Readonly<{ user: HeaderUser | 
     <header className="nature-identifier-header nature-app-header">
       <div className="nature-app-header-top">
         <Link href="/" className="nature-identifier-brand" aria-label={t("TERRA, reconnaître le vivant", "TERRA, identify life")}>
-          <Leaf size={22} /> TERRA
+          <Image className="nature-app-brand-mark" src="/images/terra-mark.webp" alt="" width={38} height={38} priority /> <span>TERRA</span>
         </Link>
         <div className="nature-app-header-tools">
           <AppPreferenceControls />
